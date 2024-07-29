@@ -1,3 +1,22 @@
+# pseudo ops #
+li
+la
+mv
+not
+neg
+bgt
+ble
+bgtu
+bleu
+beqz
+bnez
+bgez
+blez
+bgtz
+j
+call
+ret
+nop
 # rv32i #
 lui
 auipc
