@@ -5,10 +5,31 @@ import logging
 import sys
 import re
 import random
-from collections import namedtuple
+from dataclasses import dataclass 
 
-Codeline = namedtuple("Codeline", ['lineno', 'data', 'valid_insn'])
+@dataclass 
+class Codeline:
+    """Represents a line of assembly code"""
+    lineno : int 
+    data : str 
+    valid_insn : bool
 
+    def __repr__(self):
+        return f"Codeline({self.lineno=}, {self.data}, {self.valid_insn=})"
+
+    def __str__(self):
+        return f"[#{self.lineno}]: {self.data}"
+
+    def __isub__(self, other : int):
+        
+        if not isinstance(other, int):
+            raise TypeError(f"Unsupported type for -=: {type(other)}")
+        
+        if self.lineno > 0:
+            self.lineno -= 1
+        
+        return self
+        
 class Singleton(type):
     
     _instances = {}
@@ -85,12 +106,12 @@ class AssemblyHandler():
     for managing **one** assembly file. It operates on the `assembly_source`
     file and removes/restores code lines."""
 
-    def __init__(self, isa : ISA, assembly_source : pathlib.Path, chunksize = 1) -> 'AssemblyHandler':
+    def __init__(self, isa : ISA, assembly_source : pathlib.Path, chunksize : int = 1) -> 'AssemblyHandler':
         
         self.isa : ISA = isa
         self.asm_file : pathlib.Path = assembly_source
         self.code : list[Codeline] = list() # 0-based indexing for lineno attribute!
-        self.asm_file_changelog : set = set()
+        self.asm_file_changelog : list = list()
 
         assembly_source = assembly_source.resolve()
 
@@ -99,7 +120,7 @@ class AssemblyHandler():
 
                 log.debug(f"Reading from file {assembly_source}")
 
-                for lineno, line in enumerate(asm_file, start=0):
+                for lineno, line in enumerate(asm_file, start = 0):
                     
                     # We are currently not interested in the contents
                     # of each line of code. We just want to   extract
@@ -112,7 +133,7 @@ class AssemblyHandler():
                     self.code.append(Codeline(
                         lineno = lineno,
                         data = line, 
-                        valid_insn = True if isa.is_instruction(line) else False)
+                        valid_insn = isa.is_instruction(line))
                     )
 
         except FileNotFoundError:
@@ -150,7 +171,7 @@ class AssemblyHandler():
             after identifying it.
              
         Returns:
-            - Codeline: A random `Codeline` from a random chunk."""
+            - Codeline: A random `Codeline` from a random `self.candidates` chunk."""
         random_chunk = random.randint(0, len(self.candidates) - 1)            
         random_codeline = random.randint(0, len(self.candidates[random_chunk]) - 1)      
 
@@ -163,20 +184,68 @@ class AssemblyHandler():
         else:
             codeline = self.candidates[random_chunk][random_codeline]
 
+        log.debug(f"Randomly selected {codeline=}")
         return codeline
 
-    def remove_from_source(self, codeline : Codeline) -> None:
-        """Modifies the corresponding assembly file (source) by removing 
-        the line which corresponds to `codeline`'s `lineno` attribute."""
+    def remove(self, codeline : Codeline, replace : bool = False) -> None:
+        """Creates a new assembly file by using the current `self.asm_code`
+        as a source and skips the  
+        the line which corresponds to `codeline`'s `lineno` attribute.
+        
+        Args:
+            - codeline (Codeline): The `Codeline` to be removed from the
+            assembly file.
+            - replace (bool): Replaces the old assembly file with the 
+            new one if True.
+        
+        Returns: Nothing"""
+
+        # Appending the line number that is eliminated each time
+        # to the filename stem each time.
+        new_filename = f"{self.asm_file.parent}/{self.asm_file.stem}_{codeline.lineno}{self.asm_file.suffix}"
+        
+        # Updating changelog to keep track of the edits to the asm file
+        self.asm_file_changelog.append(codeline)
+
+        with open(self.asm_file) as source, open(f"{new_filename}", 'w') as new_source:
+
+            for lineno, line in enumerate(source, start = 0):
+                
+                if lineno == codeline.lineno: 
+
+                    log.debug(f"Removing line #{lineno + 1} = {codeline.data}")
+
+                    # Update the lineno attribute of every codeline
+                    # that is below the just removed codeline. 
+                    for chunk in self.candidates:
+                        
+                        for codeline in chunk: 
+
+                            if codeline.lineno > lineno:
+                                codeline -= 1
+                            # TODO: Test this!
+                    continue
+                
+                new_source.write(f"{line}")
+
+        log.debug(f"Updating {self.asm_file=} to {new_filename}")
+
+        if replace:
+            self.asm_file.replace(new_filename)
+
+    def restore(self) -> None:
+        ...
         print("Todo!")
 
+
 def main():
+    """Sandbox/Testing Env"""
     C = ISA(pathlib.Path("../langs/riscv.isa"))
     A = AssemblyHandler(C, pathlib.Path("../sandbox/sbst_01/src/tests/test1.S"),chunksize=2)
     cands = A.get_random_candidate()
 
-    print(cands)
-    #print(cands)
+    #A.remove(A.get_random_candidate())
+
 
 if __name__ == "__main__":
 
