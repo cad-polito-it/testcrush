@@ -29,7 +29,70 @@ class Codeline:
             self.lineno -= 1
         
         return self
+    
+    def __iadd__(self, other : int):
+
+        if not isinstance(other, int):
+            raise TypeError(f"Unsupported type for +=: {type(other)}")
         
+        self.lineno += 1
+
+        return self
+    
+    def __gt__(self, other : 'Codeline|int') -> bool:
+        
+        if isinstance(other, int):
+            return self.lineno > other
+        elif isinstance(other, Codeline):
+            return self.lineno > other.lineno
+        else:
+            raise TypeError(f"Unsupported type for >: {type(other)}")
+
+    def __lt__(self, other : 'Codeline|int') -> bool:
+        
+        if isinstance(other, int):
+            return self.lineno < other
+        elif isinstance(other, Codeline):
+            return self.lineno < other.lineno
+        else:
+            raise TypeError(f"Unsupported type for <: {type(other)}")
+        
+    def __le__(self, other : 'Codeline|int') -> bool:
+        
+        if isinstance(other, int):
+            return self.lineno <= other
+        elif isinstance(other, Codeline):
+            return self.lineno <= other.lineno
+        else:
+            raise TypeError(f"Unsupported type for <=: {type(other)}")
+    
+    def __ge__(self, other : 'Codeline|int') -> bool:
+
+        if isinstance(other, int):
+            return self.lineno >= other
+        elif isinstance(other, Codeline):
+            return self.lineno >= other.lineno
+        else:
+            raise TypeError(f"Unsupported type for >=: {type(other)}")
+    
+    def __ne__(self, other : 'Codeline|int') -> bool:
+
+        if isinstance(other, int):
+            return self.lineno != other
+        elif isinstance(other, Codeline):
+            return self.lineno != other.lineno
+        else:
+            raise TypeError(f"Unsupported type for !=: {type(other)}")
+
+    def __eq__(self, other : 'Codeline|int') -> bool:
+
+        if isinstance(other, int):
+            return self.lineno == other
+        elif isinstance(other, Codeline):
+            return self.lineno == other.lineno
+        else:
+            raise TypeError(f"Unsupported type for ==: {type(other)}")
+
 class Singleton(type):
     
     _instances = {}
@@ -87,6 +150,7 @@ class ISA(metaclass = Singleton):
         
         Returns:
             - set: A set with all the ISA-lang mnemonics."""
+        
         return self.mnemonics
 
     def is_instruction(self, assembly_line : str) -> bool:
@@ -98,13 +162,13 @@ class ISA(metaclass = Singleton):
         Returns:
             - bool: True if `assembly_line` is in `mnemonics`, False otherwise.
         """
+
         potential_instruction = assembly_line.split()[0]
         return potential_instruction in self.mnemonics
     
 class AssemblyHandler():
-    """This class inherits from the Singleton `ISA` class and is responsible
-    for managing **one** assembly file. It operates on the `assembly_source`
-    file and removes/restores code lines."""
+    """This class  is responsible of managing **one** assembly file. 
+    It operates on the `assembly_source` file and removes/restores code lines."""
 
     def __init__(self, isa : ISA, assembly_source : pathlib.Path, chunksize : int = 1) -> 'AssemblyHandler':
         
@@ -132,7 +196,7 @@ class AssemblyHandler():
 
                     self.code.append(Codeline(
                         lineno = lineno,
-                        data = line, 
+                        data = fr"{line}", 
                         valid_insn = isa.is_instruction(line))
                     )
 
@@ -151,6 +215,7 @@ class AssemblyHandler():
             
         Returns:
             - pathlib.Path: The assembly source `pathlib.Path`."""
+        
         return self.asm_file
 
     def get_code(self) -> list[Codeline]:
@@ -160,7 +225,28 @@ class AssemblyHandler():
         
         Returns:
             - list: A list of `Codeline` entries."""
+        
         return self.code
+    
+    def get_candidate(self, lineno : int) -> Codeline:
+        """Returns the Codeline in candidates with the specified lineno
+        
+        Args:
+            - lineno (int): the line number of the candidate to be found.
+        
+        Returns:
+            - Codeline : the `Codeline` with `Codeline.lineno == lineno`
+        if found. Raises LookupError otherwise."""
+
+        for chunk in self.candidates:
+
+            for codeline in chunk:
+
+                if codeline.lineno == lineno:
+
+                    return codeline 
+        
+        raise LookupError(f"Requested Codeline with {lineno=} not found!")
 
     def get_random_candidate(self, pop_candidate = True) -> Codeline:
         """In a uniform random manner selects one `Codeline` and returns it
@@ -172,6 +258,7 @@ class AssemblyHandler():
              
         Returns:
             - Codeline: A random `Codeline` from a random `self.candidates` chunk."""
+        
         random_chunk = random.randint(0, len(self.candidates) - 1)            
         random_codeline = random.randint(0, len(self.candidates[random_chunk]) - 1)      
 
@@ -189,8 +276,8 @@ class AssemblyHandler():
 
     def remove(self, codeline : Codeline, replace : bool = False) -> None:
         """Creates a new assembly file by using the current `self.asm_code`
-        as a source and skips the  
-        the line which corresponds to `codeline`'s `lineno` attribute.
+        as a source and skips the  the line which corresponds to `codeline`'s 
+        `lineno` attribute.
         
         Args:
             - codeline (Codeline): The `Codeline` to be removed from the
@@ -200,52 +287,117 @@ class AssemblyHandler():
         
         Returns: Nothing"""
 
+        log.debug(f"Removing {codeline}")
+
         # Appending the line number that is eliminated each time
         # to the filename stem each time.
         new_filename = f"{self.asm_file.parent}/{self.asm_file.stem}_{codeline.lineno}{self.asm_file.suffix}"
-        
+        new_asm_file = pathlib.Path(new_filename)
+
         # Updating changelog to keep track of the edits to the asm file
         self.asm_file_changelog.append(codeline)
 
-        with open(self.asm_file) as source, open(f"{new_filename}", 'w') as new_source:
+        with open(self.asm_file) as source, open(f"{new_asm_file}", 'w') as new_source:
 
             for lineno, line in enumerate(source, start = 0):
-                
-                if lineno == codeline.lineno: 
 
-                    log.debug(f"Removing line #{lineno + 1} = {codeline.data}")
+                if codeline == lineno: 
+                    
+                    log.debug(f"Removing line #{lineno} = {codeline.data}")
 
                     # Update the lineno attribute of every codeline
                     # that is below the just removed codeline. 
                     for chunk in self.candidates:
                         
-                        for codeline in chunk: 
+                        for chunk_codeline in chunk: 
 
-                            if codeline.lineno > lineno:
-                                codeline -= 1
-                            # TODO: Test this!
+                            if chunk_codeline > lineno:
+
+                                chunk_codeline -= 1
+                                
                     continue
                 
                 new_source.write(f"{line}")
 
         log.debug(f"Updating {self.asm_file=} to {new_filename}")
+        log.debug(f"Changelog entries are now {self.asm_file_changelog}")
 
         if replace:
-            self.asm_file.replace(new_filename)
+            log.debug(f"Overwritting {self.asm_file} with {new_filename}")
+            new_asm_file.replace(str(self.asm_file))
+        
+        self.asm_file = new_asm_file
 
-    def restore(self) -> None:
-        ...
-        print("Todo!")
+        return
+        
+    def restore(self, replace = False) -> None:
+        """Re-enters the last `Codeline` from the changelog to the assembly
+        file. The `self.candidates` lineno fields are updated if >= than the 
+        entry which is being restored.
+        
+        Args: 
+            - replace (bool): Replaces the old assembly file with the 
+            new one if True.
+        
+        Returns: Nothing"""
 
+        if not self.asm_file_changelog:
+            return
+        
+        # Removing the last segment of the stem of current
+        # assembly filename as, we are undoing the  latest
+        # change.
+        new_filename_stem = "_".join(self.asm_file.stem.split('_')[:-1])
+        new_filename = f"{self.asm_file.parent}/{new_filename_stem}{self.asm_file.suffix}"
+        new_asm_file = pathlib.Path(new_filename)
+
+        codeline_to_be_restored : Codeline = self.asm_file_changelog.pop()
+
+        log.debug(f"Restoring {codeline_to_be_restored}")
+
+        # The candidates that have a lineno >= to the line
+        # to be restored must get a +1 to their lineno at-
+        # ribute in order to be aligned with the  original
+        # assembly source file line numbers.
+        for chunk in self.candidates:
+            
+            for chunk_codeline in chunk:
+
+                if chunk_codeline >= codeline_to_be_restored:
+                    
+                    chunk_codeline += 1
+        
+        with open(self.asm_file) as source, open(new_asm_file, 'w') as new_source:
+
+            for lineno, line in enumerate(source, start = 0):
+
+                if codeline_to_be_restored != lineno:
+                    
+                    new_source.write(line)
+                
+                else:
+                
+                    log.debug(f"Re-inserting line#{lineno} to assembly source.")
+                    new_source.write(f"{codeline_to_be_restored.data}\n")
+        
+        log.debug(f"Updating {self.asm_file=} to {new_asm_file}")
+        log.debug(f"Changelog entries are now {self.asm_file_changelog}")
+
+        if replace:
+            log.debug(f"Overwritting {self.asm_file} with {new_filename}")
+            new_asm_file.replace(str(self.asm_file))
+
+        self.asm_file = new_asm_file
+
+        return
 
 def main():
     """Sandbox/Testing Env"""
     C = ISA(pathlib.Path("../langs/riscv.isa"))
-    A = AssemblyHandler(C, pathlib.Path("../sandbox/sbst_01/src/tests/test1.S"),chunksize=2)
-    cands = A.get_random_candidate()
-
-    #A.remove(A.get_random_candidate())
-
+    A = AssemblyHandler(C, pathlib.Path("../sandbox/sbst_01/src/tests/test1.S"), chunksize = 2)
+    random_candidate = A.get_random_candidate()
+    A.remove(random_candidate)
+    A.restore()
 
 if __name__ == "__main__":
 
@@ -254,7 +406,7 @@ if __name__ == "__main__":
     log_stream = logging.StreamHandler(stream = sys.stdout)
     log_stream.setLevel(logging.INFO)
     log_stream.setFormatter(logging.Formatter('[%(levelname)s]: %(message)s'))
-    log_file = logging.FileHandler(filename = "debug.log")
+    log_file = logging.FileHandler(filename = "debug.log", mode = 'w')
     log_file.setLevel(logging.DEBUG)
     log_file.setFormatter(logging.Formatter('[%(levelname)s|%(module)s|%(funcName)s]: %(message)s'))
     log.addHandler(log_stream)
