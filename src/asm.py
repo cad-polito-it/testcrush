@@ -7,6 +7,17 @@ import re
 import random
 from dataclasses import dataclass 
 
+log = logging.getLogger("testcrush logger")
+log.setLevel(logging.DEBUG)
+log_stream = logging.StreamHandler(stream = sys.stdout)
+log_stream.setLevel(logging.INFO)
+log_stream.setFormatter(logging.Formatter('[%(levelname)s]: %(message)s'))
+log_file = logging.FileHandler(filename = "debug.log", mode = 'w')
+log_file.setLevel(logging.DEBUG)
+log_file.setFormatter(logging.Formatter('[%(levelname)s|%(module)s|%(funcName)s]: %(message)s'))
+log.addHandler(log_stream)
+log.addHandler(log_file)
+
 @dataclass 
 class Codeline:
     """Represents a line of assembly code"""
@@ -15,7 +26,7 @@ class Codeline:
     valid_insn : bool
 
     def __repr__(self):
-        return f"Codeline({self.lineno=}, {self.data}, {self.valid_insn=})"
+        return f"Codeline({self.lineno}, \"{self.data}\", valid_insn = {self.valid_insn})"
 
     def __str__(self):
         return f"[#{self.lineno}]: {self.data}"
@@ -114,34 +125,36 @@ class ISA(metaclass = Singleton):
     def __init__(self, isa : pathlib.Path) -> "ISA":
 
         self.mnemonics : set = set()
-        self.source: pathlib.Path = str()
+        self.source: pathlib.Path = isa.resolve()
 
         try: 
-            with open(isa) as isa_keywords:
+            with open(self.source) as isa_keywords:
 
-                log.debug(f"Reading ISA language from file {isa.resolve()}")
+                log.debug(f"Reading ISA language from file {self.source}")
                 lines = [ x.rstrip() for x in isa_keywords.readlines() ]
         
         except FileNotFoundError:
-            log.fatal(f"ISA File {isa} not found! Exiting...")
+            log.fatal(f"ISA File {self.source} not found! Exiting...")
             exit(1)
 
         for lineno, line in enumerate(lines, start = 1):
+            
+            if not line:
+                raise SyntaxError(f"Empty line found at line number {lineno} of {self.source} file")
 
             # Simple sanity check 
             if line[0] != '#' and len(line.split()) > 1:
 
-                log.fatal(f"Wrong syntax at line {lineno} of {isa} file")
-                exit(1)
+                raise SyntaxError(f"Wrong syntax at line {lineno} of {self.source} file")
 
             # Skip comment lines 
             if line[0] == '#': 
                 continue
             
-            self.mnemonics.add(line)
+            self.mnemonics.add(line.strip())
 
     def __repr__(self):
-        return f"ISA('{str(self.source)})"
+        return f"ISA({str(self.source)})"
     
     def get_mnemonics(self) -> set:
         """Returns a set with the ISA-lang mnemonics.
@@ -335,7 +348,7 @@ class AssemblyHandler():
         file. The `self.candidates` lineno fields are updated if >= than the 
         entry which is being restored.
         
-        Args: 
+        Args:
             - replace (bool): Replaces the old assembly file with the 
             new one if True.
         
@@ -400,16 +413,5 @@ def main():
     A.restore()
 
 if __name__ == "__main__":
-
-    log = logging.getLogger("SQUEEZER_LOGGER")
-    log.setLevel(logging.DEBUG)
-    log_stream = logging.StreamHandler(stream = sys.stdout)
-    log_stream.setLevel(logging.INFO)
-    log_stream.setFormatter(logging.Formatter('[%(levelname)s]: %(message)s'))
-    log_file = logging.FileHandler(filename = "debug.log", mode = 'w')
-    log_file.setLevel(logging.DEBUG)
-    log_file.setFormatter(logging.Formatter('[%(levelname)s|%(module)s|%(funcName)s]: %(message)s'))
-    log.addHandler(log_stream)
-    log.addHandler(log_file)
 
     main()
