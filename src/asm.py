@@ -186,7 +186,7 @@ class AssemblyHandler():
     def __init__(self, isa : ISA, assembly_source : pathlib.Path, chunksize : int = 1) -> 'AssemblyHandler':
         
         self.isa : ISA = isa
-        self.asm_file : pathlib.Path = assembly_source
+        self.asm_file : pathlib.Path = assembly_source.resolve()
         self.code : list[Codeline] = list() # 0-based indexing for lineno attribute!
         self.asm_file_changelog : list = list()
 
