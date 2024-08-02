@@ -1,4 +1,9 @@
-#ignore sandbox
+#ignore sandbox directory
 sandbox/*
 #ignore all pycache dirs
 __pycache__/
+# ignore all logfiles 
+*.log
+# ignore python3 coverage files
+htmlcov/
+.coverage
