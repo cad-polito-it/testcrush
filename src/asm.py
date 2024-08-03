@@ -338,12 +338,14 @@ class AssemblyHandler():
         if replace:
             log.debug(f"Overwritting {self.asm_file} with {new_filename}")
             new_asm_file.replace(str(self.asm_file))
+
+        else:
         
-        self.asm_file = new_asm_file
+            self.asm_file = new_asm_file
 
         return
         
-    def restore(self, replace = False) -> None:
+    def restore(self, replace : bool = False) -> None:
         """Re-enters the last `Codeline` from the changelog to the assembly
         file. The `self.candidates` lineno fields are updated if >= than the 
         entry which is being restored.
@@ -405,12 +407,12 @@ class AssemblyHandler():
         return
 
 def main():
-    """Sandbox/Testing Env"""
+    """Sandbox/Testing Env
     C = ISA(pathlib.Path("../langs/riscv.isa"))
     A = AssemblyHandler(C, pathlib.Path("../sandbox/sbst_01/src/tests/test1.S"), chunksize = 2)
     random_candidate = A.get_random_candidate()
     A.remove(random_candidate)
-    A.restore()
+    A.restore()"""
 
 if __name__ == "__main__":
 
