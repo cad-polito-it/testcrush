@@ -7,6 +7,8 @@ import unittest.mock as mock
 import asm
 import pathlib 
 import os
+import copy
+import shutil
 
 class CodelineTest(unittest.TestCase):
     
@@ -373,8 +375,6 @@ class AssemblyHandlerTest(unittest.TestCase):
         test_obj = self.gen_rv_handler()
 
         self.assertEqual(self.EXPECTED_CANDIDATES, test_obj.candidates)  
-    
-
         self.assertEqual(test_obj.code, self.EXPECTED_CODE)
 
         self.reset_isa_singleton(test_obj)
@@ -424,3 +424,93 @@ class AssemblyHandlerTest(unittest.TestCase):
             test_obj.get_candidate(666)
 
         self.assertEqual(str(cm.exception), f"Requested Codeline with lineno=666 not found!")
+
+    def test_remove_line_reduction(self):
+
+        """After removing a candidate, the candidates that have a lineno
+        > than the just removed one must be updated by reducing their 
+        lineno attribute by 1 (-=1)."""
+
+        remove_lineno = 12
+        test_obj = self.gen_rv_handler()
+        candidate = test_obj.get_candidate(remove_lineno)
+
+        # Deep copy required in order to generate separate 
+        # asm.Codeline objects here.
+        candidates_before = [x for chunk in copy.deepcopy(test_obj.candidates) for x in chunk]
+        test_obj.remove(candidate)
+        candidates_after = [x for chunk in test_obj.candidates for x in chunk]
+
+        removed_candidate_index = candidates_before.index(candidate)
+
+        for index, (cand_before, cand_after) in enumerate(zip(candidates_before, candidates_after)):
+
+            if index <= removed_candidate_index: continue 
+
+            self.assertEqual(cand_before.lineno -1, cand_after.lineno)
+
+        # Also guarantee that the candidate was not popped from the list
+        self.assertEqual(removed_candidate_index, candidates_after.index(candidate))
+
+        self.reset_isa_singleton(test_obj)
+
+    def test_remove_new_file_no_replace(self):
+
+        remove_lineno = 12
+
+        test_obj = self.gen_rv_handler()
+        candidate = test_obj.get_candidate(remove_lineno)
+                
+        test_obj.remove(candidate)
+
+        # Check that a new file has been created
+        expected_file = pathlib.Path(f"assembly/riscv_test_{candidate.lineno}.S")
+        self.assertTrue(expected_file.exists())        
+        self.assertEqual(str(test_obj.asm_file), str(expected_file.resolve()))
+
+        new_test_obj = self.gen_rv_handler(expected_file)
+
+        # Check that new assembly file does not contain the candidate 
+        # i.e., diff the two files
+        self.assertNotIn(str(candidate), [str(x) for x in new_test_obj.get_code()])
+
+        # Ensure that the candidate is present in the old one.
+        self.assertIn(str(candidate), [str(x) for x in test_obj.get_code()])
+
+        # Delete the file
+        expected_file.unlink()
+        self.reset_isa_singleton(test_obj)
+
+    def test_remove_new_file_replace(self):
+
+        remove_lineno = 12
+
+        test_obj = self.gen_rv_handler()
+        candidate = test_obj.get_candidate(remove_lineno)
+        
+        # Create a copy to test remove with the replacement of 
+        # the original file. Copy it here because the asm_file 
+        # attribute will be modified by the first remove  call
+        temp_file = pathlib.Path(f"{test_obj.asm_file}.orig")
+        shutil.copy2(test_obj.asm_file, temp_file)
+        
+        test_obj.remove(candidate, replace = True)
+
+        # Check that the assembly source remains the same.
+        expected_file = pathlib.Path(f"assembly/riscv_test.S")
+        self.assertTrue(expected_file.exists())        
+        self.assertEqual(str(test_obj.asm_file), str(expected_file.resolve()))
+
+        new_test_obj = self.gen_rv_handler(expected_file)
+
+        # Check that new assembly file does not contain the candidate 
+        # i.e., diff the two files
+        self.assertNotIn(str(candidate), [str(x) for x in new_test_obj.get_code()])
+
+        # Ensure that the candidate is present in the old one.
+        self.assertIn(str(candidate), [str(x) for x in test_obj.get_code()])
+
+        shutil.copy2(temp_file, expected_file)
+        temp_file.unlink()
+
+        self.reset_isa_singleton(test_obj)        
