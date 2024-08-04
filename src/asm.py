@@ -187,16 +187,18 @@ class AssemblyHandler():
         
         self.isa : ISA = isa
         self.asm_file : pathlib.Path = assembly_source.resolve()
-        self.code : list[Codeline] = list() # 0-based indexing for lineno attribute!
         self.asm_file_changelog : list = list()
+        self.candidates : list[list[Codeline]] = list() # holds only instructions!
 
         assembly_source = assembly_source.resolve()
 
         try:
+            code = list()
             with open(assembly_source) as asm_file:
 
                 log.debug(f"Reading from file {assembly_source}")
 
+                # 0-based indexing for lineno!
                 for lineno, line in enumerate(asm_file, start = 0):
                     
                     # We are currently not interested in the contents
@@ -207,7 +209,7 @@ class AssemblyHandler():
                     if not line: 
                         continue
 
-                    self.code.append(Codeline(
+                    code.append(Codeline(
                         lineno = lineno,
                         data = fr"{line}", 
                         valid_insn = isa.is_instruction(line))
@@ -218,7 +220,7 @@ class AssemblyHandler():
             log.fatal(f"Assembly source file {assembly_source} not found! Exiting...")
             exit(1)
         
-        self.candidates = [codeline for codeline in self.code if codeline.valid_insn]
+        self.candidates = [codeline for codeline in code if codeline.valid_insn]
         self.candidates = [self.candidates[i:i + chunksize] for i in range(0, len(self.candidates), chunksize)]
 
     def get_asm_source(self) -> pathlib.Path:
@@ -239,7 +241,7 @@ class AssemblyHandler():
         Returns:
             - list: A list of `Codeline` entries."""
         
-        return self.code
+        return [codeline for chunk in self.candidates for codeline in chunk]
     
     def get_candidate(self, lineno : int) -> Codeline:
         """Returns the Codeline in candidates with the specified lineno
@@ -377,24 +379,35 @@ class AssemblyHandler():
         for chunk in self.candidates:
             
             for chunk_codeline in chunk:
+                
+                # If codeline is not removed from the self.candidates
+                # then be careful not to modify it. Skip it as it 'll
+                # not affect the rest of the code. Otherwise    there
+                # will be an off-by-one error on the insertion point.
+                if chunk_codeline is codeline_to_be_restored:
+
+                    continue 
 
                 if chunk_codeline >= codeline_to_be_restored:
                     
+                    log.debug(f"Incrementing {chunk_codeline.data} to")
                     chunk_codeline += 1
-        
+                    log.debug(f"\t{chunk_codeline}")
+
         with open(self.asm_file) as source, open(new_asm_file, 'w') as new_source:
-
+            
+            line_restored = False
             for lineno, line in enumerate(source, start = 0):
-
-                if codeline_to_be_restored != lineno:
-                    
-                    new_source.write(line)
                 
-                else:
-                
-                    log.debug(f"Re-inserting line#{lineno} to assembly source.")
+                if codeline_to_be_restored == lineno:
                     new_source.write(f"{codeline_to_be_restored.data}\n")
-        
+                    line_restored = True 
+
+                new_source.write(line)
+            
+            if not line_restored: # its the very last line 
+                new_source.write(f"{codeline_to_be_restored.data}\n")
+
         log.debug(f"Updating {self.asm_file=} to {new_asm_file}")
         log.debug(f"Changelog entries are now {self.asm_file_changelog}")
 
@@ -410,8 +423,9 @@ def main():
     """Sandbox/Testing Env
     C = ISA(pathlib.Path("../langs/riscv.isa"))
     A = AssemblyHandler(C, pathlib.Path("../sandbox/sbst_01/src/tests/test1.S"), chunksize = 2)
-    random_candidate = A.get_random_candidate()
+    random_candidate = A.get_candidate(22)
     A.remove(random_candidate)
+    print(A.asm_file_changelog)
     A.restore()"""
 
 if __name__ == "__main__":
