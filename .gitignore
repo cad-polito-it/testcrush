@@ -7,3 +7,5 @@ __pycache__/
 # ignore python3 coverage files
 htmlcov/
 .coverage
+# ignore .bak files
+*.bak
