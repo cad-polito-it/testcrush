@@ -314,13 +314,6 @@ class AssemblyHandlerTest(unittest.TestCase):
     ]
 
     EXPECTED_CODE =  [
-        asm.Codeline(0, "section .text", valid_insn = False), 
-        asm.Codeline(1, ".global test1", valid_insn = False), 
-        asm.Codeline(2, ".type test1, @function", valid_insn = False), 
-        asm.Codeline(3, "test_result:", valid_insn = False), 
-        asm.Codeline(4, ".space 1024", valid_insn = False), 
-        asm.Codeline(6, "test1:", valid_insn = False), 
-        asm.Codeline(7, "# ABI prologue", valid_insn = False), 
         asm.Codeline(8, "addi sp, sp, -112 # allocate 112 bytes on the stack", valid_insn = True), 
         asm.Codeline(9, "sw ra, 104(sp) # save return address", valid_insn = True), 
         asm.Codeline(10, "sw s0, 96(sp) # save callee-saved registers", valid_insn = True), 
@@ -375,7 +368,7 @@ class AssemblyHandlerTest(unittest.TestCase):
         test_obj = self.gen_rv_handler()
 
         self.assertEqual(self.EXPECTED_CANDIDATES, test_obj.candidates)  
-        self.assertEqual(test_obj.code, self.EXPECTED_CODE)
+        self.assertEqual(test_obj.get_code(), self.EXPECTED_CODE)
 
         self.reset_isa_singleton(test_obj)
 
@@ -456,61 +449,113 @@ class AssemblyHandlerTest(unittest.TestCase):
 
     def test_remove_new_file_no_replace(self):
 
-        remove_lineno = 12
+        total_lines = 23
+        
+        for lineno in range(total_lines):
+            
+            test_obj = self.gen_rv_handler()
+            try:
+                candidate = test_obj.get_candidate(lineno)
+            except LookupError:
+                continue    
+            test_obj.remove(candidate)
 
-        test_obj = self.gen_rv_handler()
-        candidate = test_obj.get_candidate(remove_lineno)
-                
-        test_obj.remove(candidate)
+            # Check that a new file has been created
+            expected_file = pathlib.Path(f"assembly/riscv_test_{candidate.lineno}.S")
+            self.assertTrue(expected_file.exists())        
+            self.assertEqual(str(test_obj.asm_file), str(expected_file.resolve()))
 
-        # Check that a new file has been created
-        expected_file = pathlib.Path(f"assembly/riscv_test_{candidate.lineno}.S")
-        self.assertTrue(expected_file.exists())        
-        self.assertEqual(str(test_obj.asm_file), str(expected_file.resolve()))
+            new_test_obj = self.gen_rv_handler(expected_file)
 
-        new_test_obj = self.gen_rv_handler(expected_file)
+            # Check that new assembly file does not contain the candidate 
+            # i.e., diff the two files
+            self.assertNotIn(str(candidate), [str(x) for x in new_test_obj.get_code()])
 
-        # Check that new assembly file does not contain the candidate 
-        # i.e., diff the two files
-        self.assertNotIn(str(candidate), [str(x) for x in new_test_obj.get_code()])
+            # Ensure that the candidate is present in the old one.
+            self.assertIn(str(candidate), [str(x) for x in test_obj.get_code()])
 
-        # Ensure that the candidate is present in the old one.
-        self.assertIn(str(candidate), [str(x) for x in test_obj.get_code()])
-
-        # Delete the file
-        expected_file.unlink()
-        self.reset_isa_singleton(test_obj)
+            # Delete the file
+            expected_file.unlink()
+            self.reset_isa_singleton(test_obj)
 
     def test_remove_new_file_replace(self):
 
-        remove_lineno = 12
+        total_lines = 23
 
-        test_obj = self.gen_rv_handler()
-        candidate = test_obj.get_candidate(remove_lineno)
-        
-        # Create a copy to test remove with the replacement of 
-        # the original file. Copy it here because the asm_file 
-        # attribute will be modified by the first remove  call
-        temp_file = pathlib.Path(f"{test_obj.asm_file}.orig")
-        shutil.copy2(test_obj.asm_file, temp_file)
-        
-        test_obj.remove(candidate, replace = True)
+        for lineno in range(total_lines):
 
-        # Check that the assembly source remains the same.
-        expected_file = pathlib.Path(f"assembly/riscv_test.S")
-        self.assertTrue(expected_file.exists())        
-        self.assertEqual(str(test_obj.asm_file), str(expected_file.resolve()))
+            test_obj = self.gen_rv_handler()
+            try:
+                candidate = test_obj.get_candidate(lineno)
+            except LookupError:
+                continue    
+            
+            # Create a copy to test remove with the replacement of 
+            # the original file. Copy it here because the asm_file 
+            # attribute will be modified by the first remove  call
+            temp_file = pathlib.Path(f"{test_obj.asm_file}.orig")
+            shutil.copy2(test_obj.asm_file, temp_file)
+            
+            test_obj.remove(candidate, replace = True)
 
-        new_test_obj = self.gen_rv_handler(expected_file)
+            # Check that the assembly source remains the same.
+            expected_file = pathlib.Path(f"assembly/riscv_test.S")
+            self.assertTrue(expected_file.exists())        
+            self.assertEqual(str(test_obj.asm_file), str(expected_file.resolve()))
 
-        # Check that new assembly file does not contain the candidate 
-        # i.e., diff the two files
-        self.assertNotIn(str(candidate), [str(x) for x in new_test_obj.get_code()])
+            new_test_obj = self.gen_rv_handler(expected_file)
 
-        # Ensure that the candidate is present in the old one.
-        self.assertIn(str(candidate), [str(x) for x in test_obj.get_code()])
+            # Check that new assembly file does not contain the candidate 
+            # i.e., diff the two files
+            self.assertNotIn(str(candidate), [str(x) for x in new_test_obj.get_code()])
 
-        shutil.copy2(temp_file, expected_file)
-        temp_file.unlink()
+            # Ensure that the candidate is present in the old one.
+            self.assertIn(str(candidate), [str(x) for x in test_obj.get_code()])
 
-        self.reset_isa_singleton(test_obj)        
+            shutil.copy2(temp_file, expected_file)
+            temp_file.unlink()
+
+            self.reset_isa_singleton(test_obj)
+    
+    def test_restore(self):
+
+        total_lines = 23
+
+        backup = pathlib.Path("assembly/riscv_test.S.bak")
+        original = pathlib.Path("assembly/riscv_test.S")
+
+        shutil.copy2(original, backup)
+
+        for lineno in range(total_lines):
+
+            test_obj = self.gen_rv_handler()
+            
+            try:
+                candidate = test_obj.get_candidate(lineno)
+            except LookupError:
+                continue 
+
+            test_obj.remove(candidate)
+
+            # Check changelog entries
+            self.assertEqual(test_obj.asm_file_changelog, [candidate])
+            
+            test_obj.restore()
+
+            # Check again that changelog is empty now
+            self.assertEqual(test_obj.asm_file_changelog, [])
+
+            # Test the differences of the files
+            test_obj_new = self.gen_rv_handler(test_obj.asm_file)
+
+            # The code must be the same after restoration
+            self.assertEqual(len(test_obj.get_code()), len(test_obj_new.get_code()))
+            self.assertEqual(test_obj.get_code(), test_obj_new.get_code())
+
+            self.reset_isa_singleton(test_obj)
+
+            # Purge generated .S files
+            pathlib.Path(f"assembly/riscv_test_{lineno}.S").unlink()
+
+        shutil.copy2(backup, original)
+        backup.unlink()
