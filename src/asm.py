@@ -4,6 +4,7 @@ import pathlib
 import logging
 import sys
 import re
+import subprocess
 import random
 from dataclasses import dataclass 
 
@@ -37,7 +38,7 @@ class Codeline:
             raise TypeError(f"Unsupported type for -=: {type(other)}")
         
         if self.lineno > 0:
-            self.lineno -= 1
+            self.lineno -= other
         
         return self
     
@@ -46,7 +47,7 @@ class Codeline:
         if not isinstance(other, int):
             raise TypeError(f"Unsupported type for +=: {type(other)}")
         
-        self.lineno += 1
+        self.lineno += other
 
         return self
     
@@ -419,14 +420,65 @@ class AssemblyHandler():
 
         return
 
+    def compile(self, exit_on_error : bool = False, *instructions : str) -> bool:
+        """Executes a sequence of bash instructions to compile the `self.asm_file`.
+        Uses subprocess for each instruction and optionally exits on error.
+        
+        Args:
+            - exit_on_error (bool) : If an error is encountered during
+            compilation and this is True, then the program terminates.
+            Otherwise it continues.
+            - *instructions (str) : A sequence of /bin/bash commands
+            required in order to compile `self.asm_file`.
+        
+        Returns: 
+            - bool : True if no message was written to `stderr` from any
+            of the executed instructions (subprocesses). False otherwise. """
+
+        if not len(instructions):
+            return False
+
+        for cmd in instructions:
+
+            log.debug(f"Executing instruction '{cmd}'.")
+            
+            with subprocess.Popen(
+                ["/bin/bash", "-c", cmd],
+                stdin = subprocess.PIPE,
+                stdout = subprocess.PIPE,
+                stderr = subprocess.PIPE, 
+                text = True) as process:
+
+                stdout, stderr = process.communicate()
+                
+                if stderr:
+                    log.debug(f"Error during execution of {cmd}\n\
+                    ---------[MESSAGE]---------\n\
+                    {'-'.join(stderr.splitlines())}\n\
+                    ---------------------------\n")
+
+                    if exit_on_error:
+
+                        log.fatal(f"Unrecoverable Error during compilation of {self.asm_file}. Exiting...")
+                        exit(1)
+
+                    return False
+
+                for line in stdout.splitlines():
+                    log.debug(f"{cmd}: {line.rstrip()}")
+        
+        return True
+            
+
 def main():
-    """Sandbox/Testing Env
+    """Sandbox/Testing Env"""
     C = ISA(pathlib.Path("../langs/riscv.isa"))
     A = AssemblyHandler(C, pathlib.Path("../sandbox/sbst_01/src/tests/test1.S"), chunksize = 2)
-    random_candidate = A.get_candidate(22)
-    A.remove(random_candidate)
-    print(A.asm_file_changelog)
-    A.restore()"""
+    #random_candidate = A.get_candidate(22)
+    #A.remove(random_candidate)
+    #print(A.asm_file_changelog)
+    #A.restore()
+    A.compile('make all --directory ../sandbox/sbst_01/src')
 
 if __name__ == "__main__":
 
