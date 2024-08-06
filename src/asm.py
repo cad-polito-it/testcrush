@@ -5,7 +5,10 @@ import logging
 import sys
 import re
 import subprocess
+import tempfile
 import random
+import shutil 
+
 from dataclasses import dataclass 
 
 log = logging.getLogger("testcrush logger")
@@ -15,7 +18,7 @@ log_stream.setLevel(logging.INFO)
 log_stream.setFormatter(logging.Formatter('[%(levelname)s]: %(message)s'))
 log_file = logging.FileHandler(filename = "debug.log", mode = 'w')
 log_file.setLevel(logging.DEBUG)
-log_file.setFormatter(logging.Formatter('[%(levelname)s|%(module)s|%(funcName)s]: %(message)s'))
+log_file.setFormatter(logging.Formatter('%(lineno)d:[%(levelname)s|%(module)s|%(funcName)s]: %(message)s'))
 log.addHandler(log_stream)
 log.addHandler(log_file)
 
@@ -290,7 +293,7 @@ class AssemblyHandler():
         log.debug(f"Randomly selected {codeline=}")
         return codeline
 
-    def remove(self, codeline : Codeline, replace : bool = False) -> None:
+    def remove(self, codeline : Codeline) -> None:
         """Creates a new assembly file by using the current `self.asm_code`
         as a source and skips the  the line which corresponds to `codeline`'s 
         `lineno` attribute.
@@ -298,79 +301,50 @@ class AssemblyHandler():
         Args:
             - codeline (Codeline): The `Codeline` to be removed from the
             assembly file.
-            - replace (bool): Replaces the old assembly file with the 
-            new one if True.
         
         Returns: Nothing"""
 
-        log.debug(f"Removing {codeline}")
-
-        # Appending the line number that is eliminated each time
-        # to the filename stem each time.
-        new_filename = f"{self.asm_file.parent}/{self.asm_file.stem}_{codeline.lineno}{self.asm_file.suffix}"
-        new_asm_file = pathlib.Path(new_filename)
-
-        # Updating changelog to keep track of the edits to the asm file
-        self.asm_file_changelog.append(codeline)
-
-        with open(self.asm_file) as source, open(f"{new_asm_file}", 'w') as new_source:
+        with open(self.asm_file) as source, tempfile.NamedTemporaryFile('w', delete = False) as new_source:
 
             for lineno, line in enumerate(source, start = 0):
 
                 if codeline == lineno: 
-                    
+
                     log.debug(f"Removing line #{lineno} = {codeline.data}")
 
-                    # Update the lineno attribute of every codeline
-                    # that is below the just removed codeline. 
-                    for chunk in self.candidates:
-                        
-                        for chunk_codeline in chunk: 
-
-                            if chunk_codeline > lineno:
-
-                                chunk_codeline -= 1
-                                
                     continue
-                
+
                 new_source.write(f"{line}")
 
-        log.debug(f"Updating {self.asm_file=} to {new_filename}")
+            new_file = pathlib.Path(new_source.name)
+            new_file.replace(self.asm_file)
+
+        # Update the lineno attribute of every codeline
+        # that is below the just removed codeline. 
+        for chunk in self.candidates:
+
+            for chunk_codeline in chunk: 
+
+                if chunk_codeline > codeline.lineno:
+
+                    chunk_codeline -= 1
+
+        # Updating changelog to keep track of the edits to the asm file
+        self.asm_file_changelog.append(codeline)
         log.debug(f"Changelog entries are now {self.asm_file_changelog}")
 
-        if replace:
-            log.debug(f"Overwritting {self.asm_file} with {new_filename}")
-            new_asm_file.replace(str(self.asm_file))
-
-        else:
-        
-            self.asm_file = new_asm_file
-
-        return
-        
-    def restore(self, replace : bool = False) -> None:
+    def restore(self) -> None:
         """Re-enters the last `Codeline` from the changelog to the assembly
         file. The `self.candidates` lineno fields are updated if >= than the 
         entry which is being restored.
         
-        Args:
-            - replace (bool): Replaces the old assembly file with the 
-            new one if True.
-        
         Returns: Nothing"""
 
         if not self.asm_file_changelog:
+            log.debug(f"Changelog is empty, nothing to restore!")
             return
         
-        # Removing the last segment of the stem of current
-        # assembly filename as, we are undoing the  latest
-        # change.
-        new_filename_stem = "_".join(self.asm_file.stem.split('_')[:-1])
-        new_filename = f"{self.asm_file.parent}/{new_filename_stem}{self.asm_file.suffix}"
-        new_asm_file = pathlib.Path(new_filename)
-
         codeline_to_be_restored : Codeline = self.asm_file_changelog.pop()
-
         log.debug(f"Restoring {codeline_to_be_restored}")
 
         # The candidates that have a lineno >= to the line
@@ -391,11 +365,9 @@ class AssemblyHandler():
 
                 if chunk_codeline >= codeline_to_be_restored:
                     
-                    log.debug(f"Incrementing {chunk_codeline.data} to")
                     chunk_codeline += 1
-                    log.debug(f"\t{chunk_codeline}")
 
-        with open(self.asm_file) as source, open(new_asm_file, 'w') as new_source:
+        with open(self.asm_file) as source, tempfile.NamedTemporaryFile('w', delete = False) as new_source:
             
             line_restored = False
             for lineno, line in enumerate(source, start = 0):
@@ -409,16 +381,10 @@ class AssemblyHandler():
             if not line_restored: # its the very last line 
                 new_source.write(f"{codeline_to_be_restored.data}\n")
 
-        log.debug(f"Updating {self.asm_file=} to {new_asm_file}")
-        log.debug(f"Changelog entries are now {self.asm_file_changelog}")
+            log.debug(f"Changelog entries are now {self.asm_file_changelog}")
 
-        if replace:
-            log.debug(f"Overwritting {self.asm_file} with {new_filename}")
-            new_asm_file.replace(str(self.asm_file))
-
-        self.asm_file = new_asm_file
-
-        return
+            new_file = pathlib.Path(new_source.name)
+            new_file.replace(self.asm_file)
 
     def compile(self, exit_on_error : bool = False, *instructions : str) -> bool:
         """Executes a sequence of bash instructions to compile the `self.asm_file`.
@@ -469,16 +435,39 @@ class AssemblyHandler():
         
         return True
             
-
+    def save(self):
+        """Saves the current version of assembly file. The filename
+        will be the original stem plus all current changelog codelines'
+        linenos seperated with a dash. If `self.asm_file_changelog` is
+        empty, it does nothing.
+        
+        Args:
+            
+        Returns: Nothing"""
+            
+        if not self.asm_file_changelog:
+            log.debug(f"No changes present to be saved.")
+            return
+        
+        filename = self.asm_file.parent /\
+            pathlib.Path(f"{self.asm_file.stem}-"\
+            + '-'.join([str(codeline.lineno) for codeline in self.asm_file_changelog])\
+            + f"{self.asm_file.suffix}")
+        
+        shutil.copy(self.asm_file, filename)
+        
+        
 def main():
     """Sandbox/Testing Env"""
     C = ISA(pathlib.Path("../langs/riscv.isa"))
     A = AssemblyHandler(C, pathlib.Path("../sandbox/sbst_01/src/tests/test1.S"), chunksize = 2)
     #random_candidate = A.get_candidate(22)
-    #A.remove(random_candidate)
+    A.remove(A.get_random_candidate())
+    A.remove(A.get_random_candidate())
     #print(A.asm_file_changelog)
-    #A.restore()
-    A.compile('make all --directory ../sandbox/sbst_01/src')
+    A.restore()
+    A.restore()
+    #A.compile('make all --directory ../sandbox/sbst_01/src')
 
 if __name__ == "__main__":
 
