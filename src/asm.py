@@ -22,7 +22,7 @@ log_file.setFormatter(logging.Formatter('%(lineno)d:[%(levelname)s|%(module)s|%(
 log.addHandler(log_stream)
 log.addHandler(log_file)
 
-@dataclass 
+@dataclass
 class Codeline:
     """Represents a line of assembly code"""
     lineno : int 
@@ -163,9 +163,10 @@ class ISA(metaclass = Singleton):
     def get_mnemonics(self) -> set:
         """Returns a set with the ISA-lang mnemonics.
         
-        Args:
+        - Parameters:
+            - None
         
-        Returns:
+        - Returns:
             - set: A set with all the ISA-lang mnemonics."""
         
         return self.mnemonics
@@ -173,10 +174,10 @@ class ISA(metaclass = Singleton):
     def is_instruction(self, assembly_line : str) -> bool:
         """Checks if `assembly_line`'s first sub-string is present the class `keywords` set.
 
-        Args:
+        - Parameters:
             - assembly_line (str): an assembly mnemonic.
 
-        Returns:
+        - Returns:
             - bool: True if `assembly_line` is in `mnemonics`, False otherwise.
         """
 
@@ -230,9 +231,10 @@ class AssemblyHandler():
     def get_asm_source(self) -> pathlib.Path:
         """Returns the assembly source file `pathlib.Path`.
         
-        Args:
+        - Parameters:
+            - None
             
-        Returns:
+        - Returns:
             - pathlib.Path: The assembly source `pathlib.Path`."""
         
         return self.asm_file
@@ -240,7 +242,8 @@ class AssemblyHandler():
     def get_code(self) -> list[Codeline]:
         """Returns the parsed code as a list of `Codelines`.
         
-        Args:
+        Parameters:
+            - None
         
         Returns:
             - list: A list of `Codeline` entries."""
@@ -250,12 +253,12 @@ class AssemblyHandler():
     def get_candidate(self, lineno : int) -> Codeline:
         """Returns the Codeline in candidates with the specified lineno
         
-        Args:
+        - Parameters:
             - lineno (int): the line number of the candidate to be found.
         
-        Returns:
-            - Codeline : the `Codeline` with `Codeline.lineno == lineno`
-        if found. Raises LookupError otherwise."""
+        - Returns:
+            - Codeline: the `Codeline` with `Codeline.lineno == lineno` 
+            if found. Raises LookupError otherwise."""
 
         for chunk in self.candidates:
 
@@ -271,11 +274,11 @@ class AssemblyHandler():
         """In a uniform random manner selects one `Codeline` and returns it
         while also optionally removing it from the `candidate` collection
         
-        Args:
+        - Parameters:
             - pop_candidate (bool): When True, deletes the `Codeline` from the collection
             after identifying it.
              
-        Returns:
+        - Returns:
             - Codeline: A random `Codeline` from a random `self.candidates` chunk."""
         
         random_chunk = random.randint(0, len(self.candidates) - 1)            
@@ -298,11 +301,12 @@ class AssemblyHandler():
         as a source and skips the  the line which corresponds to `codeline`'s 
         `lineno` attribute.
         
-        Args:
+        - Parameters:
             - codeline (Codeline): The `Codeline` to be removed from the
             assembly file.
         
-        Returns: Nothing"""
+        - Returns: 
+            - None"""
 
         with open(self.asm_file) as source, tempfile.NamedTemporaryFile('w', delete = False) as new_source:
 
@@ -338,7 +342,10 @@ class AssemblyHandler():
         file. The `self.candidates` lineno fields are updated if >= than the 
         entry which is being restored.
         
-        Returns: Nothing"""
+        Parameters:
+            - None
+        Returns: 
+            - None"""
 
         if not self.asm_file_changelog:
             log.debug(f"Changelog is empty, nothing to restore!")
@@ -390,15 +397,15 @@ class AssemblyHandler():
         """Executes a sequence of bash instructions to compile the `self.asm_file`.
         Uses subprocess for each instruction and optionally exits on error.
         
-        Args:
-            - exit_on_error (bool) : If an error is encountered during
+        - Parameters:
+            - exit_on_error (bool): If an error is encountered during
             compilation and this is True, then the program terminates.
             Otherwise it continues.
-            - *instructions (str) : A sequence of /bin/bash commands
+            - *instructions (str): A sequence of /bin/bash commands
             required in order to compile `self.asm_file`.
         
-        Returns: 
-            - bool : True if no message was written to `stderr` from any
+        - Returns: 
+            - bool: True if no message was written to `stderr` from any
             of the executed instructions (subprocesses). False otherwise. """
 
         if not len(instructions):
@@ -441,9 +448,10 @@ class AssemblyHandler():
         linenos seperated with a dash. If `self.asm_file_changelog` is
         empty, it does nothing.
         
-        Args:
-            
-        Returns: Nothing"""
+        Parameters:
+            - None
+        Returns: 
+            - Nothing"""
             
         if not self.asm_file_changelog:
             log.debug(f"No changes present to be saved.")
