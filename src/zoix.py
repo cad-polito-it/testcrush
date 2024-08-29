@@ -6,6 +6,7 @@ import subprocess
 import logging
 import re
 import enum
+import pathlib
 
 ######## TEMPORARY ########
 log = logging.getLogger("testcrush logger")
@@ -20,6 +21,10 @@ log.addHandler(log_stream)
 log.addHandler(log_file)
 ###########################
 
+class Compilation(enum.Enum):
+    ERROR = 0 # stderr contains text
+    SUCCESS = 1 # None of the above
+
 class LogicSimulation(enum.Enum):
     TIMEOUT = 0 # Endless loop
     SIM_ERROR = 1 # stderr contains text
@@ -31,20 +36,16 @@ class LogicSimulationException(BaseException):
         self.message = message
         super().__init__(self.message)
 
-class Compilation(enum.Enum):
-    ZOIX_ERROR = 0 # stderr contains text
-    SUCCESS = 1 # None of the above
-
 class FaultSimulation(enum.Enum):
     TIMEOUT = 0 # Wall-clock
     FSIM_ERROR = 1 # stderr contains text
     SUCCESS = 2 # None of the above
+
 class ZoixInvoker():
 
-    def __init__(self, fsim_threads : int) -> 'ZoixInvoker':
+    def __init__(self) -> 'ZoixInvoker':
 
         self.coverage : float = 0.0
-        self.fsim_threads : int = fsim_threads
 
     @staticmethod
     def execute(instruction : str, timeout : float = None) -> tuple[str, str]:
@@ -76,11 +77,10 @@ class ZoixInvoker():
             return "TimeoutExpired", "TimeoutExpired"
 
     def compile_sources(self, *instructions : str) -> Compilation:
-        """Takes a number of bash instructions to perform the compilation of
-        an assembly file using VCS.
+        """Performs compilation of HDL files
 
         - Parameters:
-            - None
+            - *instructions (str): A variadic number of bash shell instructions
 
         Returns:
             - Compilation: A status Enum to signify the success or failure
@@ -95,20 +95,19 @@ class ZoixInvoker():
 
             if stderr:
 
-                compilation_status = Compilation.ZOIX_ERROR
+                compilation_status = Compilation.ERROR
                 break
 
         return compilation_status
 
     def logic_simulate(self, *instructions : str, **kwargs) -> LogicSimulation:
-        """Takes a number of bash instructions which are expected to be either
-        bash scripts, or build instructions (e.g., make) to perform a
-        logic simulation of an assembly file using VCS (simv) in shell mode
+        """Performs logic simulation of user-defined firmware and captures the
+        test application time
         - Parameters:
-            - *instructions (str): A series of bash shell instructions
+            - *instructions (str): A variadic number of bash instructions
             - **kwargs: User-defined options needed for the
             evaluation of the result of the logic simulation. These are:
-                - timeout (float): A global timeout in **seconds** to be
+                - timeout (float): A timeout in **seconds** to be
                 used for **each** of the executed lsim instruction.
                 - success_regexp (re.regexp): A regular expression which is
                 used for matching in every line of the `stdout` stream to
@@ -116,7 +115,7 @@ class ZoixInvoker():
                 - tat_regexp_capture_group (int): An integer which corresponds
                 to the index of the TaT value on the custom regexp (if provided).
                 By default is 1, mapping to the default `success_regexp` group.
-                - tat_value (list): An empty list to store the value of the
+                - tat_value (list): An **empty** list to store the value of the
                 tat after being successfully matched with `success_regexp`.
                 Pass-by-reference style.
         - Returns:
@@ -201,12 +200,75 @@ the execution of {instructions}. Is your regular expression correct? Check the d
 
         return simulation_status
 
+    def create_fcm_script(self, fcm_file : pathlib.Path, **fcm_options) -> pathlib.Path:
+        """Generates and returns a fault campaign manager TCL script based on
+        user-defined settings from the setup file.
+
+        - Parameters:
+            - fcm_file (pathlib.Path): The full path (absolute or relative) of the fcm
+            script.
+            - **fcm_options : Keyword arguments where each key is an fcm command and
+            the corresponding value the flags or options (if any). The commands should
+            adhere to the supported commands documented in the VCS-Z01X user guide. No
+            sanitization checks are performed by the function.
+
+        - Returns:
+            - pathlib.Path: The absolute path of the file."""
+
+        with open(fcm_file, 'w') as fcm_script:
+
+            for command, flags in fcm_options.items():
+
+                fcm_script.write(fr"{command} {flags}" if flags else fr"{command}")
+                fcm_script.write("\n")
+
+        return fcm_file.absolute()
+
     def fault_simulate(self, *instructions : str, **kwargs) -> FaultSimulation:
-        ... # TODO
+        """Performs fault simulation of a user-defined firmware.
+
+        - Parameters:
+            - *instructions (str): A variadic number of shell instructions
+            to invoke Z01X.
+            - **kwargs: User-defined options for fault simulation control
+                - timeout (float): A timeout in **seconds** for each fsim instruction.
+        - Returns:
+            - FaultSimulation (enum): A status Enum which is
+                - TIMEOUT: if the timeout kwarg was provided and some instruction
+                violated it.
+                - FSIM_ERROR: if the `stderr` stream contains text during the
+                execution of an instruction.
+                - SUCCESS: if none of the above.
+        """
+
+        fault_simulation_status = FaultSimulation.SUCCESS
+
+        timeout : float = kwargs.get("timeout", None)
+
+        for cmd in instructions:
+
+            stdout, stderr = self.execute(cmd, timeout = timeout)
+
+            if stderr and stderr != "TimeoutExpired":
+
+                log.debug(f"Error during execution of {cmd}\n\
+                ------[STDERR STREAM]------\n\
+                {'-'.join(stderr.splitlines(keepends = True))}\n\
+                ---------------------------\n")
+
+                fault_simulation_status = FaultSimulation.FSIM_ERROR
+                break
+
+            elif stderr == stdout == "TimeoutExpired":
+
+                fault_simulation_status = LogicSimulation.TIMEOUT
+                break
+
+        return fault_simulation_status
 
 def main():
     """Sandbox/Testing Env"""
-    A = ZoixInvoker(16)
+    A = ZoixInvoker()
     #A.logic_simulate("for i in $(seq 100000); do echo $i; done", timeout = 0.1)
 
     tat_dict = {
@@ -215,9 +277,19 @@ def main():
         "tat_value" : []
     }
 
+    fcm_dict = {
+        "set_config" : "-global_max_jobs 64",
+        "create_testcases" : '-name {"test1"} -exec ${::env(VCS_WORK_DIR)}/simv -args "./simv +firmware=${::env(FIRMWARE)}" -fsim_args "-fsim=fault+dictionary"',
+        "fsim" : "-verbose",
+        "report" : "-campaign cv32e40p -report fsim_out.rpt -overwrite",
+        "report" : "-campaign cv32e40p -report fsim_out_hier.rpt -overwrite -hierarchical 3"
+    }
+
     res = A.logic_simulate("cat logic_sim_excerpt.log",
         timeout = 60.0,
         **tat_dict)
+
+    A.create_fcm_script(pathlib.Path("fcm.tcl"), **fcm_dict)
 
     print(tat_dict['tat_value'])
     print(res)
