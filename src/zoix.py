@@ -42,10 +42,9 @@ class FaultSimulation(enum.Enum):
     SUCCESS = 2 # None of the above
 
 class ZoixInvoker():
-
-    def __init__(self) -> 'ZoixInvoker':
-
-        self.coverage : float = 0.0
+    """A wrapper class to be used in handling calls to VCS-Z01X."""
+    def __init__(self) -> "ZoixInvoker":
+        ...
 
     @staticmethod
     def execute(instruction : str, timeout : float = None) -> tuple[str, str]:
@@ -215,6 +214,8 @@ the execution of {instructions}. Is your regular expression correct? Check the d
         - Returns:
             - pathlib.Path: The absolute path of the file."""
 
+        log.debug(f"Generating fault campaign manager script {fcm_file.absolute()}.")
+
         with open(fcm_file, 'w') as fcm_script:
 
             for command, flags in fcm_options.items():
@@ -265,6 +266,30 @@ the execution of {instructions}. Is your regular expression correct? Check the d
                 break
 
         return fault_simulation_status
+
+class FaultStatistics():
+
+    def __init__(self, fault_report : pathlib.Path) -> "FaultStatistics":
+        self.fault_report = fault_report
+        self.total_faults : int = 0
+        self.current_fault_stats : dict[str, int | float | tuple] = None
+
+    def set_fault_report(self, fault_report : str) -> None:
+        """Setter method for fault report.
+
+        - Parameters:
+            - fault_report (str): The new fault report filename.
+
+        - Returns:
+            - None. Raises FileExistsError if the file does not exist."""
+
+        if not pathlib.Path(fault_report).exists():
+            raise FileExistsError(f"Fault report {fault_report} does not exist!")
+
+        self.fault_report = pathlib.Path(fault_report).absolute()
+
+    def parse_fsim_report(self) -> dict[str, tuple[int, float]]:
+        ...
 
 def main():
     """Sandbox/Testing Env"""
