@@ -7,6 +7,7 @@ import logging
 import re
 import enum
 import pathlib
+import csv
 
 ######## TEMPORARY ########
 log = logging.getLogger("testcrush logger")
@@ -180,7 +181,6 @@ class ZoixInvoker():
                 if end_reached:
 
                     test_application_time = end_reached.group(tat_capture_group)
-
                     try:
                         tat_value.append(int(test_application_time))
 
@@ -262,17 +262,15 @@ the execution of {instructions}. Is your regular expression correct? Check the d
 
             elif stderr == stdout == "TimeoutExpired":
 
-                fault_simulation_status = LogicSimulation.TIMEOUT
+                fault_simulation_status = FaultSimulation.TIMEOUT
                 break
 
         return fault_simulation_status
 
-class FaultStatistics():
+class FaultReport():
 
-    def __init__(self, fault_report : pathlib.Path) -> "FaultStatistics":
-        self.fault_report = fault_report
-        self.total_faults : int = 0
-        self.current_fault_stats : dict[str, int | float | tuple] = None
+    def __init__(self, fault_report : pathlib.Path) -> "FaultReport":
+        self.fault_report : pathlib.Path = fault_report.absolute()
 
     def set_fault_report(self, fault_report : str) -> None:
         """Setter method for fault report.
@@ -288,13 +286,37 @@ class FaultStatistics():
 
         self.fault_report = pathlib.Path(fault_report).absolute()
 
-    def parse_fsim_report(self) -> dict[str, tuple[int, float]]:
-        ...
+    def extract_fault_report_cells(self, row : int, *cols : int) -> list[str]:
+        """Returns a sequence of cells from a row of the CSV fault report.
+
+        - Parameters:
+            - row (int): the row number (1-based indexing).
+            - *cols (ints): the columns' numbers (1-based indexing).
+
+        - Returns:
+            list[str]: The cells of the fault report."""
+
+        with open(self.fault_report) as csv_source:
+
+            reader = csv.reader(csv_source)
+
+            for index, csv_row in enumerate(reader, start = 1):
+
+                if index != row:
+                    continue
+
+                try:
+                    return [csv_row[col - 1] for col in cols]
+                except:
+                    raise IndexError(f"A column in {cols} is out of bounds for row {row} of fault report {self.fault_report}.")
+
+            raise IndexError(f"Row {row} is out of bounds for fault report {self.fault_report}.")
 
 def main():
+
     """Sandbox/Testing Env"""
     A = ZoixInvoker()
-    #A.logic_simulate("for i in $(seq 100000); do echo $i; done", timeout = 0.1)
+    #print(A.logic_simulate("for i in $(seq 100000); do echo $i; done", timeout = 0.1))
 
     tat_dict = {
         "success_regexp" : re.compile(r"test application time = ([0-9]+)"),
@@ -318,6 +340,9 @@ def main():
 
     print(tat_dict['tat_value'])
     print(res)
+
+    B = FaultReport("summary.csv.log")
+    print(B.extract_csv_cell(16,8))
 
 if __name__ == "__main__":
 
