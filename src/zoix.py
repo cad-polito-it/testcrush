@@ -133,7 +133,7 @@ class ZoixInvoker():
         # where X = a digit and Y = time unit.
         # Capturing of the simulation duration
         # done for possible TaT purposes.
-        success : re.regexp = kwargs.get("success_regexp",
+        success : re.Pattern = kwargs.get("success_regexp",
             re.compile(r"\$finish[^0-9]+([0-9]+)[m|u|n|p]s", re.DOTALL))
 
         # By default, a single capturing  group
