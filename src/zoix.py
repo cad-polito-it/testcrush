@@ -8,6 +8,7 @@ import re
 import enum
 import pathlib
 import csv
+from dataclasses import dataclass
 
 ######## TEMPORARY ########
 log = logging.getLogger("testcrush logger")
@@ -267,10 +268,39 @@ the execution of {instructions}. Is your regular expression correct? Check the d
 
         return fault_simulation_status
 
-class FaultReport():
+@dataclass
+class SffFault():
+    """Represents a fault which is compliant with the standard fault format of Synopsys."""
+    fid : str
+    test_name : str
+    prime : str
+    status : str
+    model : str
+    timing : str
+    cycle_injection : str
+    cycle_end : str
+    fault_class : str
+    location : str
 
-    def __init__(self, fault_report : pathlib.Path) -> "FaultReport":
+class CSVFaultReport():
+
+    def __init__(self, fault_summary : pathlib.Path, fault_report : pathlib.Path) -> "FaultReport":
+        self.fault_summary : pathlib.Path = fault_summary.absolute()
         self.fault_report : pathlib.Path = fault_report.absolute()
+
+    def set_fault_summary(self, fault_summary : str) -> None:
+        """Setter method for fault summary.
+
+        - Parameters:
+            - fault_summary (str): The new fault summary filename.
+
+        - Returns:
+            - None. Raises FileExistsError if the file does not exist."""
+
+        if not pathlib.Path(fault_summary).exists():
+            raise FileExistsError(f"Fault summary {fault_summary} does not exist!")
+
+        self.fault_summary = pathlib.Path(fault_summary).absolute()
 
     def set_fault_report(self, fault_report : str) -> None:
         """Setter method for fault report.
@@ -286,17 +316,17 @@ class FaultReport():
 
         self.fault_report = pathlib.Path(fault_report).absolute()
 
-    def extract_fault_report_cells(self, row : int, *cols : int) -> list[str]:
-        """Returns a sequence of cells from a row of the CSV fault report.
+    def extract_summary_cells_from_row(self, row : int, *cols : int) -> list[str]:
+        """Returns a sequence of cells from a row of the `self.fault_summary` **CSV** file.
 
         - Parameters:
             - row (int): the row number (1-based indexing).
             - *cols (ints): the columns' numbers (1-based indexing).
 
         - Returns:
-            list[str]: The cells of the fault report."""
+            - list[str]: The cells of the fault summary."""
 
-        with open(self.fault_report) as csv_source:
+        with open(self.fault_summary) as csv_source:
 
             reader = csv.reader(csv_source)
 
@@ -308,9 +338,29 @@ class FaultReport():
                 try:
                     return [csv_row[col - 1] for col in cols]
                 except:
-                    raise IndexError(f"A column in {cols} is out of bounds for row {row} of fault report {self.fault_report}.")
+                    raise IndexError(f"A column in {cols} is out of bounds for row {row} of fault summary {self.fault_summary}.")
 
-            raise IndexError(f"Row {row} is out of bounds for fault report {self.fault_report}.")
+            raise IndexError(f"Row {row} is out of bounds for fault summary {self.fault_summary}.")
+
+    def parse_fault_report(self) -> list[SffFault]:
+        """Parses the `self.fault_report` **CSV** file and returns a dictionary with its
+        contents, ommiting any column if specified.
+
+        - Parameters:
+            - None:
+
+        - Returns:
+            - list[SffFault]: A list with synopys fault format objects.
+        """
+
+        with open(self.fault_report) as csv_source:
+
+            reader = csv.reader(csv_source)
+
+            # Skip header
+            next(reader)
+
+            return [ SffFault(*csv_row) for csv_row in reader ]
 
 def main():
 
@@ -341,9 +391,11 @@ def main():
     print(tat_dict['tat_value'])
     print(res)
 
-    B = FaultReport("summary.csv.log")
-    print(B.extract_csv_cell(16,8))
+    B = CSVFaultReport(pathlib.Path("summary.csv.log"), pathlib.Path("sample.csv"))
+    print(B.extract_summary_cells_from_row(16,8))
+    report = B.parse_fault_report()
 
+    print(report)
 if __name__ == "__main__":
 
     main()

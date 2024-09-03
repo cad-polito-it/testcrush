@@ -9,16 +9,33 @@ import pathlib
 import subprocess
 import re
 
-class FaultReportTest(unittest.TestCase):
+class CSVFaultReportTest(unittest.TestCase):
 
     def test_constructor(self):
 
-        test_obj = zoix.FaultReport(pathlib.Path("mock_report"))
-        self.assertEqual(test_obj.fault_report, pathlib.Path("mock_report").absolute())
+        test_obj = zoix.CSVFaultReport(pathlib.Path("mock_fault_summary"), pathlib.Path("mock_fault_report"))
+        self.assertEqual(test_obj.fault_summary, pathlib.Path("mock_fault_summary").absolute())
+        self.assertEqual(test_obj.fault_report, pathlib.Path("mock_fault_report").absolute())
+
+    def test_set_fault_summary(self):
+
+        test_obj = zoix.CSVFaultReport(pathlib.Path("mock_fault_summary"), pathlib.Path("mock_fault_report"))
+
+        with self.assertRaises(FileExistsError) as cm:
+
+            test_obj.set_fault_summary("new_mock_summary")
+
+        self.assertEqual(str(cm.exception), f"Fault summary new_mock_summary does not exist!")
+
+        with mock.patch("pathlib.Path.exists", return_value = True):
+
+            test_obj.set_fault_summary("new_mock_summary")
+
+            self.assertEqual(test_obj.fault_summary, pathlib.Path("new_mock_summary").absolute())
 
     def test_set_fault_report(self):
 
-        test_obj = zoix.FaultReport(pathlib.Path("mock_report"))
+        test_obj = zoix.CSVFaultReport(pathlib.Path("mock_fault_summary"), pathlib.Path("mock_fault_report"))
 
         with self.assertRaises(FileExistsError) as cm:
 
@@ -32,9 +49,9 @@ class FaultReportTest(unittest.TestCase):
 
             self.assertEqual(test_obj.fault_report, pathlib.Path("new_mock_report").absolute())
 
-    def test_extract_fault_report_cell(self):
+    def test_extract_summary_cells_from_row(self):
 
-        test_obj = zoix.FaultReport(pathlib.Path("mock_report"))
+        test_obj = zoix.CSVFaultReport(pathlib.Path("mock_fault_summary"), pathlib.Path("mock_fault_report"))
 
         with mock.patch("builtins.open", mock.mock_open(read_data="""\
 "Category","Name","Label","Prime Cnt","Prime Pct","Prime Sub Pct","Total Cnt","Total Pct","Total Sub Pct"
@@ -54,9 +71,9 @@ class FaultReportTest(unittest.TestCase):
 "Coverage","Diagnostic Coverage","","","0.00%","","","0.00%",""
 "Coverage","Observational Coverage","","","67.58%","","","68.00%",""""")):
 
-            diagnostic_coverage = test_obj.extract_fault_report_cells(15,8)
-            observationL_coverage = test_obj.extract_fault_report_cells(16,8)
-            total_faults = test_obj.extract_fault_report_cells(2,2,4,7)
+            diagnostic_coverage = test_obj.extract_summary_cells_from_row(15,8)
+            observationL_coverage = test_obj.extract_summary_cells_from_row(16,8)
+            total_faults = test_obj.extract_summary_cells_from_row(2,2,4,7)
 
             self.assertEqual(diagnostic_coverage, ["0.00%"])
             self.assertEqual(observationL_coverage, ["68.00%"])
@@ -65,16 +82,35 @@ class FaultReportTest(unittest.TestCase):
             # Row is out of bounds
             with self.assertRaises(IndexError) as cm:
 
-                test_obj.extract_fault_report_cells(20,1)
+                test_obj.extract_summary_cells_from_row(20,1)
 
-            self.assertEqual(str(cm.exception), f"Row 20 is out of bounds for fault report {test_obj.fault_report}.")
+            self.assertEqual(str(cm.exception), f"Row 20 is out of bounds for fault summary {test_obj.fault_summary}.")
 
             # Column is out of bounds
             with self.assertRaises(IndexError) as cm:
 
-                test_obj.extract_fault_report_cells(10,1,20)
+                test_obj.extract_summary_cells_from_row(10,1,20)
 
-            self.assertEqual(str(cm.exception), f"A column in (1, 20) is out of bounds for row 10 of fault report {test_obj.fault_report}.")
+            self.assertEqual(str(cm.exception), f"A column in (1, 20) is out of bounds for row 10 of fault summary {test_obj.fault_summary}.")
+
+    def test_parse_fault_report(self):
+
+        test_obj = zoix.CSVFaultReport(pathlib.Path("mock_fault_summary"), pathlib.Path("mock_fault_report"))
+
+        with mock.patch("builtins.open", mock.mock_open(read_data='''\
+"FID","Test Name","Prime","Status","Model","Timing","Cycle Injection","Cycle End","Class","Location"
+1,"test1","yes","ON","0","","","","PORT","path_to_fault_1.portA"
+2,"test1",1,"ON","0","","","","PORT","path_to_fault_2.portB"
+3,"test1","yes","ON","1","","","","PORT","path_to_fault_3.portC"''')):
+
+            report = test_obj.parse_fault_report()
+            expected_report = [
+                zoix.SffFault("1", "test1", "yes", "ON", "0", "", "", "", "PORT", "path_to_fault_1.portA"),
+                zoix.SffFault("2", "test1", "1", "ON", "0", "", "", "", "PORT", "path_to_fault_2.portB"),
+                zoix.SffFault("3", "test1", "yes", "ON", "1", "", "", "", "PORT", "path_to_fault_3.portC"),
+            ]
+
+            self.assertEqual(report, expected_report)
 
 class ZoixInvokerTest(unittest.TestCase):
 
