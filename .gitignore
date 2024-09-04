@@ -9,3 +9,7 @@ htmlcov/
 .coverage
 # ignore .bak files
 *.bak
+# ignore .csv files
+*.csv
+# ignore .tcl files
+*.tcl
