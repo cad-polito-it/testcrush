@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+
 import sys
 sys.path.append("../")
 
@@ -6,8 +7,45 @@ import unittest
 import unittest.mock as mock
 import zoix
 import pathlib
-import subprocess
 import re
+
+class FaultTest(unittest.TestCase):
+
+    def test_constructor_and_equals(self):
+
+        test_obj = zoix.Fault(arbitrary_attr_a = "sa0")
+        self.assertEqual(zoix.Fault(arbitrary_attr_a = "sa0"), test_obj)
+        self.assertNotEqual(zoix.Fault(arbitrary_attr_b = "sa0"), test_obj)
+        self.assertNotEqual(zoix.Fault(arbitrary_attr_a = "sa1"), test_obj)
+
+    def test_repr(self):
+
+        test_obj = zoix.Fault(attr_a = "sa0", attr_b = "detected")
+        self.assertEqual(repr(test_obj), "Fault(attr_a='sa0', attr_b='detected')")
+
+    def test_str(self):
+
+        test_obj = zoix.Fault(attr_a = "sa0", attr_b = "detected")
+        self.assertEqual(str(test_obj), "attr_a: sa0, attr_b: detected")
+
+    def test_get(self):
+
+        test_obj = zoix.Fault(attr_a = "sa0", attr_b = "detected")
+        self.assertEqual(test_obj.get("attr_a"), "sa0")
+        self.assertEqual(test_obj.get("attr_c", "Whoops!"), "Whoops!")
+        self.assertIsNone(test_obj.get("attr_c"))
+
+    def test_cast_attribute(self):
+
+        test_obj = zoix.Fault(attr_a = "1", attr_b = "detected")
+        self.assertIsInstance(test_obj.get("attr_a"), str)
+        test_obj.cast_attribute("attr_a", int)
+        self.assertIsInstance(test_obj.get("attr_a"), int)
+
+        with self.assertRaises(SystemExit) as cm:
+
+            new_test_obj = zoix.Fault(attr_a = "sa1", attr_b = "detected")
+            new_test_obj.cast_attribute("attr_a", int)
 
 class CSVFaultReportTest(unittest.TestCase):
 
@@ -95,6 +133,8 @@ class CSVFaultReportTest(unittest.TestCase):
 
     def test_parse_fault_report(self):
 
+        self.maxDiff = None
+
         test_obj = zoix.CSVFaultReport(pathlib.Path("mock_fault_summary"), pathlib.Path("mock_fault_report"))
 
         with mock.patch("builtins.open", mock.mock_open(read_data='''\
@@ -104,10 +144,11 @@ class CSVFaultReportTest(unittest.TestCase):
 3,"test1","yes","ON","1","","","","PORT","path_to_fault_3.portC"''')):
 
             report = test_obj.parse_fault_report()
+            #print(report)
             expected_report = [
-                zoix.SffFault("1", "test1", "yes", "ON", "0", "", "", "", "PORT", "path_to_fault_1.portA"),
-                zoix.SffFault("2", "test1", "1", "ON", "0", "", "", "", "PORT", "path_to_fault_2.portB"),
-                zoix.SffFault("3", "test1", "yes", "ON", "1", "", "", "", "PORT", "path_to_fault_3.portC"),
+                zoix.Fault(**{"FID":"1", "Test Name":"test1", "Prime":"yes", "Status":"ON", "Model":"0", "Timing":"", "Cycle Injection":"", "Cycle End":"", "Class":"PORT", "Location":"path_to_fault_1.portA"}),
+                zoix.Fault(**{"FID":"2", "Test Name":"test1", "Prime":"1", "Status":"ON", "Model":"0", "Timing":"", "Cycle Injection":"", "Cycle End":"", "Class":"PORT", "Location":"path_to_fault_2.portB"}),
+                zoix.Fault(**{"FID":"3", "Test Name":"test1", "Prime":"yes", "Status":"ON", "Model":"1", "Timing":"", "Cycle Injection":"", "Cycle End":"", "Class":"PORT", "Location":"path_to_fault_3.portC"}),
             ]
 
             self.assertEqual(report, expected_report)

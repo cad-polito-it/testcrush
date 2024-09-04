@@ -43,6 +43,121 @@ class FaultSimulation(enum.Enum):
     FSIM_ERROR = 1 # stderr contains text
     SUCCESS = 2 # None of the above
 
+class Fault():
+    """Generic representation of a fault.
+    All attributes are set as strings"""
+
+    def __init__(self, **fault_attributes : dict[str, str]) -> 'Fault':
+        for attribute, value in fault_attributes.items():
+            setattr(self, attribute.replace(" ", "_"), value)
+
+    def __repr__(self):
+        attrs = ', '.join(f'{key}={value!r}' for key, value in self.__dict__.items())
+        return f'{self.__class__.__name__}({attrs})'
+
+    def __str__(self):
+        return ', '.join(f'{key}: {value}' for key, value in self.__dict__.items())
+
+    def __eq__(self, other):
+
+        if isinstance(other, Fault):
+            return self.__dict__ == other.__dict__
+
+        return False
+
+    def get(self, attribute : str, default : str | None = None) -> str:
+        """Generic getter method."""
+        return getattr(self, attribute.replace(" ", "_"), default)
+
+    def cast_attribute(self, attribute : str, func : callable) -> None:
+        """Updates the type of the internal"""
+        attribute = attribute.replace(" ", "_")
+        try:
+            self.__dict__[attribute] = func(getattr(self,attribute))
+        except ValueError:
+            log.critical(f"Unable to perform the cast operation to {repr(func)} of attribute {getattr(self,attribute)}")
+            exit(1)
+
+class CSVFaultReport():
+
+    def __init__(self, fault_summary : pathlib.Path, fault_report : pathlib.Path) -> "CSVFaultReport":
+        self.fault_summary : pathlib.Path = fault_summary.absolute()
+        self.fault_report : pathlib.Path = fault_report.absolute()
+
+    def set_fault_summary(self, fault_summary : str) -> None:
+        """Setter method for fault summary.
+
+        - Parameters:
+            - fault_summary (str): The new fault summary filename.
+
+        - Returns:
+            - None. Raises FileExistsError if the file does not exist."""
+
+        if not pathlib.Path(fault_summary).exists():
+            raise FileExistsError(f"Fault summary {fault_summary} does not exist!")
+
+        self.fault_summary = pathlib.Path(fault_summary).absolute()
+
+    def set_fault_report(self, fault_report : str) -> None:
+        """Setter method for fault report.
+
+        - Parameters:
+            - fault_report (str): The new fault report filename.
+
+        - Returns:
+            - None. Raises FileExistsError if the file does not exist."""
+
+        if not pathlib.Path(fault_report).exists():
+            raise FileExistsError(f"Fault report {fault_report} does not exist!")
+
+        self.fault_report = pathlib.Path(fault_report).absolute()
+
+    def extract_summary_cells_from_row(self, row : int, *cols : int) -> list[str]:
+        """Returns a sequence of cells from a row of the `self.fault_summary` **CSV** file.
+
+        - Parameters:
+            - row (int): the row number (1-based indexing).
+            - *cols (ints): the columns' numbers (1-based indexing).
+
+        - Returns:
+            - list[str]: The cells of the fault summary."""
+
+        with open(self.fault_summary) as csv_source:
+
+            reader = csv.reader(csv_source)
+
+            for index, csv_row in enumerate(reader, start = 1):
+
+                if index != row:
+                    continue
+
+                try:
+                    return [csv_row[col - 1] for col in cols]
+                except:
+                    raise IndexError(f"A column in {cols} is out of bounds for row {row} of fault summary {self.fault_summary}.")
+
+            raise IndexError(f"Row {row} is out of bounds for fault summary {self.fault_summary}.")
+
+    def parse_fault_report(self) -> list[Fault]:
+        """Parses the `self.fault_report` **CSV** file and returns a dictionary with its
+        contents, ommiting any column if specified.
+
+        - Parameters:
+            - None:
+
+        - Returns:
+            - list[Fault]: A list with synopys fault format objects.
+        """
+
+        with open(self.fault_report) as csv_source:
+
+            reader = csv.reader(csv_source)
+
+            # Attributes
+            attributes = next(reader)
+
+            return [ Fault(**dict(zip(attributes, csv_row))) for csv_row in reader ]
+
 class ZoixInvoker():
     """A wrapper class to be used in handling calls to VCS-Z01X."""
     def __init__(self) -> "ZoixInvoker":
@@ -268,100 +383,6 @@ the execution of {instructions}. Is your regular expression correct? Check the d
 
         return fault_simulation_status
 
-@dataclass
-class SffFault():
-    """Represents a fault which is compliant with the standard fault format of Synopsys."""
-    fid : str
-    test_name : str
-    prime : str
-    status : str
-    model : str
-    timing : str
-    cycle_injection : str
-    cycle_end : str
-    fault_class : str
-    location : str
-
-class CSVFaultReport():
-
-    def __init__(self, fault_summary : pathlib.Path, fault_report : pathlib.Path) -> "FaultReport":
-        self.fault_summary : pathlib.Path = fault_summary.absolute()
-        self.fault_report : pathlib.Path = fault_report.absolute()
-
-    def set_fault_summary(self, fault_summary : str) -> None:
-        """Setter method for fault summary.
-
-        - Parameters:
-            - fault_summary (str): The new fault summary filename.
-
-        - Returns:
-            - None. Raises FileExistsError if the file does not exist."""
-
-        if not pathlib.Path(fault_summary).exists():
-            raise FileExistsError(f"Fault summary {fault_summary} does not exist!")
-
-        self.fault_summary = pathlib.Path(fault_summary).absolute()
-
-    def set_fault_report(self, fault_report : str) -> None:
-        """Setter method for fault report.
-
-        - Parameters:
-            - fault_report (str): The new fault report filename.
-
-        - Returns:
-            - None. Raises FileExistsError if the file does not exist."""
-
-        if not pathlib.Path(fault_report).exists():
-            raise FileExistsError(f"Fault report {fault_report} does not exist!")
-
-        self.fault_report = pathlib.Path(fault_report).absolute()
-
-    def extract_summary_cells_from_row(self, row : int, *cols : int) -> list[str]:
-        """Returns a sequence of cells from a row of the `self.fault_summary` **CSV** file.
-
-        - Parameters:
-            - row (int): the row number (1-based indexing).
-            - *cols (ints): the columns' numbers (1-based indexing).
-
-        - Returns:
-            - list[str]: The cells of the fault summary."""
-
-        with open(self.fault_summary) as csv_source:
-
-            reader = csv.reader(csv_source)
-
-            for index, csv_row in enumerate(reader, start = 1):
-
-                if index != row:
-                    continue
-
-                try:
-                    return [csv_row[col - 1] for col in cols]
-                except:
-                    raise IndexError(f"A column in {cols} is out of bounds for row {row} of fault summary {self.fault_summary}.")
-
-            raise IndexError(f"Row {row} is out of bounds for fault summary {self.fault_summary}.")
-
-    def parse_fault_report(self) -> list[SffFault]:
-        """Parses the `self.fault_report` **CSV** file and returns a dictionary with its
-        contents, ommiting any column if specified.
-
-        - Parameters:
-            - None:
-
-        - Returns:
-            - list[SffFault]: A list with synopys fault format objects.
-        """
-
-        with open(self.fault_report) as csv_source:
-
-            reader = csv.reader(csv_source)
-
-            # Skip header
-            next(reader)
-
-            return [ SffFault(*csv_row) for csv_row in reader ]
-
 def main():
 
     """Sandbox/Testing Env"""
@@ -396,6 +417,17 @@ def main():
     report = B.parse_fault_report()
 
     print(report)
+
+    F1 = Fault(**{"FID":"1", "Test Name":"test1", "Prime":"yes", "Status":"ON", "Model":"0", "Timing":"", "Cycle Injection":"", "Cycle End":"", "Class":"PORT", "Location":"path_to_fault_1.portA"})
+    F2 = Fault(**{"FID":"1", "Test Name":"test1", "Prime":"yes", "Status":"ON", "Model":"0", "Timing":"", "Cycle Injection":"", "Cycle End":"", "Class":"PORT", "Location":"path_to_fault_1.portA"})
+
+    print(F1==F2)
+
+    print(type(F1.get('FID')))
+    F1.cast_attribute("FID", int)
+    print(type(F1.get('FID')))
+    print(repr(F1))
+    print(str(F1))
 if __name__ == "__main__":
 
     main()
