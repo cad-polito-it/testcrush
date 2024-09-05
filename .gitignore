@@ -13,3 +13,7 @@ htmlcov/
 *.csv
 # ignore .tcl files
 *.tcl
+# ignore tarballs & zips
+*.tar.gz
+*.tar
+*.zip
