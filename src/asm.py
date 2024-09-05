@@ -427,9 +427,3 @@ class AssemblyHandler():
             + f"{self.asm_file.suffix}")
 
         shutil.copy(self.asm_file, filename)
-
-def main():
-    """Sandbox/Testing Env"""
-
-if __name__ == "__main__":
-    main()

@@ -9,7 +9,6 @@ import re
 import enum
 import pathlib
 import csv
-from dataclasses import dataclass
 
 ######## TEMPORARY ########
 log = logging.getLogger("testcrush logger")
@@ -226,7 +225,7 @@ class ZoixInvoker():
             evaluation of the result of the logic simulation. These are:
                 - timeout (float): A timeout in **seconds** to be
                 used for **each** of the executed lsim instruction.
-                - success_regexp (re.regexp): A regular expression which is
+                - success_regexp (re.Pattern): A regular expression which is
                 used for matching in every line of the `stdout` stream to
                 signify the sucessfull completion of the logic simulation.
                 - tat_regexp_capture_group (int): An integer which corresponds
@@ -383,52 +382,3 @@ the execution of {instructions}. Is your regular expression correct? Check the d
                 break
 
         return fault_simulation_status
-
-def main():
-
-    """Sandbox/Testing Env"""
-    A = ZoixInvoker()
-    #print(A.logic_simulate("for i in $(seq 100000); do echo $i; done", timeout = 0.1))
-
-    tat_dict = {
-        "success_regexp" : re.compile(r"test application time = ([0-9]+)"),
-        "tat_regexp_capture_group" : 1,
-        "tat_value" : []
-    }
-
-    fcm_dict = {
-        "set_config" : "-global_max_jobs 64",
-        "create_testcases" : '-name {"test1"} -exec ${::env(VCS_WORK_DIR)}/simv -args "./simv +firmware=${::env(FIRMWARE)}" -fsim_args "-fsim=fault+dictionary"',
-        "fsim" : "-verbose",
-        "report" : "-campaign cv32e40p -report fsim_out.rpt -overwrite",
-        "report" : "-campaign cv32e40p -report fsim_out_hier.rpt -overwrite -hierarchical 3"
-    }
-
-    res = A.logic_simulate("cat logic_sim_excerpt.log",
-        timeout = 60.0,
-        **tat_dict)
-
-    A.create_fcm_script(pathlib.Path("fcm.tcl"), **fcm_dict)
-
-    print(tat_dict['tat_value'])
-    print(res)
-
-    B = CSVFaultReport(pathlib.Path("summary.csv.log"), pathlib.Path("sample.csv"))
-    print(B.extract_summary_cells_from_row(16,8))
-    report = B.parse_fault_report()
-
-    print(report)
-
-    F1 = Fault(**{"FID":"1", "Test Name":"test1", "Prime":"yes", "Status":"ON", "Model":"0", "Timing":"", "Cycle Injection":"", "Cycle End":"", "Class":"PORT", "Location":"path_to_fault_1.portA"})
-    F2 = Fault(**{"FID":"1", "Test Name":"test1", "Prime":"yes", "Status":"ON", "Model":"0", "Timing":"", "Cycle Injection":"", "Cycle End":"", "Class":"PORT", "Location":"path_to_fault_1.portA"})
-
-    print(F1==F2)
-
-    print(type(F1.get('FID')))
-    F1.cast_attribute("FID", int)
-    print(type(F1.get('FID')))
-    print(repr(F1))
-    print(str(F1))
-if __name__ == "__main__":
-
-    main()
