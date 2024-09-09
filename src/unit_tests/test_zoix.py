@@ -63,7 +63,7 @@ class CSVFaultReportTest(unittest.TestCase):
 
             test_obj.set_fault_summary("new_mock_summary")
 
-        self.assertEqual(str(cm.exception), f"Fault summary new_mock_summary does not exist!")
+        self.assertEqual(str(cm.exception), f"fault_summary='new_mock_summary' does not exist!")
 
         with mock.patch("pathlib.Path.exists", return_value = True):
 
@@ -79,7 +79,7 @@ class CSVFaultReportTest(unittest.TestCase):
 
             test_obj.set_fault_report("new_mock_report")
 
-        self.assertEqual(str(cm.exception), f"Fault report new_mock_report does not exist!")
+        self.assertEqual(str(cm.exception), f"fault_report='new_mock_report' does not exist!")
 
         with mock.patch("pathlib.Path.exists", return_value = True):
 
@@ -118,18 +118,18 @@ class CSVFaultReportTest(unittest.TestCase):
             self.assertEqual(total_faults, ["Number of Faults", "11034", "18684"])
 
             # Row is out of bounds
-            with self.assertRaises(IndexError) as cm:
+            with self.assertRaises(SystemExit) as cm:
 
                 test_obj.extract_summary_cells_from_row(20,1)
 
-            self.assertEqual(str(cm.exception), f"Row 20 is out of bounds for fault summary {test_obj.fault_summary}.")
+            self.assertEqual(str(cm.exception), "1")
 
             # Column is out of bounds
-            with self.assertRaises(IndexError) as cm:
+            with self.assertRaises(SystemExit) as cm:
 
                 test_obj.extract_summary_cells_from_row(10,1,20)
 
-            self.assertEqual(str(cm.exception), f"A column in (1, 20) is out of bounds for row 10 of fault summary {test_obj.fault_summary}.")
+            self.assertEqual(str(cm.exception), "1")
 
     def test_parse_fault_report(self):
 
@@ -277,6 +277,7 @@ Day Month HH:MM:SS YYYY"""
             self.assertEqual(str(cm.exception), "Simulation status was not set during the execution of \
 ('mock_logic_simulation_instruction',). Is your regular expression correct? Check the debug log for more information!")
 
+        self.maxDiff = None
         # TaT is not Int!
         with mock.patch("zoix.ZoixInvoker.execute", return_value = (r"$finish at simulation time 482140ns", "")) as mocked_execute:
 
@@ -284,7 +285,7 @@ Day Month HH:MM:SS YYYY"""
 
                 logic_simulation = test_obj.logic_simulate("mock_logic_simulation_instruction", success_regexp = re.compile(r"\$finish.*(482140n)"), tat_value = [])
 
-            self.assertEqual(str(cm.exception), r"Test application time was not correctly captured 'test_application_time='482140n'' and could not be converted to an integer. Perhaps there is something wrong withyour regular expression 're.compile('\\$finish.*(482140n)')' ?")
+            self.assertEqual(str(cm.exception), r"Test application time was not correctly captured test_application_time='482140n' and could not be converted to an integer. Perhaps there is something wrong with your regular expression 're.compile('\\$finish.*(482140n)')' ?")
 
     def test_create_fcm_script(self):
 
