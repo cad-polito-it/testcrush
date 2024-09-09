@@ -257,7 +257,7 @@ class ISATest(unittest.TestCase):
                 test_obj = self.gen_isa(pathlib.Path("mock_filename"))
 
         self.assertEqual(str(cm.exception),
-            f"Empty line found at line number 3 of {os.getcwd()}/mock_filename file")
+            f"Empty line at line number 3 of {os.getcwd()}/mock_filename file")
 
         mock_instructions = "instruction_a\ninstruction_b\ninstruction_c"
         with mock.patch("builtins.open", mock.mock_open(read_data=mock_instructions)) as mocked_open:

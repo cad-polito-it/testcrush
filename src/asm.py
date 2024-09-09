@@ -5,38 +5,42 @@ import pathlib
 import logging
 import sys
 import re
-import subprocess
 import tempfile
 import random
 import shutil
 
 from dataclasses import dataclass
 
+# TEMPORARY
 log = logging.getLogger("testcrush logger")
 log.setLevel(logging.DEBUG)
-log_stream = logging.StreamHandler(stream = sys.stdout)
+log_stream = logging.StreamHandler(stream=sys.stdout)
 log_stream.setLevel(logging.INFO)
 log_stream.setFormatter(logging.Formatter('[%(levelname)s]: %(message)s'))
-log_file = logging.FileHandler(filename = "debug.log", mode = 'w')
+log_file = logging.FileHandler(filename="debug.log", mode='w')
 log_file.setLevel(logging.DEBUG)
-log_file.setFormatter(logging.Formatter('%(lineno)d:[%(levelname)s|%(module)s|%(funcName)s]: %(message)s'))
+log_file.setFormatter(logging.Formatter(
+    '%(lineno)d:[%(levelname)s|%(module)s|%(funcName)s]: %(message)s'))
 log.addHandler(log_stream)
 log.addHandler(log_file)
+
 
 @dataclass
 class Codeline:
     """Represents a line of assembly code"""
-    lineno : int
-    data : str
-    valid_insn : bool
+    lineno: int
+    data: str
+    valid_insn: bool
 
     def __repr__(self):
-        return f"Codeline({self.lineno}, \"{self.data}\", valid_insn = {self.valid_insn})"
+        return f"Codeline({self.lineno}, \
+\"{self.data}\", \
+valid_insn = {self.valid_insn})"
 
     def __str__(self):
         return f"[#{self.lineno}]: {self.data}"
 
-    def __isub__(self, other : int):
+    def __isub__(self, other: int):
 
         if not isinstance(other, int):
             raise TypeError(f"Unsupported type for -=: {type(other)}")
@@ -46,7 +50,7 @@ class Codeline:
 
         return self
 
-    def __iadd__(self, other : int):
+    def __iadd__(self, other: int):
 
         if not isinstance(other, int):
             raise TypeError(f"Unsupported type for +=: {type(other)}")
@@ -55,7 +59,7 @@ class Codeline:
 
         return self
 
-    def __gt__(self, other : 'Codeline|int') -> bool:
+    def __gt__(self, other: 'Codeline|int') -> bool:
 
         if isinstance(other, int):
             return self.lineno > other
@@ -64,7 +68,7 @@ class Codeline:
         else:
             raise TypeError(f"Unsupported type for >: {type(other)}")
 
-    def __lt__(self, other : 'Codeline|int') -> bool:
+    def __lt__(self, other: 'Codeline|int') -> bool:
 
         if isinstance(other, int):
             return self.lineno < other
@@ -73,7 +77,7 @@ class Codeline:
         else:
             raise TypeError(f"Unsupported type for <: {type(other)}")
 
-    def __le__(self, other : 'Codeline|int') -> bool:
+    def __le__(self, other: 'Codeline|int') -> bool:
 
         if isinstance(other, int):
             return self.lineno <= other
@@ -82,7 +86,7 @@ class Codeline:
         else:
             raise TypeError(f"Unsupported type for <=: {type(other)}")
 
-    def __ge__(self, other : 'Codeline|int') -> bool:
+    def __ge__(self, other: 'Codeline|int') -> bool:
 
         if isinstance(other, int):
             return self.lineno >= other
@@ -91,7 +95,7 @@ class Codeline:
         else:
             raise TypeError(f"Unsupported type for >=: {type(other)}")
 
-    def __ne__(self, other : 'Codeline|int') -> bool:
+    def __ne__(self, other: 'Codeline|int') -> bool:
 
         if isinstance(other, int):
             return self.lineno != other
@@ -100,7 +104,7 @@ class Codeline:
         else:
             raise TypeError(f"Unsupported type for !=: {type(other)}")
 
-    def __eq__(self, other : 'Codeline|int') -> bool:
+    def __eq__(self, other: 'Codeline|int') -> bool:
 
         if isinstance(other, int):
             return self.lineno == other
@@ -108,6 +112,7 @@ class Codeline:
             return self.lineno == other.lineno
         else:
             raise TypeError(f"Unsupported type for ==: {type(other)}")
+
 
 class Singleton(type):
 
@@ -124,33 +129,36 @@ class Singleton(type):
 
         return cls._instances[cls]
 
-class ISA(metaclass = Singleton):
+
+class ISA(metaclass=Singleton):
     """This **Singleton** class provides utilities for the considered ISA."""
 
-    def __init__(self, isa : pathlib.Path) -> "ISA":
+    def __init__(self, isa: pathlib.Path) -> "ISA":
 
-        self.mnemonics : set = set()
+        self.mnemonics: set = set()
         self.source: pathlib.Path = isa.resolve()
 
         try:
             with open(self.source) as isa_keywords:
 
                 log.debug(f"Reading ISA language from file {self.source}")
-                lines = [ x.rstrip() for x in isa_keywords.readlines() ]
+                lines = [x.rstrip() for x in isa_keywords.readlines()]
 
         except FileNotFoundError:
             log.fatal(f"ISA File {self.source} not found! Exiting...")
             exit(1)
 
-        for lineno, line in enumerate(lines, start = 1):
+        for lineno, line in enumerate(lines, start=1):
 
             if not line:
-                raise SyntaxError(f"Empty line found at line number {lineno} of {self.source} file")
+                raise SyntaxError(f"Empty line at line number {lineno} of \
+{self.source} file")
 
             # Simple sanity check
             if line[0] != '#' and len(line.split()) > 1:
 
-                raise SyntaxError(f"Wrong syntax at line {lineno} of {self.source} file")
+                raise SyntaxError(f"Wrong syntax at line {lineno} of \
+{self.source} file")
 
             # Skip comment lines
             if line[0] == '#':
@@ -172,8 +180,9 @@ class ISA(metaclass = Singleton):
 
         return self.mnemonics
 
-    def is_instruction(self, assembly_line : str) -> bool:
-        """Checks if `assembly_line`'s first sub-string is present the class `keywords` set.
+    def is_instruction(self, assembly_line: str) -> bool:
+        """Checks if `assembly_line`'s first sub-string is present the class
+        `keywords` set.
 
         - Parameters:
             - assembly_line (str): an assembly mnemonic.
@@ -185,17 +194,21 @@ class ISA(metaclass = Singleton):
         potential_instruction = assembly_line.split()[0]
         return potential_instruction in self.mnemonics
 
+
 class AssemblyHandler():
     """This class  is responsible of managing **one** assembly file.
-    It operates on the `assembly_source` file and removes/restores code lines."""
+    It operates on the `assembly_source` file and removes/restores lines."""
 
-    def __init__(self, isa : ISA, assembly_source : pathlib.Path, chunksize : int = 1) -> 'AssemblyHandler':
+    def __init__(self,
+                 isa: ISA,
+                 assembly_source: pathlib.Path,
+                 chunksize: int = 1) -> 'AssemblyHandler':
 
-        self.isa : ISA = isa
-        self.asm_file : pathlib.Path = assembly_source.resolve()
-        self.asm_file_changelog : list = list()
-        self.candidates : list[list[Codeline]] = list() # holds only instructions!
-        self.test_application_time : int = None
+        self.isa: ISA = isa
+        self.asm_file: pathlib.Path = assembly_source.resolve()
+        self.asm_file_changelog: list = list()
+        self.candidates: list[list[Codeline]] = list()  # only instructions!
+        self.test_application_time: int = None
 
         assembly_source = assembly_source.resolve()
 
@@ -206,7 +219,7 @@ class AssemblyHandler():
                 log.debug(f"Reading from file {assembly_source}")
 
                 # 0-based indexing for lineno!
-                for lineno, line in enumerate(asm_file, start = 0):
+                for lineno, line in enumerate(asm_file, start=0):
 
                     # We are currently not interested in the contents
                     # of each line of code. We just want to   extract
@@ -217,20 +230,22 @@ class AssemblyHandler():
                         continue
 
                     code.append(Codeline(
-                        lineno = lineno,
-                        data = fr"{line}",
-                        valid_insn = isa.is_instruction(line))
-                    )
+                        lineno=lineno,
+                        data=fr"{line}",
+                        valid_insn=isa.is_instruction(line)))
 
         except FileNotFoundError:
 
-            log.fatal(f"Assembly source file {assembly_source} not found! Exiting...")
+            log.fatal(f"Assembly source file {assembly_source} not found! \
+Exiting...")
             exit(1)
 
-        self.candidates = [codeline for codeline in code if codeline.valid_insn]
-        self.candidates = [self.candidates[i:i + chunksize] for i in range(0, len(self.candidates), chunksize)]
+        self.candidates = [codeline for codeline in code if
+                           codeline.valid_insn]
+        self.candidates = [self.candidates[i:i + chunksize]
+                           for i in range(0, len(self.candidates), chunksize)]
 
-    def set_test_application_time(self, time : int) -> None:
+    def set_test_application_time(self, time: int) -> None:
         """Sets the test application time attribute
 
         - Parameters:
@@ -263,7 +278,7 @@ class AssemblyHandler():
 
         return [codeline for chunk in self.candidates for codeline in chunk]
 
-    def get_candidate(self, lineno : int) -> Codeline:
+    def get_candidate(self, lineno: int) -> Codeline:
         """Returns the Codeline in candidates with the specified lineno
 
         - Parameters:
@@ -283,19 +298,22 @@ class AssemblyHandler():
 
         raise LookupError(f"Requested Codeline with {lineno=} not found!")
 
-    def get_random_candidate(self, pop_candidate = True) -> Codeline:
+    def get_random_candidate(self, pop_candidate: bool = True) -> Codeline:
         """In a uniform random manner selects one `Codeline` and returns it
         while also optionally removing it from the `candidate` collection
 
         - Parameters:
-            - pop_candidate (bool): When True, deletes the `Codeline` from the collection
-            after identifying it.
+            - pop_candidate (bool): When True, deletes the `Codeline` from the
+            collection after identifying it.
 
         - Returns:
-            - Codeline: A random `Codeline` from a random `self.candidates` chunk."""
+            - Codeline: A random `Codeline` from a random `self.candidates`
+            chunk."""
 
         random_chunk = random.randint(0, len(self.candidates) - 1)
-        random_codeline = random.randint(0, len(self.candidates[random_chunk]) - 1)
+        random_codeline = \
+            random.randint(0,
+                           len(self.candidates[random_chunk]) - 1)
 
         # Check if it's the last codeline of the chunk
         # and delete the chunk after popping it.
@@ -309,7 +327,7 @@ class AssemblyHandler():
         log.debug(f"Randomly selected {codeline=}")
         return codeline
 
-    def remove(self, codeline : Codeline) -> None:
+    def remove(self, codeline: Codeline) -> None:
         """Creates a new assembly file by using the current `self.asm_code`
         as a source and skips the  the line which corresponds to `codeline`'s
         `lineno` attribute.
@@ -321,9 +339,10 @@ class AssemblyHandler():
         - Returns:
             - None"""
 
-        with open(self.asm_file) as source, tempfile.NamedTemporaryFile('w', delete = False) as new_source:
+        with open(self.asm_file) as source, \
+             tempfile.NamedTemporaryFile('w', delete=False) as new_source:
 
-            for lineno, line in enumerate(source, start = 0):
+            for lineno, line in enumerate(source, start=0):
 
                 if codeline == lineno:
 
@@ -361,10 +380,10 @@ class AssemblyHandler():
             - None"""
 
         if not self.asm_file_changelog:
-            log.debug(f"Changelog is empty, nothing to restore!")
+            log.debug(f"{self.asm_file_changelog=}  empty, nothing to restore")
             return
 
-        codeline_to_be_restored : Codeline = self.asm_file_changelog.pop()
+        codeline_to_be_restored: Codeline = self.asm_file_changelog.pop()
         log.debug(f"Restoring {codeline_to_be_restored}")
 
         # The candidates that have a lineno >= to the line
@@ -387,10 +406,11 @@ class AssemblyHandler():
 
                     chunk_codeline += 1
 
-        with open(self.asm_file) as source, tempfile.NamedTemporaryFile('w', delete = False) as new_source:
+        with open(self.asm_file) as source, \
+             tempfile.NamedTemporaryFile('w', delete=False) as new_source:
 
             line_restored = False
-            for lineno, line in enumerate(source, start = 0):
+            for lineno, line in enumerate(source, start=0):
 
                 if codeline_to_be_restored == lineno:
                     new_source.write(f"{codeline_to_be_restored.data}\n")
@@ -398,7 +418,7 @@ class AssemblyHandler():
 
                 new_source.write(line)
 
-            if not line_restored: # its the very last line
+            if not line_restored:  # its the very last line
                 new_source.write(f"{codeline_to_be_restored.data}\n")
 
             log.debug(f"Changelog entries are now {self.asm_file_changelog}")
@@ -418,12 +438,13 @@ class AssemblyHandler():
             - Nothing"""
 
         if not self.asm_file_changelog:
-            log.debug(f"No changes present to be saved.")
+            log.debug("No changes in changelog to be saved.")
             return
 
         filename = self.asm_file.parent /\
-            pathlib.Path(f"{self.asm_file.stem}-"\
-            + '-'.join([str(codeline.lineno) for codeline in self.asm_file_changelog])\
-            + f"{self.asm_file.suffix}")
+            pathlib.Path(f"{self.asm_file.stem}-"
+                         + '-'.join([str(codeline.lineno)
+                                     for codeline in self.asm_file_changelog])
+                         + f"{self.asm_file.suffix}")
 
         shutil.copy(self.asm_file, filename)
