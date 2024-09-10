@@ -188,9 +188,9 @@ for fault summary {self.fault_summary}.")
                     in reader]
 
     @staticmethod
-    def extract_summary_coverage(summary : pathlib.Path,
-                                 regexp : re.Pattern,
-                                 group_index : int) -> float:
+    def extract_summary_coverage(summary: pathlib.Path,
+                                 regexp: re.Pattern,
+                                 group_index: int) -> float:
         """Extracts the coverage percentage from the summary text file
         file via multilined regex matching
 
@@ -203,7 +203,7 @@ for fault summary {self.fault_summary}.")
             holds the coverage percentage
 
         - Returns:
-            - float: The coverage percentage which was captured casted to float.
+            - float: The coverage percentage which was captured as float.
         """
         with open(summary) as source:
             data = source.read()
