@@ -191,7 +191,7 @@ for fault summary {self.fault_summary}.")
     def compute_flist_coverage(fault_list: list[Fault],
                                sff_file: pathlib.Path,
                                formula: str,
-                               precision: int = 2,
+                               precision: int = 4,
                                status_attribute: str = "Status") -> float:
         """Computes the test coverage percentage as described by `formula`,
         which must be comprised of mathematical operations of Z01X fault
@@ -204,7 +204,7 @@ for fault summary {self.fault_summary}.")
             - formula (str): A formula which computes the coverage e.g.,
             `"DD/(NA + DA + DN + DD)"`.
             - precision (int): the number of decimals to consider for
-            the coverage. Default is `2`.
+            the coverage. Default is `4`.
             - status_attribute (str): The attribute of the `Fault` object
             which represents its Z01X fault status/class. Default is "Status".
         - Returns:
