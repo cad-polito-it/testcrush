@@ -188,12 +188,43 @@ for fault summary {self.fault_summary}.")
                     in reader]
 
     @staticmethod
+    def extract_summary_coverage(summary : pathlib.Path,
+                                 regexp : re.Pattern,
+                                 group_index : int) -> float:
+        """Extracts the coverage percentage from the summary text file
+        file via multilined regex matching
+
+        - Parameters:
+            - summary (pathlib.Path): The location of the summary.txt report
+            - regexp (re.Pattern): The regular expression to match the intended
+            coverage line. Note that it must have at least one capture group,
+            which should precicely hold the coverage percentage.
+            - group_index (int): The capture group index of the `regexp` that
+            holds the coverage percentage
+
+        - Returns:
+            - float: The coverage percentage which was captured casted to float.
+        """
+        with open(summary) as source:
+            data = source.read()
+
+        match = re.search(regexp, data)
+
+        if not match:
+            raise ValueError(f"Unable to match coverage percentage with\
+{regexp}")
+
+        log.debug(f"Match {match=}. Groups {match.groups()}")
+
+        return float(match.group(group_index))
+
+    @staticmethod
     def compute_flist_coverage(fault_list: list[Fault],
                                sff_file: pathlib.Path,
                                formula: str,
                                precision: int = 4,
                                status_attribute: str = "Status") -> float:
-        """Computes the test coverage percentage as described by `formula`,
+        """Computes the test coverage value as described by `formula`,
         which must be comprised of mathematical operations of Z01X fault
         classes (i.e., 2 letter strings).
 
@@ -208,7 +239,8 @@ for fault summary {self.fault_summary}.")
             - status_attribute (str): The attribute of the `Fault` object
             which represents its Z01X fault status/class. Default is "Status".
         - Returns:
-            float: The coverage percentage i.e., the evaluated `formula`."""
+            float: The coverage value in [0.0, 1.0] i.e., the evaluated
+            `formula`. Not the precentage!"""
 
         # Gather fault statuses numbers.
         fault_statuses = dict()
