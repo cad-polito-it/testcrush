@@ -28,6 +28,7 @@ log.addHandler(log_file)
 @dataclass
 class Codeline:
     """Represents a line of assembly code"""
+
     lineno: int
     data: str
     valid_insn: bool
@@ -131,7 +132,7 @@ class Singleton(type):
 
 
 class ISA(metaclass=Singleton):
-    """This **Singleton** class provides utilities for the considered ISA."""
+    """**Singleton** class to provide utilities for the considered ISA."""
 
     def __init__(self, isa: pathlib.Path) -> "ISA":
 
@@ -170,25 +171,28 @@ class ISA(metaclass=Singleton):
         return f"ISA({str(self.source)})"
 
     def get_mnemonics(self) -> set:
-        """Returns a set with the ISA-lang mnemonics.
+        """
+        Returns a set with the ISA-lang mnemonics.
 
-        - Parameters:
-            - None
+        Args:
+            None
 
-        - Returns:
-            - set: A set with all the ISA-lang mnemonics."""
+        Returns:
+            set: A set with all the ISA-lang mnemonics."""
 
         return self.mnemonics
 
     def is_instruction(self, assembly_line: str) -> bool:
-        """Checks if `assembly_line`'s first sub-string is present the class
-        `keywords` set.
+        """
+        Checks if ``assembly_line``'s first sub-string is present the class
+        ``keywords`` set.
 
-        - Parameters:
-            - assembly_line (str): an assembly mnemonic.
+        Args:
+            assembly_line (str): an assembly mnemonic.
 
-        - Returns:
-            - bool: True if `assembly_line` is in `mnemonics`, False otherwise.
+        Returns:
+            bool: True if ``assembly_line`` is in ``mnemonics``, False
+                  otherwise.
         """
 
         potential_instruction = assembly_line.split()[0]
@@ -196,8 +200,11 @@ class ISA(metaclass=Singleton):
 
 
 class AssemblyHandler():
-    """This class  is responsible of managing **one** assembly file.
-    It operates on the `assembly_source` file and removes/restores lines."""
+    """
+    Manages **one** assembly file.
+
+    It operates on the file by removing/restoring lines of code.
+    """
 
     def __init__(self,
                  isa: ISA,
@@ -246,47 +253,51 @@ Exiting...")
                            for i in range(0, len(self.candidates), chunksize)]
 
     def set_test_application_time(self, time: int) -> None:
-        """Sets the test application time attribute
+        """
+        Sets the test application time attribute
 
-        - Parameters:
-            - time (int): the time value in s/m/u/n/p seconds.
+        Args:
+            time (int): the time value in s/m/u/n/p seconds.
 
-        - Returns:
-            - None
+        Returns:
+            None
         """
         self.test_application_time = time
 
     def get_asm_source(self) -> pathlib.Path:
-        """Returns the assembly source file `pathlib.Path`.
+        """
+        Returns the assembly source file ``pathlib.Path``.
 
-        - Parameters:
-            - None
-
-        - Returns:
-            - pathlib.Path: The assembly source `pathlib.Path`."""
+        Returns:
+            pathlib.Path: The assembly source ``pathlib.Path``.
+        """
 
         return self.asm_file
 
     def get_code(self) -> list[Codeline]:
-        """Returns the parsed code as a list of `Codelines`.
-
-        Parameters:
-            - None
+        """
+        Returns the parsed code as a list of ``Codelines``.
 
         Returns:
-            - list: A list of `Codeline` entries."""
+            list: A list of ``Codeline`` entries.
+        """
 
         return [codeline for chunk in self.candidates for codeline in chunk]
 
     def get_candidate(self, lineno: int) -> Codeline:
-        """Returns the Codeline in candidates with the specified lineno
+        """
+        Returns the Codeline in candidates with the specified lineno
 
-        - Parameters:
-            - lineno (int): the line number of the candidate to be found.
+        Args:
+            lineno (int): the line number of the candidate to be found.
 
-        - Returns:
-            - Codeline: the `Codeline` with `Codeline.lineno == lineno`
-            if found. Raises LookupError otherwise."""
+        Returns:
+            Codeline: the ```Codeline`` with ``Codeline.lineno == lineno```
+            if found. Raises LookupError otherwise.
+
+        Raises:
+            LookUpError: If the requested Codeline does not exist
+        """
 
         for chunk in self.candidates:
 
@@ -299,16 +310,18 @@ Exiting...")
         raise LookupError(f"Requested Codeline with {lineno=} not found!")
 
     def get_random_candidate(self, pop_candidate: bool = True) -> Codeline:
-        """In a uniform random manner selects one `Codeline` and returns it
-        while also optionally removing it from the `candidate` collection
+        """
+        In a uniform random manner selects one ``Codeline`` and returns it
+        while also optionally removing it from the ``candidate`` collection
 
-        - Parameters:
-            - pop_candidate (bool): When True, deletes the `Codeline` from the
+        Args:
+            pop_candidate (bool): When True, deletes the ``Codeline`` from the
             collection after identifying it.
 
-        - Returns:
-            - Codeline: A random `Codeline` from a random `self.candidates`
-            chunk."""
+        Returns:
+            Codeline: A random ``Codeline`` from a random ``self.candidates``
+            chunk.
+        """
 
         random_chunk = random.randint(0, len(self.candidates) - 1)
         random_codeline = \
@@ -328,16 +341,18 @@ Exiting...")
         return codeline
 
     def remove(self, codeline: Codeline) -> None:
-        """Creates a new assembly file by using the current `self.asm_code`
-        as a source and skips the  the line which corresponds to `codeline`'s
-        `lineno` attribute.
+        """
+        Creates a new assembly file by using the current ``self.asm_code``
+        as a source and skips the  the line which corresponds to ``codeline``'s
+        ``lineno`` attribute.
 
-        - Parameters:
-            - codeline (Codeline): The `Codeline` to be removed from the
-            assembly file.
+        Args:
+            codeline (Codeline): The ``Codeline`` to be removed from the
+                                 assembly file.
 
-        - Returns:
-            - None"""
+        Returns:
+            None
+        """
 
         with open(self.asm_file) as source, \
              tempfile.NamedTemporaryFile('w', delete=False) as new_source:
@@ -370,14 +385,14 @@ Exiting...")
         log.debug(f"Changelog entries are now {self.asm_file_changelog}")
 
     def restore(self) -> None:
-        """Re-enters the last `Codeline` from the changelog to the assembly
-        file. The `self.candidates` lineno fields are updated if >= than the
+        """
+        Re-enters the last ``Codeline`` from the changelog to the assembly
+        file. The ``self.candidates`` lineno fields are updated if >= than the
         entry which is being restored.
 
-        Parameters:
-            - None
         Returns:
-            - None"""
+            None
+        """
 
         if not self.asm_file_changelog:
             log.debug(f"{self.asm_file_changelog=}  empty, nothing to restore")
@@ -427,15 +442,15 @@ Exiting...")
             new_file.replace(self.asm_file)
 
     def save(self):
-        """Saves the current version of assembly file. The filename
+        """
+        Saves the current version of assembly file. The filename
         will be the original stem plus all current changelog codelines'
-        linenos seperated with a dash. If `self.asm_file_changelog` is
+        linenos seperated with a dash. If ``self.asm_file_changelog`` is
         empty, it does nothing.
 
-        Parameters:
-            - None
         Returns:
-            - Nothing"""
+            None
+        """
 
         if not self.asm_file_changelog:
             log.debug("No changes in changelog to be saved.")

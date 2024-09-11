@@ -8,6 +8,7 @@ import re
 import enum
 import pathlib
 import csv
+from typing import Any
 
 # TEMPORARY
 log = logging.getLogger("testcrush logger")
@@ -24,35 +25,34 @@ log.addHandler(log_file)
 
 
 class Compilation(enum.Enum):
-
+    """Statuses for the VCS compilation of HDL sources."""
     ERROR = 0  # stderr contains text
     SUCCESS = 1  # None of the above
 
 
 class LogicSimulation(enum.Enum):
-
+    """Statuses for the simv logic simulation of a given program."""
     TIMEOUT = 0  # Endless loop
     SIM_ERROR = 1  # stderr contains text
     SUCCESS = 2  # None of the above
 
 
 class LogicSimulationException(BaseException):
-
+    """Custom exception for the simv logic simulation."""
     def __init__(self, message="Error during VC Logic Simulation"):
         self.message = message
         super().__init__(self.message)
 
 
 class FaultSimulation(enum.Enum):
-
+    """Statuses for the Z01X fault simulation."""
     TIMEOUT = 0  # Wall-clock
     FSIM_ERROR = 1  # stderr contains text
     SUCCESS = 2  # None of the above
 
 
 class Fault():
-    """Generic representation of a fault.
-    All attributes are set as strings"""
+    """Generic representation of a fault. All attributes are set as strings."""
 
     def __init__(self, **fault_attributes: dict[str, str]) -> 'Fault':
         for attribute, value in fault_attributes.items():
@@ -74,12 +74,38 @@ class Fault():
 
         return False
 
-    def get(self, attribute: str, default: str | None = None) -> str:
-        """Generic getter method."""
+    def get(self, attribute: str, default: str | None = None) -> str | Any:
+        """
+        Generic getter method for arbitrary attribute.
+
+        Args:
+            attribute (str): The requested attribute of the fault.
+            default (str | None): A default value to be used as a guard.
+
+        Returns:
+            str | Any: The fault attribute. If no cast has been performed on
+            the attribute then the default type is ``str``.
+        """
+
         return getattr(self, attribute.replace(" ", "_"), default)
 
     def cast_attribute(self, attribute: str, func: callable) -> None:
-        """Casts the type of the internal attribute"""
+        """
+        Casts the type of the internal attribute
+
+        Args:
+            attribute (str): The requested attribute of the fault to be casted.
+            func (callable): A function to cast the fault attribute.
+
+        Returns:
+            None
+
+        Raises:
+            KeyError: If the requested attribute does not exist.
+            ValueError: If the cast cannot be performed e.g., when
+                       ``int('a')``.
+        """
+
         attribute = attribute.replace(" ", "_")
         try:
             self.__dict__[attribute] = func(getattr(self, attribute))
@@ -95,9 +121,11 @@ member of {self.__class__}")
 
 
 class CSVFaultReport():
-    """Manipulates the VC-Z01X summary and report **CSV** files which are
-    generated after fault simulation. The `report` instruction specified in the
-    `fcm.tcl` file **MUST** be executed with the `-csv` option."""
+    """Manipulates the VC-Z01X summary and report **CSV** files.
+
+    These files are expected to be generated after fault simulation.
+    The ``report`` instruction specified in the``fcm.tcl`` file **MUST** be
+    executed with the ``-csv`` option."""
 
     def __init__(self, fault_summary: pathlib.Path,
                  fault_report: pathlib.Path) -> "CSVFaultReport":
@@ -106,13 +134,18 @@ class CSVFaultReport():
         self.fault_report: pathlib.Path = fault_report.absolute()
 
     def set_fault_summary(self, fault_summary: str) -> None:
-        """Setter method for fault summary.
+        """
+        Setter method for fault summary.
 
-        - Parameters:
-            - fault_summary (str): The new fault summary filename.
+        Args:
+            fault_summary (str): The new fault summary filename.
 
-        - Returns:
-            - None. Raises FileExistsError if the file does not exist."""
+        Returns:
+            None
+
+        Raises:
+            FileExistsError: if the file does not exist.
+        """
 
         if not pathlib.Path(fault_summary).exists():
             raise FileExistsError(f"{fault_summary=} does not exist!")
@@ -120,13 +153,17 @@ class CSVFaultReport():
         self.fault_summary = pathlib.Path(fault_summary).absolute()
 
     def set_fault_report(self, fault_report: str) -> None:
-        """Setter method for fault report.
+        """
+        Setter method for fault report.
 
-        - Parameters:
-            - fault_report (str): The new fault report filename.
+        Args:
+            fault_report (str): The new fault report filename.
 
-        - Returns:
-            - None. Raises FileExistsError if the file does not exist."""
+        Returns:
+            None
+
+        Raises:
+            FileExistsError: If the file does not exist."""
 
         if not pathlib.Path(fault_report).exists():
             raise FileExistsError(f"{fault_report=} does not exist!")
@@ -136,15 +173,20 @@ class CSVFaultReport():
     def extract_summary_cells_from_row(self,
                                        row: int,
                                        *cols: int) -> list[str]:
-        """Returns a sequence of cells from a row of the
-        `self.fault_summary` **CSV** file.
+        """
+        Returns a sequence of cells from a row of the
+        ``self.fault_summary`` **CSV** file.
 
-        - Parameters:
-            - row (int): the row number (1-based indexing).
-            - *cols (ints): the columns' numbers (1-based indexing).
+        Args:
+            row (int): the row number (1-based indexing).
+            *cols (ints): the columns' numbers (1-based indexing).
 
-        - Returns:
-            - list[str]: The cells of the fault summary."""
+        Returns:
+            list[str]: The cells of the fault summary.
+
+        Raises:
+            SystemExit: If a requested column or row is out-of-bounds.
+        """
 
         with open(self.fault_summary) as csv_source:
 
@@ -167,14 +209,12 @@ for fault summary {self.fault_summary}.")
             exit(1)
 
     def parse_fault_report(self) -> list[Fault]:
-        """Parses the `self.fault_report` **CSV** file and returns a dictionary
-        with its contents, ommiting any column if specified.
+        """
+        Parses the ``self.fault_report`` **CSV** file and returns
+        a dictionary with its contents, ommiting any column if specified.
 
-        - Parameters:
-            - None:
-
-        - Returns:
-            - list[Fault]: A list with synopys fault format objects.
+        Returns:
+            list[Fault]: A list with `Fault` entries.
         """
 
         with open(self.fault_report) as csv_source:
@@ -191,24 +231,31 @@ for fault summary {self.fault_summary}.")
     def extract_summary_coverage(summary: pathlib.Path,
                                  regexp: re.Pattern,
                                  group_index: int) -> float:
-        """Extracts the coverage percentage from the summary text file
-        file via multilined regex matching
+        """
+        Extracts the coverage percentage from the summary text file
+        file via multilined regex matching.
 
-        - Parameters:
-            - summary (pathlib.Path): The location of the summary.txt report
-            - regexp (re.Pattern): The regular expression to match the intended
-            coverage line. Note that it must have at least one capture group,
-            which should precicely hold the coverage percentage.
-            - group_index (int): The capture group index of the `regexp` that
-            holds the coverage percentage
+        Args:
+            summary (pathlib.Path): The location of the ``summary.txt`` report.
+            regexp (re.Pattern): The regular expression to match the intended
+                                 coverage line. Note that it must have at least
+                                 one capture group, which should precicely hold
+                                 the coverage percentage.
+            group_index (int): The capture group index of the regexp that
+                               holds the coverage percentage.
 
-        - Returns:
-            - float: The coverage percentage which was captured as float.
+        Returns:
+            float: The coverage percentage which was captured as float.
+
+        Raises:
+            ValueError: If the provided `regexp` does not match anything.
+            SystemExit: If the conversion of the matched capture group to float
+                        fails.
         """
         with open(summary) as source:
             data = source.read()
 
-        match = re.search(regexp, data)
+        match = re.search(regexp, data, re.DOTALL | re.MULTILINE)
 
         if not match:
             raise ValueError(f"Unable to match coverage percentage with\
@@ -216,7 +263,14 @@ for fault summary {self.fault_summary}.")
 
         log.debug(f"Match {match=}. Groups {match.groups()}")
 
-        return float(match.group(group_index))
+        try:
+            coverage = float(match.group(group_index))
+
+        except BaseException:
+            log.critical(f"Unable to cast {match.group(group_index)} to float")
+            exit(1)
+
+        return coverage
 
     @staticmethod
     def compute_flist_coverage(fault_list: list[Fault],
@@ -224,23 +278,29 @@ for fault summary {self.fault_summary}.")
                                formula: str,
                                precision: int = 4,
                                status_attribute: str = "Status") -> float:
-        """Computes the test coverage value as described by `formula`,
+        """
+        Computes the test coverage value as described by `formula`,
         which must be comprised of mathematical operations of Z01X fault
         classes (i.e., 2 letter strings).
 
-        - Parameters:
-            - fault_list (list(Fault)): A fault-list generated after parsing
-            the Z01X fault report csv file.
-            - sff_file (pathlib.Path): The fault format configuration file.
-            - formula (str): A formula which computes the coverage e.g.,
-            `"DD/(NA + DA + DN + DD)"`.
-            - precision (int): the number of decimals to consider for
-            the coverage. Default is `4`.
-            - status_attribute (str): The attribute of the `Fault` object
-            which represents its Z01X fault status/class. Default is "Status".
-        - Returns:
+        Args:
+            fault_list (list[Fault]): A fault-list generated after parsing
+                                      the Z01X fault report csv file.
+            sff_file (pathlib.Path): The fault format configuration file.
+            formula (str): A formula which computes the coverage e.g.,
+                           ``"DD/(NA + DA + DN + DD)"``.
+            precision (int): the number of decimals to consider for
+                             the coverage. Default is ``4``.
+            status_attribute (str): The attribute of the ``Fault`` object
+                                    which represents its Z01X fault status.
+                                    Default value is ``"Status"``.
+        Returns:
             float: The coverage value in [0.0, 1.0] i.e., the evaluated
-            `formula`. Not the precentage!"""
+            ``formula``. Not as a precentage!
+        Raises:
+            SystemExit: If the "StatusGroups" segment is not found in the
+                        configuration .sff file.
+        """
 
         # Gather fault statuses numbers.
         fault_statuses = dict()
@@ -308,14 +368,17 @@ class ZoixInvoker():
 
     @staticmethod
     def execute(instruction: str, timeout: float = None) -> tuple[str, str]:
-        """Executes a bash command-string instruction and returns
-        the `stdout` and `stderr` responses as a tuple.
+        """
+        Executes a **bash** instruction and returns
+        the ``stdout`` and ``stderr`` responses as a tuple.
 
-        - Parameters:
-            - instruction (str): The bash instruction to be executed.
-        - Returns:
-            - tuple(str, str): The stdout (index 0) and the stderr (index 1)
-            as strings."""
+        Args:
+            instruction (str): The bash instruction to be executed.
+
+        Returns:
+            tuple(str, str): The stdout (index 0) and the stderr (index 1)
+            as strings.
+        """
 
         log.debug(f"Executing {instruction}...")
         try:
@@ -337,14 +400,20 @@ class ZoixInvoker():
             return "TimeoutExpired", "TimeoutExpired"
 
     def compile_sources(self, *instructions: str) -> Compilation:
-        """Performs compilation of HDL files
+        """
+        Performs compilation of HDL files
 
-        - Parameters:
-            - *instructions (str): A variadic number of bash shell instructions
+        Args:
+            *instructions (str): A variadic number of bash shell instructions
 
         Returns:
-            - Compilation: A status Enum to signify the success or failure
+            Compilation: A status Enum to signify the success or failure
             of the compilation.
+
+                - ERROR: if any text was found in the ``stderr`` stream
+                  during the execution of an instruction.
+                - SUCCESS: otherwise.
+
         """
 
         compilation_status = Compilation.SUCCESS
@@ -361,31 +430,40 @@ class ZoixInvoker():
         return compilation_status
 
     def logic_simulate(self, *instructions: str, **kwargs) -> LogicSimulation:
-        """Performs logic simulation of user-defined firmware and captures the
+        """
+        Performs logic simulation of user-defined firmware and captures the
         test application time
-        - Parameters:
-            - *instructions (str): A variadic number of bash instructions
-            - **kwargs: User-defined options needed for the
-            evaluation of the result of the logic simulation. These are:
-                - timeout (float): A timeout in **seconds** to be
-                used for **each** of the executed lsim instruction.
-                - success_regexp (re.Pattern): A regular expression which is
-                used for matching in every line of the `stdout` stream to
-                signify the sucessfull completion of the logic simulation.
-                - tat_regexp_capture_group (int): An integer which corresponds
-                to the index of the TaT value on the custom regexp
-                (if provided). By default is 1, mapping to the default
-                `success_regexp` group.
-                - tat_value (list): An **empty** list to store the value of the
-                tat after being successfully matched with `success_regexp`.
-                Pass-by-reference style.
-        - Returns:
-            - LogicSimulation (enum):
+
+        Args:
+            *instructions (str): A variadic number of bash instructions
+            **kwargs: User-defined options needed for the evaluation of the
+              result of the logic simulation. These options are:
+
+                - **timeout** (float): A timeout in **seconds** to be used for
+                  **each** of the executed logic simulation instructions.
+
+                - **success_regexp** (re.Pattern): A regular expression used
+                  for matching in every line of the ``stdout`` stream to mark
+                  the successful completion of the logic simulation.
+
+                - **tat_regexp_capture_group** (int): The index of the capture
+                  group in the custom regular expression for the TaT value.
+                  Default is 1, corresponding to the ``success_regexp`` group.
+
+                - **tat_value** (list): An **empty** list to store the TaT
+                  valueafter being successfully matched with
+                  ``success_regexp``. The list is passed by reference and
+                  the result will be appended to it.
+
+        Returns:
+            LogicSimulation: A status Enum which is:
+
                 - TIMEOUT: if user defined timeout has been triggered.
-                - SIM_ERROR: if any text was found in the `stderr` stream
-                during the execution of an instruction.
+                - SIM_ERROR: if any text was found in the ``stderr`` stream
+                    during the execution of an instruction.
                 - SUCCESS: if the halting regexp matched text from the
-               `stdout` stream."""
+                    ``stdout`` stream.
+        """
 
         timeout: float = kwargs.get("timeout", None)
 
@@ -467,20 +545,23 @@ Check the debug log for more information!")
     def create_fcm_script(self,
                           fcm_file: pathlib.Path,
                           **fcm_options) -> pathlib.Path:
-        """Generates and returns a fault campaign manager TCL script based on
+        """
+        Generates and returns a fault campaign manager TCL script based on
         user-defined settings from the setup file.
 
-        - Parameters:
-            - fcm_file (pathlib.Path): The full path (absolute or relative) \
-            of the fcm script.
-            - **fcm_options: Keyword arguments where each key is an fcm \
-            command and the corresponding value the flags or options (if any).\
-             The commands should adhere to the supported commands documented \
-            in the VCS-Z01X user guide. No sanitization checks are performed \
-            by the method.
+        Args:
+            fcm_file (pathlib.Path): The full path (absolute or relative)
+                                     of the fcm script.
+            **fcm_options: Keyword arguments where each key is an fcm
+                           command and the corresponding value the flags or
+                           options (if any). The commands should adhere to the
+                           supported commands documented in the VCS-Z01X user
+                           guide. No sanitization checks are performed by the
+                           method.
 
-        - Returns:
-            - pathlib.Path: The absolute path of the file."""
+        Returns:
+            pathlib.Path: The absolute path of the generated file.
+        """
 
         log.debug(f"Generating fault campaign manager script \
 {fcm_file.absolute()}.")
@@ -496,20 +577,24 @@ Check the debug log for more information!")
         return fcm_file.absolute()
 
     def fault_simulate(self, *instructions: str, **kwargs) -> FaultSimulation:
-        """Performs fault simulation of a user-defined firmware.
+        """
+        Performs fault simulation of a user-defined firmware.
 
-        - Parameters:
-            - *instructions (str): A variadic number of shell instructions
+        Args:
+            *instructions (str): A variadic number of shell instructions
             to invoke Z01X.
-            - **kwargs: User-defined options for fault simulation control
+            **kwargs: User-defined options for fault simulation control.
+
                 - timeout (float): A timeout in **seconds** for each fsim
-                instruction.
-        - Returns:
-            - FaultSimulation (enum): A status Enum which is
+                    instruction.
+
+        Returns:
+            FaultSimulation: A status Enum which is:
+
                 - TIMEOUT: if the timeout kwarg was provided and some
-                instruction iolated it.
-                - FSIM_ERROR: if the `stderr` stream contains text during the
-                execution of an instruction.
+                  instruction exceeded it.
+                - FSIM_ERROR: if the ``stderr`` stream contains text during the
+                  execution of an instruction.
                 - SUCCESS: if none of the above.
         """
 
