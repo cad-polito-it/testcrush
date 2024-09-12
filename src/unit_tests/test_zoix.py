@@ -329,6 +329,12 @@ report -campaign NAME -report fsim_out_hier.rpt -overwrite -hierarchical 3
             fault_simulation = test_obj.fault_simulate("mock_fsim_instruction1", "mock_fsim_instruction2")
             self.assertEqual(fault_simulation, zoix.FaultSimulation.SUCCESS)
 
+        with mock.patch("zoix.ZoixInvoker.execute", return_value = ("Some fault sim text", "Stderr text but must be ignored!")) as mocked_execute:
+
+            fault_simulation = test_obj.fault_simulate("mock_fsim_instruction1", "mock_fsim_instruction2",
+                                                       allow = [re.compile(r"Stderr text but must be ignored\!")])
+            self.assertEqual(fault_simulation, zoix.FaultSimulation.SUCCESS)
+
         # FSIM Error
         with mock.patch("zoix.ZoixInvoker.execute", return_value = ("Some fault sim text", "Stderr has text!")) as mocked_execute:
 

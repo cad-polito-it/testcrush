@@ -586,7 +586,10 @@ Check the debug log for more information!")
             **kwargs: User-defined options for fault simulation control.
 
                 - timeout (float): A timeout in **seconds** for each fsim
-                    instruction.
+                  instruction.
+                - allow (list[re.Pattern]): Series of regexps to look for in
+                  ``stderr`` and allow continuation without raising any error
+                  messages.
 
         Returns:
             FaultSimulation: A status Enum which is:
@@ -601,12 +604,28 @@ Check the debug log for more information!")
         fault_simulation_status = FaultSimulation.SUCCESS
 
         timeout: float = kwargs.get("timeout", None)
+        allow: list[re.Pattern] = kwargs.get("allow", None)
 
         for cmd in instructions:
 
             stdout, stderr = self.execute(cmd, timeout=timeout)
 
             if stderr and stderr != "TimeoutExpired":
+
+                if allow:
+
+                    continue_execution = False
+
+                    for regexp in allow:
+
+                        if regexp.search(stderr):
+
+                            continue_execution = True
+                            break
+
+                    if continue_execution:
+
+                        continue
 
                 log.debug(f"Error during execution of {cmd}\n\
                 ------[STDERR STREAM]------\n\
