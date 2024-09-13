@@ -419,12 +419,12 @@ class A0():
 
             if self.evaluate(old_stl_stats, new_stl_stats):
 
-                old_stl_stats = new_stl_stats
-                iteration_stats["verdict"] = "Proceed"
-
                 print(f"\tSTL has better stats than before!\n\t\tOld TaT: \
 {old_stl_stats[0]} | Old Coverage: {old_stl_stats[1]}\n\t\tNew TaT: \
 {new_stl_stats[0]} | New Coverage: {new_stl_stats[1]}\n\tProceeding!")
+
+                old_stl_stats = new_stl_stats
+                iteration_stats["verdict"] = "Proceed"
 
             else:
 
