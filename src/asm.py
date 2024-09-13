@@ -367,6 +367,7 @@ Exiting...")
 
                 new_source.write(f"{line}")
 
+            new_source.flush()
             new_file = pathlib.Path(new_source.name)
             shutil.move(new_file, self.asm_file)
 
@@ -438,6 +439,7 @@ Exiting...")
 
             log.debug(f"Changelog entries are now {self.asm_file_changelog}")
 
+            new_source.flush()
             new_file = pathlib.Path(new_source.name)
             shutil.move(new_file, self.asm_file)
 
