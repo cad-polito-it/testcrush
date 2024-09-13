@@ -381,23 +381,24 @@ class ZoixInvoker():
         """
 
         log.debug(f"Executing {instruction}...")
-        try:
-            with subprocess.Popen(
-              ["/bin/bash", "-c", instruction],
-              stdin=subprocess.PIPE,
-              stdout=subprocess.PIPE,
-              stderr=subprocess.PIPE,
-              text=True) as process:
+
+        with subprocess.Popen(
+            ["/bin/bash", "-c", instruction],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True) as process:
+
+            try:
 
                 stdout, stderr = process.communicate(timeout=timeout)
+                return stdout, stderr
 
-            return stdout, stderr
+            except subprocess.TimeoutExpired:
 
-        except subprocess.TimeoutExpired:
-
-            log.debug(f"TIMEOUT during the execution of:\n\t{instruction}.")
-            process.kill()
-            return "TimeoutExpired", "TimeoutExpired"
+                log.debug(f"TIMEOUT during the execution of:\n\t{instruction}")
+                process.kill()
+                return "TimeoutExpired", "TimeoutExpired"
 
     def compile_sources(self, *instructions: str) -> Compilation:
         """
