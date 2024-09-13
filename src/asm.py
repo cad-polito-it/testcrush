@@ -368,7 +368,7 @@ Exiting...")
                 new_source.write(f"{line}")
 
             new_file = pathlib.Path(new_source.name)
-            new_file.replace(self.asm_file)
+            shutil.move(new_file, self.asm_file)
 
         # Update the lineno attribute of every codeline
         # that is below the just removed codeline.
@@ -439,7 +439,7 @@ Exiting...")
             log.debug(f"Changelog entries are now {self.asm_file_changelog}")
 
             new_file = pathlib.Path(new_source.name)
-            new_file.replace(self.asm_file)
+            shutil.move(new_file, self.asm_file)
 
     def save(self):
         """
