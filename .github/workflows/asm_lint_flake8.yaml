@@ -29,4 +29,4 @@ jobs:
     - name: Lint with flake8
       run: |
         cd src
-        flake8 asm.py
+        flake8 asm.py --max-line-length 120

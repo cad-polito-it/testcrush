@@ -34,9 +34,7 @@ class Codeline:
     valid_insn: bool
 
     def __repr__(self):
-        return f"Codeline({self.lineno}, \
-\"{self.data}\", \
-valid_insn = {self.valid_insn})"
+        return f"Codeline({self.lineno}, \"{self.data}\", valid_insn = {self.valid_insn})"
 
     def __str__(self):
         return f"[#{self.lineno}]: {self.data}"
@@ -152,14 +150,12 @@ class ISA(metaclass=Singleton):
         for lineno, line in enumerate(lines, start=1):
 
             if not line:
-                raise SyntaxError(f"Empty line at line number {lineno} of \
-{self.source} file")
+                raise SyntaxError(f"Empty line at line number {lineno} of {self.source} file")
 
             # Simple sanity check
             if line[0] != '#' and len(line.split()) > 1:
 
-                raise SyntaxError(f"Wrong syntax at line {lineno} of \
-{self.source} file")
+                raise SyntaxError(f"Wrong syntax at line {lineno} of {self.source} file")
 
             # Skip comment lines
             if line[0] == '#':
@@ -184,15 +180,13 @@ class ISA(metaclass=Singleton):
 
     def is_instruction(self, assembly_line: str) -> bool:
         """
-        Checks if ``assembly_line``'s first sub-string is present the class
-        ``keywords`` set.
+        Checks if ``assembly_line``'s first sub-string is present the class ``keywords`` set.
 
         Args:
             assembly_line (str): an assembly mnemonic.
 
         Returns:
-            bool: True if ``assembly_line`` is in ``mnemonics``, False
-                  otherwise.
+            bool: True if ``assembly_line`` is in ``mnemonics``, False otherwise.
         """
 
         potential_instruction = assembly_line.split()[0]
@@ -292,8 +286,7 @@ Exiting...")
             lineno (int): the line number of the candidate to be found.
 
         Returns:
-            Codeline: the ```Codeline`` with ``Codeline.lineno == lineno```
-            if found. Raises LookupError otherwise.
+            Codeline: the ``Codeline`` with ``Codeline.lineno == lineno`` if found.
 
         Raises:
             LookUpError: If the requested Codeline does not exist
@@ -311,30 +304,30 @@ Exiting...")
 
     def get_random_candidate(self, pop_candidate: bool = True) -> Codeline:
         """
-        In a uniform random manner selects one ``Codeline`` and returns it
-        while also optionally removing it from the ``candidate`` collection
+        In a uniform random manner selects one ``Codeline`` and returns it while also optionally removing it from
+        the ``candidate`` collection.
 
         Args:
-            pop_candidate (bool): When True, deletes the ``Codeline`` from the
-            collection after identifying it.
+            pop_candidate (bool): When True, deletes the ``Codeline`` from the collection after identifying it.
 
         Returns:
-            Codeline: A random ``Codeline`` from a random ``self.candidates``
-            chunk.
+            Codeline: A random ``Codeline`` from a random ``self.candidates`` chunk.
         """
 
         random_chunk = random.randint(0, len(self.candidates) - 1)
-        random_codeline = \
-            random.randint(0,
-                           len(self.candidates[random_chunk]) - 1)
+        random_codeline = random.randint(0, len(self.candidates[random_chunk]) - 1)
 
         # Check if it's the last codeline of the chunk
         # and delete the chunk after popping it.
         if pop_candidate:
+
             codeline = self.candidates[random_chunk].pop(random_codeline)
+
             if not self.candidates[random_chunk]:
                 del self.candidates[random_chunk]
+
         else:
+
             codeline = self.candidates[random_chunk][random_codeline]
 
         log.debug(f"Randomly selected {codeline=}")
@@ -342,13 +335,14 @@ Exiting...")
 
     def remove(self, codeline: Codeline) -> None:
         """
-        Creates a new assembly file by using the current ``self.asm_code``
-        as a source and skips the  the line which corresponds to ``codeline``'s
-        ``lineno`` attribute.
+        Removes the codeline from the assembly file.
+
+        Creates a new assembly file by using the current ``self.asm_code`` as a source and skips the the line which
+        corresponds to ``codeline``'s ``lineno`` attribute. The ``self.candidates`` lineno fields are updated (-1)
+        if >= than the entry which is being restored.
 
         Args:
-            codeline (Codeline): The ``Codeline`` to be removed from the
-                                 assembly file.
+            codeline (Codeline): The ``Codeline`` to be removed from the assembly file.
 
         Returns:
             None
@@ -387,9 +381,9 @@ Exiting...")
 
     def restore(self) -> None:
         """
-        Re-enters the last ``Codeline`` from the changelog to the assembly
-        file. The ``self.candidates`` lineno fields are updated if >= than the
-        entry which is being restored.
+        Re-enters the last ``Codeline`` from the changelog to the assembly file.
+
+        The ``self.candidates`` lineno fields are updated (+1) if >= than the entry which is being restored.
 
         Returns:
             None
@@ -422,8 +416,7 @@ Exiting...")
 
                     chunk_codeline += 1
 
-        with open(self.asm_file) as source, \
-             tempfile.NamedTemporaryFile('w', delete=False) as new_source:
+        with open(self.asm_file) as source, tempfile.NamedTemporaryFile('w', delete=False) as new_source:
 
             line_restored = False
             for lineno, line in enumerate(source, start=0):
@@ -445,10 +438,8 @@ Exiting...")
 
     def save(self):
         """
-        Saves the current version of assembly file. The filename
-        will be the original stem plus all current changelog codelines'
-        linenos seperated with a dash. If ``self.asm_file_changelog`` is
-        empty, it does nothing.
+        Saves the current version of assembly file. The filename will be the original stem plus all current changelog
+        codelines' linenos seperated with a dash. If ``self.asm_file_changelog`` is empty, it does nothing.
 
         Returns:
             None
@@ -458,10 +449,9 @@ Exiting...")
             log.debug("No changes in changelog to be saved.")
             return
 
-        filename = self.asm_file.parent /\
-            pathlib.Path(f"{self.asm_file.stem}-"
-                         + '-'.join([str(codeline.lineno)
-                                     for codeline in self.asm_file_changelog])
-                         + f"{self.asm_file.suffix}")
+        filename = self.asm_file.parent / pathlib.Path(f"{self.asm_file.stem}-"
+                                                       + '-'.join([str(codeline.lineno) for
+                                                                   codeline in self.asm_file_changelog])
+                                                       + f"{self.asm_file.suffix}")
 
         shutil.copy(self.asm_file, filename)

@@ -29,4 +29,4 @@ jobs:
     - name: Lint with flake8
       run: |
         cd src
-        flake8 zoix.py
+        flake8 zoix.py --max-line-length 120

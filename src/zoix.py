@@ -170,12 +170,9 @@ class CSVFaultReport():
 
         self.fault_report = pathlib.Path(fault_report).absolute()
 
-    def extract_summary_cells_from_row(self,
-                                       row: int,
-                                       *cols: int) -> list[str]:
+    def extract_summary_cells_from_row(self, row: int, *cols: int) -> list[str]:
         """
-        Returns a sequence of cells from a row of the
-        ``self.fault_summary`` **CSV** file.
+        Returns a sequence of cells from a row of the ``self.fault_summary`` **CSV** file.
 
         Args:
             row (int): the row number (1-based indexing).
@@ -200,18 +197,16 @@ class CSVFaultReport():
                 try:
                     return [csv_row[col - 1] for col in cols]
                 except IndexError:
-                    log.critical(f"A column in {cols} is out of bounds \
-for row {row} of fault summary {self.fault_summary}.")
+                    log.critical(f"A column in {cols} is out of bounds for row {row} of summary {self.fault_summary}.")
                     exit(1)
 
-            log.critical(f"Row {row} is out of bounds \
-for fault summary {self.fault_summary}.")
+            log.critical(f"Row {row} is out of bounds for fault summary {self.fault_summary}.")
             exit(1)
 
     def parse_fault_report(self) -> list[Fault]:
         """
-        Parses the ``self.fault_report`` **CSV** file and returns
-        a dictionary with its contents, ommiting any column if specified.
+        Parses the ``self.fault_report`` **CSV** file and returns  a dictionary with its contents, ommiting
+        any column if specified.
 
         Returns:
             list[Fault]: A list with `Fault` entries.
@@ -224,33 +219,26 @@ for fault summary {self.fault_summary}.")
             # Attributes
             attributes = next(reader)
 
-            return [Fault(**dict(zip(attributes, csv_row))) for csv_row
-                    in reader]
+            return [Fault(**dict(zip(attributes, csv_row))) for csv_row in reader]
 
     @staticmethod
-    def extract_summary_coverage(summary: pathlib.Path,
-                                 regexp: re.Pattern,
-                                 group_index: int) -> float:
+    def extract_summary_coverage(summary: pathlib.Path, regexp: re.Pattern, group_index: int) -> float:
         """
         Extracts the coverage percentage from the summary text file
         file via multilined regex matching.
 
         Args:
             summary (pathlib.Path): The location of the ``summary.txt`` report.
-            regexp (re.Pattern): The regular expression to match the intended
-                                 coverage line. Note that it must have at least
-                                 one capture group, which should precicely hold
-                                 the coverage percentage.
-            group_index (int): The capture group index of the regexp that
-                               holds the coverage percentage.
+            regexp (re.Pattern): The regular expression to match the intended coverage line. Note that it must have at
+                                 least one capture group, which should precicely hold the coverage percentage.
+            group_index (int): The capture group index of the regexp that holds the coverage percentage.
 
         Returns:
             float: The coverage percentage which was captured as float.
 
         Raises:
             ValueError: If the provided `regexp` does not match anything.
-            SystemExit: If the conversion of the matched capture group to float
-                        fails.
+            SystemExit: If the conversion of the matched capture group to float fails.
         """
         with open(summary) as source:
             data = source.read()
@@ -258,8 +246,7 @@ for fault summary {self.fault_summary}.")
         match = re.search(regexp, data, re.DOTALL | re.MULTILINE)
 
         if not match:
-            raise ValueError(f"Unable to match coverage percentage with\
-{regexp}")
+            raise ValueError(f"Unable to match coverage percentage with {regexp}")
 
         log.debug(f"Match {match=}. Groups {match.groups()}")
 
@@ -273,33 +260,23 @@ for fault summary {self.fault_summary}.")
         return coverage
 
     @staticmethod
-    def compute_flist_coverage(fault_list: list[Fault],
-                               sff_file: pathlib.Path,
-                               formula: str,
-                               precision: int = 4,
+    def compute_flist_coverage(fault_list: list[Fault], sff_file: pathlib.Path, formula: str, precision: int = 4,
                                status_attribute: str = "Status") -> float:
         """
-        Computes the test coverage value as described by `formula`,
-        which must be comprised of mathematical operations of Z01X fault
-        classes (i.e., 2 letter strings).
+        Computes the test coverage value as described by `formula`, which must be comprised of mathematical operations
+        of Z01X fault classes (i.e., 2 letter strings).
 
         Args:
-            fault_list (list[Fault]): A fault-list generated after parsing
-                                      the Z01X fault report csv file.
+            fault_list (list[Fault]): A fault-list generated after parsing the Z01X fault report csv file.
             sff_file (pathlib.Path): The fault format configuration file.
-            formula (str): A formula which computes the coverage e.g.,
-                           ``"DD/(NA + DA + DN + DD)"``.
-            precision (int): the number of decimals to consider for
-                             the coverage. Default is ``4``.
-            status_attribute (str): The attribute of the ``Fault`` object
-                                    which represents its Z01X fault status.
+            formula (str): A formula which computes the coverage e.g., ``"DD/(NA + DA + DN + DD)"``.
+            precision (int): the number of decimals to consider for the coverage. Default is ``4``.
+            status_attribute (str): The attribute of the ``Fault`` object which represents its Z01X fault status.
                                     Default value is ``"Status"``.
         Returns:
-            float: The coverage value in [0.0, 1.0] i.e., the evaluated
-            ``formula``. Not as a precentage!
+            float: The coverage value in [0.0, 1.0] i.e., the evaluated ``formula``. Not as a precentage!
         Raises:
-            SystemExit: If the "StatusGroups" segment is not found in the
-                        configuration .sff file.
+            SystemExit: If the "StatusGroups" segment is not found in the configuration .sff file.
         """
 
         # Gather fault statuses numbers.
@@ -323,13 +300,11 @@ for fault summary {self.fault_summary}.")
                     re.MULTILINE).group(1).splitlines()
 
             except AttributeError:
-                log.critical(f"Unable to extract StatusGroups segment \
-from the {sff_file}. Exiting...")
+                log.critical(f"Unable to extract StatusGroups segment from the {sff_file}. Exiting...")
                 exit(1)
 
         # Remove empty lines if any.
-        status_groups_raw = list(filter(lambda x: len(x),
-                                        map(str.strip, status_groups_raw)))
+        status_groups_raw = list(filter(lambda x: len(x), map(str.strip, status_groups_raw)))
         status_groups = dict()
 
         for line in status_groups_raw:
@@ -352,13 +327,7 @@ from the {sff_file}. Exiting...")
                status not in status_groups.keys():
                 non_present_statuses[status] = 0
 
-        return round(eval(formula,
-                          {
-                            **fault_statuses,
-                            **status_groups,
-                            **non_present_statuses
-                          }),
-                     precision)
+        return round(eval(formula, {**fault_statuses, **status_groups, **non_present_statuses}), precision)
 
 
 class ZoixInvoker():
@@ -369,8 +338,7 @@ class ZoixInvoker():
     @staticmethod
     def execute(instruction: str, timeout: float = None) -> tuple[str, str]:
         """
-        Executes a **bash** instruction and returns
-        the ``stdout`` and ``stderr`` responses as a tuple.
+        Executes a **bash** instruction and returns the ``stdout`` and ``stderr`` responses as a tuple.
 
         Args:
             instruction (str): The bash instruction to be executed.
@@ -382,12 +350,9 @@ class ZoixInvoker():
 
         log.debug(f"Executing {instruction}...")
 
-        with subprocess.Popen(
-            ["/bin/bash", "-c", instruction],
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True) as process:
+        with subprocess.Popen(["/bin/bash", "-c", instruction],
+                              stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                              stderr=subprocess.PIPE, text=True) as process:
 
             try:
 
@@ -408,13 +373,10 @@ class ZoixInvoker():
             *instructions (str): A variadic number of bash shell instructions
 
         Returns:
-            Compilation: A status Enum to signify the success or failure
-            of the compilation.
+            Compilation: A status Enum to signify the success or failure of the compilation.
 
-                - ERROR: if any text was found in the ``stderr`` stream
-                  during the execution of an instruction.
+                - ERROR: if any text was found in the ``stderr`` stream during the execution of an instruction.
                 - SUCCESS: otherwise.
-
         """
 
         compilation_status = Compilation.SUCCESS
@@ -432,38 +394,31 @@ class ZoixInvoker():
 
     def logic_simulate(self, *instructions: str, **kwargs) -> LogicSimulation:
         """
-        Performs logic simulation of user-defined firmware and captures the
-        test application time
+        Performs logic simulation of user-defined firmware and captures the test application time
 
         Args:
             *instructions (str): A variadic number of bash instructions
-            **kwargs: User-defined options needed for the evaluation of the
-              result of the logic simulation. These options are:
+            **kwargs: User-defined options needed for the evaluation of the result of the logic simulation.
+                      These options are:
 
-                - **timeout** (float): A timeout in **seconds** to be used for
-                  **each** of the executed logic simulation instructions.
+                - **timeout** (float): A timeout in **seconds** to be used for **each** of the executed logic
+                  simulation instructions.
 
-                - **success_regexp** (re.Pattern): A regular expression used
-                  for matching in every line of the ``stdout`` stream to mark
-                  the successful completion of the logic simulation.
+                - **success_regexp** (re.Pattern): A regular expression used for matching in every line of the
+                  ``stdout`` stream to mark the successful completion of the logic simulation.
 
-                - **tat_regexp_capture_group** (int): The index of the capture
-                  group in the custom regular expression for the TaT value.
-                  Default is 1, corresponding to the ``success_regexp`` group.
+                - **tat_regexp_capture_group** (int): The index of the capture group in the custom regular
+                  expression for the TaT value. Default is 1, corresponding to the ``success_regexp`` group.
 
-                - **tat_value** (list): An **empty** list to store the TaT
-                  valueafter being successfully matched with
-                  ``success_regexp``. The list is passed by reference and
-                  the result will be appended to it.
+                - **tat_value** (list): An **empty** list to store the TaT value after being successfully matched with
+                  ``success_regexp``. The list is used to mimic a pass-by-reference.
 
         Returns:
             LogicSimulation: A status Enum which is:
 
                 - TIMEOUT: if user defined timeout has been triggered.
-                - SIM_ERROR: if any text was found in the ``stderr`` stream
-                    during the execution of an instruction.
-                - SUCCESS: if the halting regexp matched text from the
-                    ``stdout`` stream.
+                - SIM_ERROR: if any text was found in the ``stderr`` stream during the execution of an instruction.
+                - SUCCESS: if the halting regexp matched text from the ``stdout`` stream.
         """
 
         timeout: float = kwargs.get("timeout", None)
@@ -473,8 +428,7 @@ class ZoixInvoker():
         # where X = a digit and Y = time unit.
         # Capturing of the simulation duration
         # done for possible TaT purposes.
-        default_regexp = re.compile(r"\$finish[^0-9]+([0-9]+)[m|u|n|p]s",
-                                    re.DOTALL)
+        default_regexp = re.compile(r"\$finish[^0-9]+([0-9]+)[m|u|n|p]s", re.DOTALL)
         success: re.Pattern = kwargs.get("success_regexp", default_regexp)
 
         # By default, a single capturing  group
@@ -527,9 +481,8 @@ class ZoixInvoker():
                         tat_value.append(int(test_application_time))
 
                     except ValueError:
-                        raise LogicSimulationException(f"Test application \
-time was not correctly captured {test_application_time=} and could not be \
-converted to an integer. Perhaps there is something wrong with your regular \
+                        raise LogicSimulationException(f"Test application time was not correctly captured \
+{test_application_time=} and could not be converted to an integer. Perhaps there is something wrong with your regular \
 expression '{success}' ?")
 
                     log.debug(f"Simulation SUCCESS: {end_reached.groups()}")
@@ -537,28 +490,20 @@ expression '{success}' ?")
                     break
 
         if not simulation_status:
-            raise LogicSimulationException(f"Simulation status was not set \
-during the execution of {instructions}. Is your regular expression correct? \
-Check the debug log for more information!")
+            raise LogicSimulationException(f"Simulation status was not set during the execution of {instructions}. \
+Is your regular expression correct? Check the debug log for more information!")
 
         return simulation_status
 
-    def create_fcm_script(self,
-                          fcm_file: pathlib.Path,
-                          **fcm_options) -> pathlib.Path:
+    def create_fcm_script(self, fcm_file: pathlib.Path, **fcm_options) -> pathlib.Path:
         """
-        Generates and returns a fault campaign manager TCL script based on
-        user-defined settings from the setup file.
+        Generates and returns a fault campaign manager TCL script based on user-defined settings from the setup file.
 
         Args:
-            fcm_file (pathlib.Path): The full path (absolute or relative)
-                                     of the fcm script.
-            **fcm_options: Keyword arguments where each key is an fcm
-                           command and the corresponding value the flags or
-                           options (if any). The commands should adhere to the
-                           supported commands documented in the VCS-Z01X user
-                           guide. No sanitization checks are performed by the
-                           method.
+            fcm_file (pathlib.Path): The full path (absolute or relative) of the fcm script.
+            **fcm_options: Keyword arguments where each key is an fcm command and the corresponding value the flags or
+                           options (if any). The commands should adhere to the supported commands documented in the
+                           VCS-Z01X user guide. No sanitization checks are performed by the method.
 
         Returns:
             pathlib.Path: The absolute path of the generated file.
