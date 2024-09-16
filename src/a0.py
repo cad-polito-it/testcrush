@@ -2,8 +2,6 @@
 # SPDX-License-Identifier: MIT
 
 import os
-import sys
-import logging
 import pathlib
 import shutil
 import subprocess
@@ -15,18 +13,7 @@ import zipfile
 import csv
 import time
 
-# TEMPORARY
-log = logging.getLogger("testcrush logger")
-log.setLevel(logging.DEBUG)
-log_stream = logging.StreamHandler(stream=sys.stdout)
-log_stream.setLevel(logging.INFO)
-log_stream.setFormatter(logging.Formatter('[%(levelname)s]: %(message)s'))
-log_file = logging.FileHandler(filename="debug.log", mode='w')
-log_file.setLevel(logging.DEBUG)
-log_file.setFormatter(logging.Formatter(
-    '%(lineno)d:[%(levelname)s|%(module)s|%(funcName)s]: %(message)s'))
-log.addHandler(log_stream)
-log.addHandler(log_file)
+from utils import log
 
 
 def compile_assembly(*instructions, exit_on_error: bool = False) -> bool:

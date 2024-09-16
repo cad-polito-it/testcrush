@@ -1,27 +1,13 @@
 #!/usr/bin/python3
 # SPDX-License-Identifier: MIT
 
-import sys
 import subprocess
-import logging
 import re
 import enum
 import pathlib
 import csv
+from utils import log
 from typing import Any
-
-# TEMPORARY
-log = logging.getLogger("testcrush logger")
-log.setLevel(logging.DEBUG)
-log_stream = logging.StreamHandler(stream=sys.stdout)
-log_stream.setLevel(logging.INFO)
-log_stream.setFormatter(logging.Formatter('[%(levelname)s]: %(message)s'))
-log_file = logging.FileHandler(filename="debug.log", mode='w')
-log_file.setLevel(logging.DEBUG)
-log_file.setFormatter(logging.Formatter(
-    '%(lineno)d:[%(levelname)s|%(module)s|%(funcName)s]: %(message)s'))
-log.addHandler(log_stream)
-log.addHandler(log_file)
 
 
 class Compilation(enum.Enum):

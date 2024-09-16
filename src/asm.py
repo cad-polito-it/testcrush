@@ -2,27 +2,13 @@
 # SPDX-License-Identifier: MIT
 
 import pathlib
-import logging
-import sys
 import re
 import tempfile
 import random
 import shutil
 
+from utils import Singleton, log
 from dataclasses import dataclass
-
-# TEMPORARY
-log = logging.getLogger("testcrush logger")
-log.setLevel(logging.DEBUG)
-log_stream = logging.StreamHandler(stream=sys.stdout)
-log_stream.setLevel(logging.INFO)
-log_stream.setFormatter(logging.Formatter('[%(levelname)s]: %(message)s'))
-log_file = logging.FileHandler(filename="debug.log", mode='w')
-log_file.setLevel(logging.DEBUG)
-log_file.setFormatter(logging.Formatter(
-    '%(lineno)d:[%(levelname)s|%(module)s|%(funcName)s]: %(message)s'))
-log.addHandler(log_stream)
-log.addHandler(log_file)
 
 
 @dataclass
@@ -111,22 +97,6 @@ class Codeline:
             return self.lineno == other.lineno
         else:
             raise TypeError(f"Unsupported type for ==: {type(other)}")
-
-
-class Singleton(type):
-
-    _instances = {}
-
-    def __call__(cls, *args, **kwargs):
-
-        if cls not in cls._instances:
-
-            log.debug(f"Singleton {cls.__name__} created!")
-
-            instance = super().__call__(*args, **kwargs)
-            cls._instances[cls] = instance
-
-        return cls._instances[cls]
 
 
 class ISA(metaclass=Singleton):
