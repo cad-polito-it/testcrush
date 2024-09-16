@@ -404,6 +404,10 @@ class A0():
             iteration_stats["fsim_ok"] = "YES"
             iteration_stats["coverage"] = str(coverage)
 
+            # Step 4: Coverage and TaT evaluation.  Wrt
+            # the paper the evaluation happens  on  the
+            # coverage i.e., new >= old rather than the
+            # comparisson of the set of detected faults
             if self.evaluate(old_stl_stats, new_stl_stats):
 
                 print(f"\tSTL has better stats than before!\n\t\tOld TaT: \
