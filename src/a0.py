@@ -105,7 +105,7 @@ class CSVCompactionStatistics():
     def __init__(self, output: pathlib.Path) -> 'CSVCompactionStatistics':
 
         self._file = open(output, 'w')
-        self.writer = csv.writer(self._file)
+        self.writer: csv._writer = csv.writer(self._file)
         self.writer.writerow(self._header)
 
     def __iadd__(self, rowline: dict):
@@ -125,11 +125,11 @@ class A0():
                                                                                 chunksize=1)
                                                             for asm_file in a0_asm_sources]
 
-        self.assembly_compilation_instructions = a0_settings.get("assembly_compilation_instructions")
-        self.fsim_report = zoix.CSVFaultReport(fault_summary=pathlib.Path(a0_settings.get("fsim_fault_summary")),
+        self.assembly_compilation_instructions: list[str] = a0_settings.get("assembly_compilation_instructions")
+        self.fsim_report: zoix.CSVFaultReport = zoix.CSVFaultReport(fault_summary=pathlib.Path(a0_settings.get("fsim_fault_summary")),
                                                fault_report=pathlib.Path(a0_settings.get("fsim_fault_report")))
-        self.sff_config = a0_settings.get("sff_config")
-        self.coverage_formula = a0_settings.get("coverage_formula")
+        self.sff_config: pathlib.Path = pathlib.Path(a0_settings.get("sff_config"))
+        self.coverage_formula: str = a0_settings.get("coverage_formula")
         log.debug(f"Fault reports set to {self.fsim_report=}")
 
         self.zoix_compilation_args: list[str] = a0_settings.get("vcs_compilation_instructions")
@@ -146,7 +146,7 @@ class A0():
         self.zoix_fsim_kwargs: dict[str, float] = \
             {k: eval(v) for k, v in a0_settings.get("fault_simulation_options").items()}
 
-        self.vc_zoix = zoix.ZoixInvoker()
+        self.vc_zoix: zoix.ZoixInvoker = zoix.ZoixInvoker()
 
     @staticmethod
     def evaluate(previous_result: tuple[int, float],
