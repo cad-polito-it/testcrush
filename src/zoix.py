@@ -380,7 +380,23 @@ class ZoixInvoker():
 
     def logic_simulate(self, *instructions: str, **kwargs) -> LogicSimulation:
         """
-        Performs logic simulation of user-defined firmware and captures the test application time
+        Performs logic simulation of user-defined firmware and captures the test application time.
+
+        A timeout value must be specified in order to avoid endless loops that will hang the program. There are
+        two important kwargs that the user must specify. The success regexp and the tat regexp. During a logic
+        simulation, the simulator typically stops when a ``$finish`` call is met. However, in a non-trivial DUT case
+        like e.g., a processor, there are many things that may go wrong like for instance an out-of-bounds read or
+        write from/to a memory. In that case, it is up to the designer to handle accordingly the situation e.g., issue
+        a ``$fatal`` call. Which means, that in order to be accurate and know whether the logic simulation terminates
+        gracefully, some sort of ``$display`` must be specified -or- at least the ``$finish`` statement must be invoked
+        from the correct place. For this reason, the success regexp is required in order to know that not only the logic
+        simulation ended but that it also ended without causing any kind of violation in the DUT.
+
+        When it comes to the tat regexp, this can be either a custom message again issued by the testbench or the time
+        of the simulation that the correct ``$finish`` statement was issued. It is up to the user to specify it. However
+        in order for the logic simulation to be considerred successful the success regexp AND the tat regexp must match
+        something.
+
 
         Args:
             *instructions (str): A variadic number of bash instructions
@@ -392,6 +408,9 @@ class ZoixInvoker():
 
                 - **success_regexp** (re.Pattern): A regular expression used for matching in every line of the
                   ``stdout`` stream to mark the successful completion of the logic simulation.
+
+                - **tat_regexp (re.Pattern): A regular expression used to match the line that reports the test
+                  application time from the simulator.
 
                 - **tat_regexp_capture_group** (int): The index of the capture group in the custom regular
                   expression for the TaT value. Default is 1, corresponding to the ``success_regexp`` group.
@@ -413,9 +432,18 @@ class ZoixInvoker():
         # $finish at simulation time  XXXXXXYs
         # where X = a digit and Y = time unit.
         # Capturing of the simulation duration
-        # done for possible TaT purposes.
+        # done for possible TaT purposes. NOTE
+        # that it is advised that BOTH regular
+        # expressions ARE specified and   that
+        # the default value is not  used. That
+        # is because it may be that the TB may
+        # have >=1 $finish call locations e.g.
+        # on an out-of-bounds read/write case.
+        # Hence, be as accurate as possible!!!
         default_regexp = re.compile(r"\$finish[^0-9]+([0-9]+)[m|u|n|p]s", re.DOTALL)
-        success: re.Pattern = kwargs.get("success_regexp", default_regexp)
+
+        success_regexp: re.Pattern = kwargs.get("success_regexp", default_regexp)
+        tat_regexp: re.Pattern = kwargs.get("tat_regexp", default_regexp)
 
         # By default, a single capturing  group
         # is expected in the regexp, which maps
@@ -428,11 +456,15 @@ class ZoixInvoker():
         # An empty mutable container is expected
         # to store the TaT  value  matched  from
         # the regexp. It is used  like  that  to
-        # mimic a pass-by-reference and not alter
+        # mimic  pass-by-reference and not alter
         # the function's return value.
         tat_value: list = kwargs.get("tat_value", [])
 
         simulation_status = None
+
+        # Loop control flags
+        exit_success = False
+        tat_success = False
 
         for cmd in instructions:
 
@@ -442,7 +474,7 @@ class ZoixInvoker():
 
                 log.debug(f"Error during execution of {cmd}\n\
                 ------[STDERR STREAM]------\n\
-                {'-'.join(stderr.splitlines(keepends = True))}\n\
+                {'-'.join(stderr.splitlines(keepends=True))}\n\
                 ---------------------------\n")
 
                 simulation_status = LogicSimulation.SIM_ERROR
@@ -457,27 +489,40 @@ class ZoixInvoker():
 
                 log.debug(f"{cmd}: {line.rstrip()}")
 
-                end_reached: re.Match = re.search(success, line)
+                # Exit success
+                success_match: re.Match = re.search(success_regexp, line)
 
-                if end_reached:
+                if success_match:
+                    log.debug(f"Exit Success: {success_match.groups()}")
+                    exit_success = True
 
-                    test_application_time = end_reached.\
-                        group(tat_capture_group)
+                # TaT matching
+                tat_match: re.Match = re.search(tat_regexp, line)
+
+                if tat_match:
+
+                    test_application_time = tat_match.group(tat_capture_group)
                     try:
                         tat_value.append(int(test_application_time))
-
+                        tat_success = True
                     except ValueError:
                         raise LogicSimulationException(f"Test application time was not correctly captured \
 {test_application_time=} and could not be converted to an integer. Perhaps there is something wrong with your regular \
-expression '{success}' ?")
+expression '{tat_regexp}' ?")
 
-                    log.debug(f"Simulation SUCCESS: {end_reached.groups()}")
-                    simulation_status = LogicSimulation.SUCCESS
+                    log.debug(f"TaT Captured: {tat_match.groups()}")
+
+                if tat_success and exit_success:
                     break
 
-        if not simulation_status:
-            raise LogicSimulationException(f"Simulation status was not set during the execution of {instructions}. \
-Is your regular expression correct? Check the debug log for more information!")
+        if tat_success and exit_success:
+
+            log.debug(f"Simulation Success! {exit_success=} and {tat_success=}.")
+            simulation_status = LogicSimulation.SUCCESS
+
+        elif not (tat_success and exit_success) and simulation_status != LogicSimulation.TIMEOUT:
+            log.debug(f"Simulation Failed! {exit_success=} and {tat_success=}.")
+            simulation_status = LogicSimulation.SIM_ERROR
 
         return simulation_status
 

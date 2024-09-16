@@ -231,10 +231,29 @@ Time: 482140000 ps
 CPU Time:      7.710 seconds;       Data structure size:   6.4Mb
 Day Month HH:MM:SS YYYY"""
 
+        faulty_lsim_snippet = r"""
+cd redacted/testcrush/cv32e40p/run/vcs &&\
+./simv +firmware=redacted/testcrush/cv32e40p/sbst/sbst.hex
+Info: [VCS_SAVE_RESTORE_INFO] ASLR (Address Space Layout Randomization) is detected on the machine. To enable $save functionality, ASLR will be switched off and simv re-executed.
+Please use '-no_save' simv switch to avoid re-execution or '-suppress=ASLR_DETECTED_INFO' to suppress this message.
+Chronologic VCS simulator copyright 1991-2023
+Contains Synopsys proprietary information.
+Compiler version V-2023.12-SP1_Full64; Runtime version V-2023.12-SP1_Full64;  Sep 16 13:14 2024
+out of bounds read from 55555600
+Fatal: "redacted/testcrush/cv32e40p/example_tb/core/mm_ram.sv", 389: tb_top.wrapper_i.ram_i.read_mux: at time 162880000 ps
+$finish called from file "redacted/testcrush/cv32e40p/example_tb/core/mm_ram.sv", line 389.
+[TESTBENCH] 162880ns: test application time = 16284 clock cycles (162840 ns)
+$finish at simulation time  162880ns
+           V C S   S i m u l a t i o n   R e p o r t
+Time: 162880000 ps
+CPU Time:      4.660 seconds;       Data structure size:   6.4Mb
+Day Month HH:MM:SS YYYY
+"""
         tat_dict = {
-            "success_regexp" : re.compile(r"test application time = ([0-9]+)"),
-            "tat_regexp_capture_group" : 1,
-            "tat_value" : []
+            "success_regexp": re.compile(r"EXIT\sSUCCESS"),
+            "tat_regexp": re.compile(r"test application time = ([0-9]+)"),
+            "tat_regexp_capture_group": 1,
+            "tat_value": []
         }
 
         # Simulation Success
@@ -249,7 +268,7 @@ Day Month HH:MM:SS YYYY"""
             self.assertEqual(tat_dict["tat_value"].pop(), 48209)
 
             # Do not supply a regexp, let the default one work and capture $finish
-            del tat_dict["success_regexp"]
+            del tat_dict["tat_regexp"]
             logic_simulation = test_obj.logic_simulate("mock_logic_simulation_instruction", **tat_dict)
 
             self.assertEqual(logic_simulation, zoix.LogicSimulation.SUCCESS)
@@ -261,31 +280,17 @@ Day Month HH:MM:SS YYYY"""
             logic_simulation = test_obj.logic_simulate("mock_logic_simulation_instruction")
             self.assertEqual(logic_simulation, zoix.LogicSimulation.SIM_ERROR)
 
+        # Stout contains error messages from lsim
+        with mock.patch("zoix.ZoixInvoker.execute", return_value = (faulty_lsim_snippet, "")) as mocked_execute:
+
+            logic_simulation = test_obj.logic_simulate("mock_logic_simulation_instruction", **tat_dict)
+            self.assertEqual(logic_simulation, zoix.LogicSimulation.SIM_ERROR)
+
         # Simulation Timeout
         with mock.patch("zoix.ZoixInvoker.execute", return_value = ("TimeoutExpired", "TimeoutExpired")) as mocked_execute:
 
             logic_simulation = test_obj.logic_simulate("mock_logic_simulation_instruction")
             self.assertEqual(logic_simulation, zoix.LogicSimulation.TIMEOUT)
-
-        # Faulty Regexp
-        with mock.patch("zoix.ZoixInvoker.execute", return_value = ("Some mock text for lsim", "")) as mocked_execute:
-
-            # Default regexp won't work on the mocked text
-            with self.assertRaises(zoix.LogicSimulationException) as cm:
-                logic_simulation = test_obj.logic_simulate("mock_logic_simulation_instruction")
-
-            self.assertEqual(str(cm.exception), "Simulation status was not set during the execution of \
-('mock_logic_simulation_instruction',). Is your regular expression correct? Check the debug log for more information!")
-
-        self.maxDiff = None
-        # TaT is not Int!
-        with mock.patch("zoix.ZoixInvoker.execute", return_value = (r"$finish at simulation time 482140ns", "")) as mocked_execute:
-
-            with self.assertRaises(zoix.LogicSimulationException) as cm:
-
-                logic_simulation = test_obj.logic_simulate("mock_logic_simulation_instruction", success_regexp = re.compile(r"\$finish.*(482140n)"), tat_value = [])
-
-            self.assertEqual(str(cm.exception), r"Test application time was not correctly captured test_application_time='482140n' and could not be converted to an integer. Perhaps there is something wrong with your regular expression 're.compile('\\$finish.*(482140n)')' ?")
 
     def test_create_fcm_script(self):
 
