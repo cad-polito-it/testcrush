@@ -12,15 +12,15 @@ from typing import Any
 
 class Compilation(enum.Enum):
     """Statuses for the VCS compilation of HDL sources."""
-    ERROR = 0  # stderr contains text
-    SUCCESS = 1  # None of the above
+    ERROR = "ERROR"  # stderr contains text
+    SUCCESS = "SUCCESS"  # None of the above
 
 
 class LogicSimulation(enum.Enum):
     """Statuses for the simv logic simulation of a given program."""
-    TIMEOUT = 0  # Endless loop
-    SIM_ERROR = 1  # stderr contains text
-    SUCCESS = 2  # None of the above
+    TIMEOUT = "TIMEOUT"  # Endless loop
+    SIM_ERROR = "ERROR"  # stderr contains text
+    SUCCESS = "SUCCESS"  # None of the above
 
 
 class LogicSimulationException(BaseException):
@@ -32,9 +32,9 @@ class LogicSimulationException(BaseException):
 
 class FaultSimulation(enum.Enum):
     """Statuses for the Z01X fault simulation."""
-    TIMEOUT = 0  # Wall-clock
-    FSIM_ERROR = 1  # stderr contains text
-    SUCCESS = 2  # None of the above
+    TIMEOUT = "TIMEOUT"  # Wall-clock
+    FSIM_ERROR = "ERROR"  # stderr contains text
+    SUCCESS = "SUCCESS"  # None of the above
 
 
 class Fault():
