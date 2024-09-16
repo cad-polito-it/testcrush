@@ -126,8 +126,9 @@ class A0():
                                                             for asm_file in a0_asm_sources]
 
         self.assembly_compilation_instructions: list[str] = a0_settings.get("assembly_compilation_instructions")
-        self.fsim_report: zoix.CSVFaultReport = zoix.CSVFaultReport(fault_summary=pathlib.Path(a0_settings.get("fsim_fault_summary")),
-                                               fault_report=pathlib.Path(a0_settings.get("fsim_fault_report")))
+        self.fsim_report: zoix.CSVFaultReport = zoix.CSVFaultReport(
+            fault_summary=pathlib.Path(a0_settings.get("fsim_fault_summary")),
+            fault_report=pathlib.Path(a0_settings.get("fsim_fault_report")))
         self.sff_config: pathlib.Path = pathlib.Path(a0_settings.get("sff_config"))
         self.coverage_formula: str = a0_settings.get("coverage_formula")
         log.debug(f"Fault reports set to {self.fsim_report=}")
@@ -300,7 +301,7 @@ class A0():
 
             print(f"""
 #############
-# ITERATION {total_iterations - len(all_instructions)} / {total_iterations}
+# ITERATION {total_iterations - len(all_instructions) + 1} / {total_iterations}
 #############
 """)
 
@@ -362,11 +363,12 @@ class A0():
                 log.critical("Unable to perform logic simulation for TaT computation. Simulation status not set!")
                 exit(1)
 
-            if lsim == zoix.LogicSimulation.TIMEOUT:
-                print(f"\tLogic simulation of {asm_source_file} resulted in a TIMEOUT after the removal of {codeline}.")
+            if lsim != zoix.LogicSimulation.SUCCESS:
+
+                print(f"\tLogic simulation of {asm_source_file} resulted in {lsim.value} after removing {codeline}.")
                 print("\tRestoring.")
                 iteration_stats["compiles"] = "YES"
-                iteration_stats["lsim_ok"] = "NO-TIMEOUT"
+                iteration_stats["lsim_ok"] = f"NO-{lsim.value}"
                 iteration_stats["verdict"] = "Restore"
                 _restore(asm_id)
                 continue
@@ -379,13 +381,13 @@ class A0():
             print("\tInitiating fault simulation.")
             fsim = vc_zoix.fault_simulate(*self.zoix_fsim_args, **self.zoix_fsim_kwargs)
 
-            if fsim == zoix.FaultSimulation.TIMEOUT:
-                print(f"\tFault simulation of {asm_source_file} resulted in a TIMEOUT after the removal of {codeline}.")
+            if fsim != zoix.FaultSimulation.SUCCESS:
+                print(f"\tFault simulation of {asm_source_file} resulted in a {fsim.value} after removing {codeline}.")
                 print("\tRestoring.")
                 iteration_stats["compiles"] = "YES"
                 iteration_stats["lsim_ok"] = "YES"
                 iteration_stats["tat"] = str(test_application_time)
-                iteration_stats["fsim_ok"] = "NO-TIMEOUT"
+                iteration_stats["fsim_ok"] = f"NO-{fsim.value}"
                 iteration_stats["verdict"] = "Restore"
                 _restore(asm_id)
                 continue
