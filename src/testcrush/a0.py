@@ -7,14 +7,12 @@ import shutil
 import subprocess
 import re
 import random
-import zoix
-import asm
 import zipfile
 import csv
 import time
 
-from utils import log
-
+from testcrush.utils import log, Timer
+from testcrush import asm, zoix
 
 def compile_assembly(*instructions, exit_on_error: bool = False) -> bool:
     """
@@ -466,9 +464,10 @@ def main():
 
     A = A0(isa, *a0_sources, **a0_settings)
 
-    initial_stats = A.pre_run()
+    with Timer():
+        initial_stats = A.pre_run()
 
-    A.run(initial_stats)
+        A.run(initial_stats)
 
 
 if __name__ == "__main__":

@@ -7,9 +7,8 @@ import tempfile
 import random
 import shutil
 
-from utils import Singleton, log
+from testcrush.utils import Singleton, log
 from dataclasses import dataclass
-
 
 @dataclass
 class Codeline:

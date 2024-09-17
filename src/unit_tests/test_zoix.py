@@ -1,11 +1,12 @@
 #!/usr/bin/python3
 
 import sys
-sys.path.append("../")
+sys.path.append("..")
+
+from testcrush import zoix
 
 import unittest
 import unittest.mock as mock
-import zoix
 import pathlib
 import re
 
@@ -172,13 +173,13 @@ class ZoixInvokerTest(unittest.TestCase):
 
         test_obj = zoix.ZoixInvoker()
 
-        with mock.patch("zoix.ZoixInvoker.execute", return_value = ("stdout contains text", "")) as mocked_execute:
+        with mock.patch("testcrush.zoix.ZoixInvoker.execute", return_value = ("stdout contains text", "")) as mocked_execute:
 
             compilation = test_obj.compile_sources("mock_compilation_instruction")
 
             self.assertEqual(compilation, zoix.Compilation.SUCCESS)
 
-        with mock.patch("zoix.ZoixInvoker.execute", return_value = ("stdout contains text", "stderr contains text too!")) as mocked_execute:
+        with mock.patch("testcrush.zoix.ZoixInvoker.execute", return_value = ("stdout contains text", "stderr contains text too!")) as mocked_execute:
 
             compilation = test_obj.compile_sources("mock_compilation_instruction")
 
@@ -257,7 +258,7 @@ Day Month HH:MM:SS YYYY
         }
 
         # Simulation Success
-        with mock.patch("zoix.ZoixInvoker.execute", return_value = (logic_sim_snippet, "")) as mocked_execute:
+        with mock.patch("testcrush.zoix.ZoixInvoker.execute", return_value = (logic_sim_snippet, "")) as mocked_execute:
 
             self.assertEqual(tat_dict["tat_value"], [])
 
@@ -275,19 +276,19 @@ Day Month HH:MM:SS YYYY
             self.assertEqual(tat_dict["tat_value"].pop(), 482140)
 
         # Simulation Error
-        with mock.patch("zoix.ZoixInvoker.execute", return_value = (logic_sim_snippet, "stderr has text!")) as mocked_execute:
+        with mock.patch("testcrush.zoix.ZoixInvoker.execute", return_value = (logic_sim_snippet, "stderr has text!")) as mocked_execute:
 
             logic_simulation = test_obj.logic_simulate("mock_logic_simulation_instruction")
             self.assertEqual(logic_simulation, zoix.LogicSimulation.SIM_ERROR)
 
         # Stout contains error messages from lsim
-        with mock.patch("zoix.ZoixInvoker.execute", return_value = (faulty_lsim_snippet, "")) as mocked_execute:
+        with mock.patch("testcrush.zoix.ZoixInvoker.execute", return_value = (faulty_lsim_snippet, "")) as mocked_execute:
 
             logic_simulation = test_obj.logic_simulate("mock_logic_simulation_instruction", **tat_dict)
             self.assertEqual(logic_simulation, zoix.LogicSimulation.SIM_ERROR)
 
         # Simulation Timeout
-        with mock.patch("zoix.ZoixInvoker.execute", return_value = ("TimeoutExpired", "TimeoutExpired")) as mocked_execute:
+        with mock.patch("testcrush.zoix.ZoixInvoker.execute", return_value = ("TimeoutExpired", "TimeoutExpired")) as mocked_execute:
 
             logic_simulation = test_obj.logic_simulate("mock_logic_simulation_instruction")
             self.assertEqual(logic_simulation, zoix.LogicSimulation.TIMEOUT)
@@ -329,25 +330,25 @@ report -campaign NAME -report fsim_out_hier.rpt -overwrite -hierarchical 3
         test_obj = zoix.ZoixInvoker()
 
         # FSIM Success
-        with mock.patch("zoix.ZoixInvoker.execute", return_value = ("Some fault sim text", "")) as mocked_execute:
+        with mock.patch("testcrush.zoix.ZoixInvoker.execute", return_value = ("Some fault sim text", "")) as mocked_execute:
 
             fault_simulation = test_obj.fault_simulate("mock_fsim_instruction1", "mock_fsim_instruction2")
             self.assertEqual(fault_simulation, zoix.FaultSimulation.SUCCESS)
 
-        with mock.patch("zoix.ZoixInvoker.execute", return_value = ("Some fault sim text", "Stderr text but must be ignored!")) as mocked_execute:
+        with mock.patch("testcrush.zoix.ZoixInvoker.execute", return_value = ("Some fault sim text", "Stderr text but must be ignored!")) as mocked_execute:
 
             fault_simulation = test_obj.fault_simulate("mock_fsim_instruction1", "mock_fsim_instruction2",
                                                        allow = [re.compile(r"Stderr text but must be ignored\!")])
             self.assertEqual(fault_simulation, zoix.FaultSimulation.SUCCESS)
 
         # FSIM Error
-        with mock.patch("zoix.ZoixInvoker.execute", return_value = ("Some fault sim text", "Stderr has text!")) as mocked_execute:
+        with mock.patch("testcrush.zoix.ZoixInvoker.execute", return_value = ("Some fault sim text", "Stderr has text!")) as mocked_execute:
 
             fault_simulation = test_obj.fault_simulate("mock_fsim_instruction1", "mock_fsim_instruction2")
             self.assertEqual(fault_simulation, zoix.FaultSimulation.FSIM_ERROR)
 
         # FSIM Timeout
-        with mock.patch("zoix.ZoixInvoker.execute", return_value = ("TimeoutExpired", "TimeoutExpired")) as mocked_execute:
+        with mock.patch("testcrush.zoix.ZoixInvoker.execute", return_value = ("TimeoutExpired", "TimeoutExpired")) as mocked_execute:
 
             fault_simulation = test_obj.fault_simulate("mock_fsim_instruction1", "mock_fsim_instruction2", timeout = 1)
             self.assertEqual(fault_simulation, zoix.FaultSimulation.TIMEOUT)

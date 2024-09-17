@@ -1,19 +1,5 @@
 #!/usr/bin/python3
 
-import sys
-sys.path.append("..")
-
-from testcrush import asm
-
-import unittest
-import unittest.mock as mock
-
-import pathlib
-import os
-import copy
-import shutil
-import random
-
 from testcrush import asm, utils
 
 import unittest
@@ -25,12 +11,10 @@ import copy
 import shutil
 import random
 import sys
-
-
 class CodelineTest(unittest.TestCase):
 
     @staticmethod
-    def gen_codeline_obj(lineno: int, data: str = "Dummy Text", valid_insn: bool = True):
+    def gen_codeline_obj(lineno : int, data : str = "Dummy Text", valid_insn : bool = True):
         return asm.Codeline(lineno, data, valid_insn)
 
     def test_repr(self):
@@ -64,33 +48,22 @@ class CodelineTest(unittest.TestCase):
         test_obj -= 1
         self.assertEqual(test_obj.lineno, random_non_zero_int - 1)
 
-    def test_isub_with_random_sequence(self):
-
-        random_100_non_zero_int = [random.randint(1, sys.maxsize) for _ in range(100)]
+    def test_isub_for_chunks_of_codelines(self):
 
         # Test similar to struct appearing in the asm.py code for modifying codelines in candidates
-        test_objs = [
-            [self.gen_codeline_obj(random_100_non_zero_int[i]),
-            self.gen_codeline_obj(random_100_non_zero_int[i+1])] for i in range(0,len(random_100_non_zero_int),2)]
-
-        line_numbers = [[x.lineno, y.lineno ] for chunk_codeline in test_objs for x, y in [chunk_codeline]]
+        test_objs = [ [self.gen_codeline_obj(i), self.gen_codeline_obj(i+1) ] for i in range(1,100,2) ]
+        line_numbers = [ [x.lineno, y.lineno ] for chunk_codeline in test_objs for x, y in [chunk_codeline] ]
 
         for chunk in test_objs:
             for chunk_codeline in chunk:
                 chunk_codeline -= 1
 
-        new_line_numbers = [[x.lineno, y.lineno ] for chunk_codeline in test_objs for x, y in [chunk_codeline]]
-        expected_new_line_numbers = [
-            [random_100_non_zero_int[i]-1,
-            random_100_non_zero_int[i+1]-1,] for i in range(0,len(random_100_non_zero_int),2)]
+        new_line_numbers = [ [x.lineno, y.lineno ] for chunk_codeline in test_objs for x, y in [chunk_codeline] ]
+        expected_new_line_numbers = [ [i, i+1] for i in range(0, 99, 2)]
 
         self.assertEqual(new_line_numbers, expected_new_line_numbers)
         self.assertNotEqual(line_numbers, new_line_numbers)
 
-    def test_isub_type_error(self):
-
-        random_non_zero_int = random.randint(1, sys.maxsize)
-        test_obj = self.gen_codeline_obj(random_non_zero_int)
         # Rhs is an unsupported type
         with self.assertRaises(TypeError) as cm:
             test_obj-= 3.14
@@ -98,230 +71,122 @@ class CodelineTest(unittest.TestCase):
         self.assertEqual(str(cm.exception), "Unsupported type for -=: <class 'float'>")
 
 
-    def test_iadd_with_random_codeline(self):
+    def test_iadd(self):
 
-        random_int = random.randint(0, sys.maxsize)
-        test_obj = self.gen_codeline_obj(random_int)
+        test_obj = self.gen_codeline_obj(0)
         test_obj += 1
-        self.assertEqual(test_obj.lineno,  random_int+1)
+        self.assertEqual(test_obj.lineno,  1)
 
-    def test_isub_with_random_sequence(self):
+        test_obj = self.gen_codeline_obj(500_000)
+        test_obj += 1
+        self.assertEqual(test_obj.lineno,  500_001)
 
-        random_100_non_zero_int = [random.randint(0, sys.maxsize) for _ in range(100)]
-
-        test_objs = [
-            [self.gen_codeline_obj(random_100_non_zero_int[i]),
-            self.gen_codeline_obj(random_100_non_zero_int[i+1])] for i in range(0,len(random_100_non_zero_int),2)]
-
-        line_numbers = [[x.lineno, y.lineno ] for chunk_codeline in test_objs for x, y in [chunk_codeline]]
-
-        for chunk in test_objs:
-            for chunk_codeline in chunk:
-                chunk_codeline += 1
-
-        new_line_numbers = [[x.lineno, y.lineno ] for chunk_codeline in test_objs for x, y in [chunk_codeline]]
-        expected_new_line_numbers = [
-            [random_100_non_zero_int[i]+1,
-            random_100_non_zero_int[i+1]+1] for i in range(0,len(random_100_non_zero_int),2)]
-
-        self.assertEqual(new_line_numbers, expected_new_line_numbers)
-        self.assertNotEqual(line_numbers, new_line_numbers)
-
-    def test_iadd_type_error(self):
-
-        random_int = random.randint(0, sys.maxsize)
-        test_obj = self.gen_codeline_obj(random_int)
-
+        # Rhs is an unsupported type
         with self.assertRaises(TypeError) as cm:
             test_obj += 3.14
 
         self.assertEqual(str(cm.exception), "Unsupported type for +=: <class 'float'>")
 
-    def test_gt_with_codeline(self):
+    def test_gt(self):
 
-        random_int = random.randint(0, sys.maxsize)
-        greater_random_int = random_int + random.randint(1, sys.maxsize - random_int)
-
-        test_obj_smaller = self.gen_codeline_obj(random_int)
-        test_obj_greater = self.gen_codeline_obj(greater_random_int)
-
+        # Both lhs and rhs are Codelines
+        test_obj_smaller = self.gen_codeline_obj(10)
+        test_obj_greater = self.gen_codeline_obj(20)
         self.assertGreater(test_obj_greater, test_obj_smaller)
 
-    def test_gt_with_int(self):
-
-        random_int = random.randint(1, sys.maxsize)
-        random_smaller_int = random.randint(0, random_int - 1)
-
-        test_obj = self.gen_codeline_obj(random_int)
-
         # Just lhs is a Codeline and rhs is int
-        self.assertGreater(test_obj,
-                           test_obj.lineno - random_smaller_int)
-
-    def test_gt_type_error(self):
-
-        test_obj = self.gen_codeline_obj(random.randint(0, sys.maxsize))
+        self.assertGreater(test_obj_greater, 10)
 
         # Lhs is Codeline but rhs is an unsupported type
         with self.assertRaises(TypeError) as cm:
-            test_obj > 3.14
+            test_obj_greater > 3.14
 
         self.assertEqual(str(cm.exception), "Unsupported type for >: <class 'float'>")
 
     def test_lt(self):
 
-        random_int = random.randint(0, sys.maxsize)
-        greater_random_int = random_int + random.randint(1, sys.maxsize - random_int)
-
-        test_obj_smaller = self.gen_codeline_obj(random_int)
-        test_obj_greater = self.gen_codeline_obj(greater_random_int)
-
+        # Both lhs and rhs are Codelines
+        test_obj_smaller = self.gen_codeline_obj(10)
+        test_obj_greater = self.gen_codeline_obj(20)
         self.assertLess(test_obj_smaller, test_obj_greater)
 
-    def test_lt_with_int(self):
+        # Just lhs is a Codeline and rhs is int
+        self.assertLess(test_obj_smaller, 20)
 
-        random_int = random.randint(0, sys.maxsize)
-        greater_random_int = random_int + random.randint(1, sys.maxsize - random_int)
-
-        test_obj_smaller = self.gen_codeline_obj(random_int)
-
-        self.assertLess(test_obj_smaller, greater_random_int)
-
-    def test_lt_type_error(self):
-
-        test_obj = self.gen_codeline_obj(random.randint(0, sys.maxsize))
         # Lhs is Codeline but rhs is an unsupported type
         with self.assertRaises(TypeError) as cm:
-            test_obj < 3.14
+            test_obj_smaller < None
 
-        self.assertEqual(str(cm.exception), "Unsupported type for <: <class 'float'>")
+        self.assertEqual(str(cm.exception), "Unsupported type for <: <class 'NoneType'>")
 
-    def test_ge_with_codeline(self):
+    def test_ge(self):
 
-        random_int = random.randint(0, sys.maxsize)
-        greater_random_int = random_int + random.randint(1, sys.maxsize - random_int)
-
-        test_obj = self.gen_codeline_obj(random_int)
-        test_obj_greater = self.gen_codeline_obj(greater_random_int)
-        test_obj_equal   = self.gen_codeline_obj(random_int)
-
-        self.assertGreaterEqual(test_obj_greater, test_obj)
+        # Similar as above
+        test_obj_smaller = self.gen_codeline_obj(10)
+        test_obj_greater = self.gen_codeline_obj(20)
+        test_obj_equal   = self.gen_codeline_obj(20)
+        self.assertGreaterEqual(test_obj_greater, test_obj_smaller)
         self.assertGreaterEqual(test_obj_greater, test_obj_equal)
 
-    def test_ge_with_int(self):
-
-        random_int = random.randint(0, sys.maxsize)
-        greater_random_int = random_int + random.randint(1, sys.maxsize - random_int)
-
-        test_obj = self.gen_codeline_obj(greater_random_int)
-
-        self.assertGreaterEqual(test_obj, random_int)
-        self.assertGreaterEqual(test_obj, random_int)
-
-    def test_ge_type_error(self):
-
-        test_obj = self.gen_codeline_obj(random.randint(0, sys.maxsize))
+        # Just lhs is a Codeline and rhs is int
+        self.assertGreaterEqual(test_obj_greater, 10)
+        self.assertGreaterEqual(test_obj_greater, 20)
 
         # Lhs is Codeline but rhs is an unsupported type
         with self.assertRaises(TypeError) as cm:
-            test_obj >= "Whoopsie!"
+            test_obj_greater >= "Whoopsie!"
 
         self.assertEqual(str(cm.exception), "Unsupported type for >=: <class 'str'>")
 
-    def test_le_with_codeline(self):
-
-        random_int = random.randint(0, sys.maxsize)
-        greater_random_int = random_int + random.randint(1, sys.maxsize - random_int)
-
-        test_obj = self.gen_codeline_obj(random_int)
-        test_obj_greater = self.gen_codeline_obj(greater_random_int)
-        test_obj_equal   = self.gen_codeline_obj(random_int)
+    def test_le(self):
 
         # Both lhs and rhs are Codelines
-        test_obj = self.gen_codeline_obj(test_obj)
-        test_obj_greater = self.gen_codeline_obj(test_obj_greater)
-        test_obj_equal   = self.gen_codeline_obj(test_obj)
+        test_obj_smaller = self.gen_codeline_obj(10)
+        test_obj_greater = self.gen_codeline_obj(20)
+        test_obj_equal   = self.gen_codeline_obj(10)
+        self.assertLessEqual(test_obj_smaller, test_obj_greater)
+        self.assertLessEqual(test_obj_smaller, test_obj_equal)
 
-        self.assertLessEqual(test_obj, test_obj_greater)
-        self.assertLessEqual(test_obj, test_obj_equal)
+        # Just lhs is a Codeline and rhs is int
+        self.assertLessEqual(test_obj_smaller, 20)
+        self.assertLessEqual(test_obj_smaller, 10)
 
-    def test_le_with_int(self):
-
-        random_int = random.randint(0, sys.maxsize)
-        greater_random_int = random_int + random.randint(1, sys.maxsize - random_int)
-
-        test_obj = self.gen_codeline_obj(random_int)
-
-        self.assertLessEqual(test_obj, greater_random_int)
-        self.assertLessEqual(test_obj, random_int)
-
-    def test_le_type_error(self):
-
-        test_obj = self.gen_codeline_obj(random.randint(0, sys.maxsize))
-
+        # Lhs is Codeline but rhs is an unsupported type
         with self.assertRaises(TypeError) as cm:
-            test_obj <= []
+            test_obj_smaller <= []
 
         self.assertEqual(str(cm.exception), "Unsupported type for <=: <class 'list'>")
 
-    def test_ne_with_codeline(self):
-
-        random_int_1 = random.randint(0, sys.maxsize)
-        random_int_2 = random.randint(0, sys.maxsize)
-        while random_int_2 == random_int_1:
-            random_int_2 = random.randint(0, sys.maxsize)
+    def test_ne(self):
 
         # Both lhs and rhs are Codelines
-        test_obj_a = self.gen_codeline_obj(random_int_1)
-        test_obj_b = self.gen_codeline_obj(random_int_2)
+        test_obj_a = self.gen_codeline_obj(10)
+        test_obj_b = self.gen_codeline_obj(20)
         self.assertNotEqual(test_obj_a, test_obj_b)
 
-    def test_ne_with_int(self):
+        # Just lhs is a Codeline and rhs is int
+        self.assertNotEqual(test_obj_a, 20)
+        self.assertNotEqual(test_obj_b, 10)
 
-        random_int_1 = random.randint(0, sys.maxsize)
-        random_int_2 = random.randint(0, sys.maxsize)
-        while random_int_2 == random_int_1:
-            random_int_2 = random.randint(0, sys.maxsize)
-
-        test_obj_a = self.gen_codeline_obj(random_int_1)
-        test_obj_b = self.gen_codeline_obj(random_int_2)
-
-        self.assertNotEqual(test_obj_a, random_int_2)
-        self.assertNotEqual(test_obj_b, random_int_1)
-
-    def test_ne_type_error(self):
-
-        test_obj = self.gen_codeline_obj(random.randint(0, sys.maxsize))
-
+        # Lhs is Codeline but rhs is an unsupported type
         with self.assertRaises(TypeError) as cm:
-            test_obj != 3.14
+            test_obj_a != 3.14
 
         self.assertEqual(str(cm.exception), "Unsupported type for !=: <class 'float'>")
 
-    def test_eq_with_codeline(self):
+    def test_eq(self):
 
-        random_int = random.randint(0, sys.maxsize)
-
-        test_obj_a = self.gen_codeline_obj(random_int)
-        test_obj_b = self.gen_codeline_obj(random_int)
+        # Both lhs and rhs are Codelines
+        test_obj_a = self.gen_codeline_obj(10)
+        test_obj_b = self.gen_codeline_obj(10)
         self.assertEqual(test_obj_a, test_obj_b)
 
-    def test_eq_with_int(self):
+        # Just lhs is a Codeline and rhs is int
+        self.assertEqual(test_obj_a, 10)
 
-        random_int = random.randint(0, sys.maxsize)
-
-        test_obj = self.gen_codeline_obj(random_int)
-
-        self.assertEqual(test_obj, random_int)
-
-    def test_eq_type_error(self):
-
-        random_int = random.randint(0, sys.maxsize)
-
-        test_obj = self.gen_codeline_obj(random_int)
-
+        # Lhs is Codeline but rhs is an unsupported type
         with self.assertRaises(TypeError) as cm:
-            test_obj == "Another Whoopsie!"
+            test_obj_a == "Another Whoopsie!"
 
         self.assertEqual(str(cm.exception), "Unsupported type for ==: <class 'str'>")
 
@@ -363,7 +228,7 @@ class ISATest(unittest.TestCase):
 
             self.reset_isa_singleton(test_obj_a)
 
-    def test_constructor_file_not_found(self):
+    def test_constructor(self):
 
         with mock.patch("builtins.open", mock.mock_open()) as mocked_open:
 
@@ -374,8 +239,6 @@ class ISATest(unittest.TestCase):
                 self.gen_isa(pathlib.Path("an_invalid/path.isa"))
 
             self.assertEqual(cm.exception.code, 1)
-
-    def test_constructor_syntax_error(self):
 
         invalid_mock_text = r"""#commentline
         valid_line
@@ -388,8 +251,6 @@ class ISATest(unittest.TestCase):
 
         self.assertEqual(str(cm.exception),
             f"Wrong syntax at line 3 of {os.getcwd()}/mock_filename file")
-
-    def test_constructor_empty_line_error(self):
 
         invalid_mock_text = r"""valid_line
         another_valid_line

@@ -28,5 +28,5 @@ jobs:
 
     - name: Lint with flake8
       run: |
-        cd src
+        cd src/testcrush
         flake8 a0.py --max-line-length 120

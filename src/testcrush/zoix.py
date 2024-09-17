@@ -6,7 +6,8 @@ import re
 import enum
 import pathlib
 import csv
-from utils import log
+
+from testcrush.utils import log
 from typing import Any
 
 
