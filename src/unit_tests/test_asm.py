@@ -815,7 +815,7 @@ test1:
         # Also guarantee that the candidate was not popped from the list
         self.assertEqual(removed_candidate_index, candidates_after.index(candidate))
 
-        pathlib.Path.unlink("mock_riscv_file")
+        pathlib.Path("mock_riscv_file").unlink()
         self.reset_isa_singleton(test_obj)
 
     def test_remove(self):
@@ -862,7 +862,7 @@ test1:
 
             self.reset_isa_singleton(test_obj)
 
-        pathlib.Path.unlink("temp_asm.S")
+        pathlib.Path("temp_asm.S").unlink()
 
     def test_restore(self):
 
@@ -900,7 +900,7 @@ test1:
 
             self.reset_isa_singleton(test_obj)
 
-        pathlib.Path.unlink("temp_asm.S")
+        pathlib.Path("temp_asm.S").unlink()
 
     def test_save(self):
 
@@ -935,4 +935,4 @@ test1:
             self.reset_isa_singleton(test_obj)
             expected_filename.unlink()
 
-        pathlib.Path.unlink("temp_asm.S")
+        pathlib.Path("temp_asm.S").unlink()
