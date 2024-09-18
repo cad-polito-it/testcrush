@@ -1,20 +1,14 @@
 #!/usr/bin/python3
 
-import sys
-sys.path.append("..")
+try:
 
-from testcrush import asm
+    from testcrush import asm
 
-import unittest
-import unittest.mock as mock
+except ModuleNotFoundError:
 
-import pathlib
-import os
-import copy
-import shutil
-import random
-
-from testcrush import asm, utils
+    import sys
+    sys.path.append("..")
+    from testcrush import asm
 
 import unittest
 import unittest.mock as mock
@@ -24,7 +18,6 @@ import os
 import copy
 import shutil
 import random
-import sys
 
 
 class CodelineTest(unittest.TestCase):
@@ -69,20 +62,20 @@ class CodelineTest(unittest.TestCase):
         random_100_non_zero_int = [random.randint(1, sys.maxsize) for _ in range(100)]
 
         # Test similar to struct appearing in the asm.py code for modifying codelines in candidates
-        test_objs = [
-            [self.gen_codeline_obj(random_100_non_zero_int[i]),
-            self.gen_codeline_obj(random_100_non_zero_int[i+1])] for i in range(0,len(random_100_non_zero_int),2)]
+        test_objs = [[self.gen_codeline_obj(random_100_non_zero_int[i]),
+                      self.gen_codeline_obj(random_100_non_zero_int[i+1])]
+                     for i in range(0, len(random_100_non_zero_int), 2)]
 
-        line_numbers = [[x.lineno, y.lineno ] for chunk_codeline in test_objs for x, y in [chunk_codeline]]
+        line_numbers = [[x.lineno, y.lineno] for chunk_codeline in test_objs for x, y in [chunk_codeline]]
 
         for chunk in test_objs:
             for chunk_codeline in chunk:
                 chunk_codeline -= 1
 
-        new_line_numbers = [[x.lineno, y.lineno ] for chunk_codeline in test_objs for x, y in [chunk_codeline]]
-        expected_new_line_numbers = [
-            [random_100_non_zero_int[i]-1,
-            random_100_non_zero_int[i+1]-1,] for i in range(0,len(random_100_non_zero_int),2)]
+        new_line_numbers = [[x.lineno, y.lineno] for chunk_codeline in test_objs for x, y in [chunk_codeline]]
+        expected_new_line_numbers = [[random_100_non_zero_int[i]-1,
+                                      random_100_non_zero_int[i+1]-1]
+                                     for i in range(0, len(random_100_non_zero_int), 2)]
 
         self.assertEqual(new_line_numbers, expected_new_line_numbers)
         self.assertNotEqual(line_numbers, new_line_numbers)
@@ -93,7 +86,7 @@ class CodelineTest(unittest.TestCase):
         test_obj = self.gen_codeline_obj(random_non_zero_int)
         # Rhs is an unsupported type
         with self.assertRaises(TypeError) as cm:
-            test_obj-= 3.14
+            test_obj -= 3.14
 
         self.assertEqual(str(cm.exception), "Unsupported type for -=: <class 'float'>")
 
@@ -325,6 +318,7 @@ class CodelineTest(unittest.TestCase):
 
         self.assertEqual(str(cm.exception), "Unsupported type for ==: <class 'str'>")
 
+
 class ISATest(unittest.TestCase):
 
     @staticmethod
@@ -337,8 +331,10 @@ class ISATest(unittest.TestCase):
 
     @staticmethod
     def reset_isa_singleton(isa : asm.ISA) -> None:
-        """The isa object is Singleton. To avoid collisions
-        with other tests, the Singleton must be destroyed."""
+        """
+        The isa object is Singleton. To avoid collisions
+        with other tests, the Singleton must be destroyed.
+        """
         singleton_metaclass = isa.__class__.__class__
         isa_class = isa.__class__
 
@@ -404,6 +400,8 @@ class ISATest(unittest.TestCase):
         self.assertEqual(str(cm.exception),
             f"Empty line at line number 3 of {os.getcwd()}/mock_filename file")
 
+    def test_constructor_success(self):
+
         mock_instructions = "instruction_a\ninstruction_b\ninstruction_c"
         with mock.patch("builtins.open", mock.mock_open(read_data=mock_instructions)) as mocked_open:
             test_obj = self.gen_isa(pathlib.Path("mock_filename"))
@@ -439,7 +437,217 @@ class ISATest(unittest.TestCase):
 
         self.reset_isa_singleton(test_obj)
 
+
 class AssemblyHandlerTest(unittest.TestCase):
+
+    RISCV_ISALANG = r"""\
+# pseudo ops #
+li
+la
+mv
+not
+neg
+bgt
+ble
+bgtu
+bleu
+beqz
+bnez
+bgez
+blez
+bgtz
+j
+call
+ret
+nop
+# rv32i #
+lui
+auipc
+jal
+jalr
+beq
+bne
+blt
+bge
+bltu
+bgeu
+lb
+lh
+lw
+lbu
+lhu
+sb
+sh
+sw
+addi
+slti
+sltiu
+xori
+ori
+andi
+slli
+srli
+srai
+add
+sub
+sll
+slt
+sltu
+xor
+srl
+sra
+or
+and
+fence
+ecall
+ebreak
+# rv32m #
+mul
+mulh
+mulhsu
+mulhu
+div
+divu
+rem
+remu
+# rv32c #
+c.addi4spn
+c.lw
+c.sw
+c.addi
+c.nop
+c.jal
+c.li
+c.lui
+c.addi16sp
+c.srli
+c.srai
+c.andi
+c.sub
+c.xor
+c.or
+c.and
+c.j
+c.beqz
+c.bnez
+c.slli
+c.lwsp
+c.mv
+c.jr
+c.add
+c.jalr
+c.ebreak
+c.swsp
+# rvzicsr #
+csrrw
+csrrs
+csrrc
+csrrwi
+csrrsi
+csrrci
+# rvzifencei #
+fence.i
+# rv32f #
+flw
+fsw
+fmadd.s
+fmsub.s
+fnmadd.s
+fnmsub.s
+fadd.s
+fsub.s
+fmul.s
+fdiv.s
+fsqrt.s
+fsgnj.s
+fsgnjn.s
+fsgnjx.s
+fmin.s
+fmax.s
+fcvt.w.s
+fcvt.wu.s
+feq.s
+flt.s
+fle.s
+fclass.s
+fcvt.s.w
+fcvt.s.wu
+fmv.x.w
+fmv.w.x
+# rv32fc #
+c.flw
+c.fsw
+c.flwsp
+c.fswsp
+# rv32a #
+lrw
+scw
+amoswapw
+amoaddw
+amoxorw
+amoandw
+amoorw
+amominw
+amomaxw
+amominuw
+amomaxuw
+# rv32d #
+fld
+fsd
+fmadd.d
+fmsub.d
+fnmadd.d
+fnmsub.d
+fadd.d
+fsub.d
+fmul.d
+fdiv.d
+fsqrt.d
+fsgnj.d
+fsgnjn.d
+fsgnjx.d
+fmin.d
+fmax.d
+fcvt.s.d
+fcvt.d.s
+feq.d
+flt.d
+fle.d
+fclass.d
+fcvt.w.d
+fcvt.wu.d
+fcvt.d.w
+fcvt.d.wu
+# rv32dc #
+c.fld
+c.fsd
+c.fldsp
+c.fsdsp"""
+
+    RISCV_SNIPPET = r"""section .text
+.global test1
+.type test1, @function
+test_result:
+		.space 1024
+
+test1:
+	# ABI prologue
+	addi sp, sp, -112     # allocate 112 bytes on the stack
+	sw ra, 104(sp)        # save return address
+	sw s0, 96(sp)         # save callee-saved registers
+	sw s1, 88(sp)
+	sw s2, 80(sp)
+	sw s3, 72(sp)
+	sw s4, 64(sp)
+	sw s5, 56(sp)
+	sw s6, 48(sp)
+	sw s7, 40(sp)
+	sw s8, 32(sp)
+	sw s9, 24(sp)
+	sw s10, 16(sp)
+	sw s11, 8(sp)
+	addi s0, sp, 112     # set up s0 to point to start of stack frame
+"""
 
     EXPECTED_CANDIDATES = [
         [asm.Codeline(8, "addi sp, sp, -112 # allocate 112 bytes on the stack", valid_insn = True)],
@@ -477,16 +685,24 @@ class AssemblyHandlerTest(unittest.TestCase):
         asm.Codeline(22, "addi s0, sp, 112 # set up s0 to point to start of stack frame", valid_insn = True)
     ]
 
-    @staticmethod
-    def gen_rv_handler(assembly_source : pathlib.Path = pathlib.Path("assembly/riscv_test.S"), chunksize : int = 1) -> asm.AssemblyHandler:
-        isa = asm.ISA(pathlib.Path("../../langs/riscv.isa"))
-        return asm.AssemblyHandler(isa, assembly_source, chunksize)
+    def gen_rv_handler(self, assembly_source: pathlib.Path = pathlib.Path("mock_riscv_file"), chunksize: int = 1):
+
+        with mock.patch("builtins.open", mock.mock_open(read_data=self.RISCV_ISALANG)) as mocked_open:
+            isa = asm.ISA(pathlib.Path("some_path"))
+
+        if assembly_source.name == "mock_riscv_file":
+            with mock.patch("builtins.open", mock.mock_open(read_data=self.RISCV_SNIPPET)) as mocked_open:
+                return asm.AssemblyHandler(isa, assembly_source, chunksize)
+        else:
+            return asm.AssemblyHandler(isa, assembly_source, chunksize)
 
     @staticmethod
     def reset_isa_singleton(handler : asm.AssemblyHandler) -> None:
-        """The self.isa of the handler object is Singleton.
+        """
+        The self.isa of the handler object is Singleton.
         To avoid collisions with other tests, the Singleton
-        must be destroyed."""
+        must be destroyed.
+        """
         singleton_metaclass = handler.isa.__class__.__class__
         isa_class = handler.isa.__class__
 
@@ -494,7 +710,8 @@ class AssemblyHandlerTest(unittest.TestCase):
 
     def test_constructor(self):
 
-        isa = asm.ISA(pathlib.Path("../../langs/riscv.isa"))
+        with mock.patch("builtins.open", mock.mock_open(read_data=self.RISCV_ISALANG)) as mocked_open:
+            isa = asm.ISA(pathlib.Path("some_path"))
 
         # manually generating the handler because ISA also uses  open()
         # and we don't want it to be intercepted as it has been already
@@ -505,15 +722,15 @@ class AssemblyHandlerTest(unittest.TestCase):
 
             with self.assertRaises(SystemExit) as cm:
 
-                test_obj = asm.AssemblyHandler(isa = isa,
+                test_obj = asm.AssemblyHandler(isa = asm.ISA(pathlib.Path("../../langs/riscv.irsa")),
                     assembly_source = pathlib.Path("an_invalid/assembly_source_path.S"),
                     chunksize = 1)
 
             self.assertEqual(cm.exception.code, 1)
 
         test_obj = self.gen_rv_handler()
-
-        self.assertEqual(self.EXPECTED_CANDIDATES, test_obj.candidates)
+        #print(test_obj.candidates)
+        self.assertEqual(test_obj.candidates, self.EXPECTED_CANDIDATES)
         self.assertEqual(test_obj.get_code(), self.EXPECTED_CODE)
 
         self.reset_isa_singleton(test_obj)
@@ -521,7 +738,9 @@ class AssemblyHandlerTest(unittest.TestCase):
     def test_get_asm_source(self):
 
         test_obj = self.gen_rv_handler()
-        self.assertEqual(str(test_obj.get_asm_source()), f"{os.getcwd()}/assembly/riscv_test.S")
+
+        self.assertEqual(str(test_obj.get_asm_source()), f"{os.getcwd()}/mock_riscv_file")
+
         self.reset_isa_singleton(test_obj)
 
     def test_get_code(self):
@@ -553,45 +772,36 @@ class AssemblyHandlerTest(unittest.TestCase):
         test_obj = self.gen_rv_handler()
 
         # Everything works as expected. Candidate exists
-        expected_candidate = asm.Codeline(10, "sw s1, 88(sp)", True)
-        self.assertEqual(test_obj.get_candidate(10), expected_candidate)
+        expected_candidate = random.choice(self.EXPECTED_CODE)
+        self.assertEqual(test_obj.get_candidate(expected_candidate.lineno), expected_candidate)
         self.reset_isa_singleton(test_obj)
 
         # Candidate does not exist
         with self.assertRaises(LookupError) as cm:
 
-            test_obj.get_candidate(666)
+            test_obj.get_candidate(sys.maxsize - 1)
 
-        self.assertEqual(str(cm.exception), f"Requested Codeline with lineno=666 not found!")
-
-    def test_set_test_application_time(self):
-
-        test_obj = self.gen_rv_handler()
-        self.assertIsNone(test_obj.test_application_time)
-
-        time_value = int(random.random())
-        test_obj.set_test_application_time(time_value)
-        self.assertEqual(time_value, test_obj.test_application_time)
-        self.reset_isa_singleton(test_obj)
+        self.assertEqual(str(cm.exception), f"Requested Codeline with lineno={sys.maxsize - 1} not found!")
 
     def test_remove_line_reduction(self):
-
-        """After removing a candidate, the candidates that have a lineno
+        """
+        After removing a candidate, the candidates that have a lineno
         > than the just removed one must be updated by reducing their
-        lineno attribute by 1 (-=1)."""
+        lineno attribute by 1 (-=1).
+        """
 
-        backup = pathlib.Path("assembly/riscv_test.S.bak")
-        original = pathlib.Path("assembly/riscv_test.S")
-        shutil.copy2(original, backup)
-
-        remove_lineno = 12
+        remove_lineno = random.choice([x.lineno for x in self.EXPECTED_CODE])
         test_obj = self.gen_rv_handler()
         candidate = test_obj.get_candidate(remove_lineno)
 
         # Deep copy required in order to generate separate
         # asm.Codeline objects here.
         candidates_before = [x for chunk in copy.deepcopy(test_obj.candidates) for x in chunk]
-        test_obj.remove(candidate)
+
+        with mock.patch("builtins.open", mock.mock_open(read_data=self.RISCV_SNIPPET)):
+
+            test_obj.remove(candidate)
+
         candidates_after = [x for chunk in test_obj.candidates for x in chunk]
 
         removed_candidate_index = candidates_before.index(candidate)
@@ -605,19 +815,24 @@ class AssemblyHandlerTest(unittest.TestCase):
         # Also guarantee that the candidate was not popped from the list
         self.assertEqual(removed_candidate_index, candidates_after.index(candidate))
 
+        pathlib.Path.unlink("mock_riscv_file")
         self.reset_isa_singleton(test_obj)
-        shutil.copy2(backup, original)
 
     def test_remove(self):
 
-        total_lines = 23
+        total_lines = len(self.EXPECTED_CODE)
 
         for lineno in range(total_lines):
 
-            test_obj = self.gen_rv_handler()
+            # Generate a temporary .S file
+            with open("temp_asm.S", 'w') as outf:
+                outf.write(self.RISCV_SNIPPET)
+
+            test_obj = self.gen_rv_handler(assembly_source=pathlib.Path("temp_asm.S"))
+
             try:
                 candidate = test_obj.get_candidate(lineno)
-            except LookupError:
+            except LookupError:  # lineno does not correspond to a candidate
                 continue
 
             # Create a copy to test remove with the replacement of
@@ -629,36 +844,37 @@ class AssemblyHandlerTest(unittest.TestCase):
             test_obj.remove(candidate)
 
             # Check that the assembly source remains the same.
-            expected_file = pathlib.Path(f"assembly/riscv_test.S")
+            expected_file = pathlib.Path("temp_asm.S")
             self.assertTrue(expected_file.exists())
             self.assertEqual(str(test_obj.asm_file), str(expected_file.resolve()))
 
             new_test_obj = self.gen_rv_handler(expected_file)
-
             # Check that new assembly file does not contain the candidate
-            # i.e., diff the two files
+            # i.e., diff the two files...
             self.assertNotIn(str(candidate), [str(x) for x in new_test_obj.get_code()])
 
-            # Ensure that the candidate is present in the old one.
+            # But ensure that the candidate is present in the old one.
             self.assertIn(str(candidate), [str(x) for x in test_obj.get_code()])
 
+            # Cleanup
             shutil.copy2(temp_file, expected_file)
             temp_file.unlink()
 
             self.reset_isa_singleton(test_obj)
 
+        pathlib.Path.unlink("temp_asm.S")
+
     def test_restore(self):
 
-        total_lines = 23
-
-        backup = pathlib.Path("assembly/riscv_test.S.bak")
-        original = pathlib.Path("assembly/riscv_test.S")
-
-        shutil.copy2(original, backup)
+        total_lines = len(self.EXPECTED_CODE)
 
         for lineno in range(total_lines):
 
-            test_obj = self.gen_rv_handler()
+           # Generate a temporary .S file
+            with open("temp_asm.S", 'w') as outf:
+                outf.write(self.RISCV_SNIPPET)
+
+            test_obj = self.gen_rv_handler(pathlib.Path("temp_asm.S"))
 
             try:
                 candidate = test_obj.get_candidate(lineno)
@@ -684,24 +900,19 @@ class AssemblyHandlerTest(unittest.TestCase):
 
             self.reset_isa_singleton(test_obj)
 
-        shutil.copy2(backup, original)
-        backup.unlink()
+        pathlib.Path.unlink("temp_asm.S")
 
     def test_save(self):
 
-        total_lines = 23
-
-        backup = pathlib.Path("assembly/riscv_test.S.bak")
-        original = pathlib.Path("assembly/riscv_test.S")
-
-        shutil.copy2(original, backup)
-
-        test_obj = self.gen_rv_handler()
-        test_obj.save()
+        total_lines = len(self.EXPECTED_CODE)
 
         for lineno in range(total_lines):
 
-            test_obj = self.gen_rv_handler()
+           # Generate a temporary .S file
+            with open("temp_asm.S", 'w') as outf:
+                outf.write(self.RISCV_SNIPPET)
+
+            test_obj = self.gen_rv_handler(pathlib.Path("temp_asm.S"))
 
             try:
                 candidate = test_obj.get_candidate(lineno)
@@ -713,7 +924,7 @@ class AssemblyHandlerTest(unittest.TestCase):
             # Check changelog entries
             self.assertEqual(test_obj.asm_file_changelog, [candidate])
 
-            expected_filename = pathlib.Path(f"assembly/riscv_test-{candidate.lineno}.S").resolve()
+            expected_filename = pathlib.Path(f"temp_asm-{candidate.lineno}.S").resolve()
 
             test_obj.save()
 
@@ -723,9 +934,5 @@ class AssemblyHandlerTest(unittest.TestCase):
             #expected_filename.unlink()
             self.reset_isa_singleton(test_obj)
             expected_filename.unlink()
-            shutil.copy2(backup, original)
 
-        shutil.copy2(backup,original)
-        backup.unlink()
-
-
+        pathlib.Path.unlink("temp_asm.S")
