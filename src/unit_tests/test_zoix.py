@@ -1,9 +1,14 @@
 #!/usr/bin/python3
 
-import sys
-sys.path.append("..")
+try:
 
-from testcrush import zoix
+    from testcrush import asm
+
+except ModuleNotFoundError:
+
+    import sys
+    sys.path.append("..")
+    from testcrush import zoix
 
 import unittest
 import unittest.mock as mock
