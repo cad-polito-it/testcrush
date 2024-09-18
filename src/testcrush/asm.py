@@ -178,7 +178,6 @@ class AssemblyHandler():
         self.asm_file: pathlib.Path = assembly_source.resolve()
         self.asm_file_changelog: list = list()
         self.candidates: list[list[Codeline]] = list()  # only instructions!
-        self.test_application_time: int = None
 
         assembly_source = assembly_source.resolve()
 
@@ -214,18 +213,6 @@ Exiting...")
                            codeline.valid_insn]
         self.candidates = [self.candidates[i:i + chunksize]
                            for i in range(0, len(self.candidates), chunksize)]
-
-    def set_test_application_time(self, time: int) -> None:
-        """
-        Sets the test application time attribute
-
-        Args:
-            time (int): the time value in s/m/u/n/p seconds.
-
-        Returns:
-            None
-        """
-        self.test_application_time = time
 
     def get_asm_source(self) -> pathlib.Path:
         """
@@ -317,8 +304,7 @@ Exiting...")
             None
         """
 
-        with open(self.asm_file) as source, \
-             tempfile.NamedTemporaryFile('w', delete=False) as new_source:
+        with open(self.asm_file) as source, tempfile.NamedTemporaryFile('w', delete=False) as new_source:
 
             for lineno, line in enumerate(source, start=0):
 
