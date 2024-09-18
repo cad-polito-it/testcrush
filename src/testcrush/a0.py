@@ -14,6 +14,7 @@ import time
 from testcrush.utils import log, Timer
 from testcrush import asm, zoix
 
+
 def compile_assembly(*instructions, exit_on_error: bool = False) -> bool:
     """
     Executes a sequence of bash instructions to compile the `self.asm_file`. Uses subprocess for each instruction and

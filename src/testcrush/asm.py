@@ -10,6 +10,7 @@ import shutil
 from testcrush.utils import Singleton, log
 from dataclasses import dataclass
 
+
 @dataclass
 class Codeline:
     """Represents a line of assembly code"""
