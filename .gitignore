@@ -4,6 +4,11 @@ sandbox/*
 __pycache__/
 # ignore all logfiles 
 *.log
+# ignore sphinx build
+build/
+# ignore eggs
+*.egg*
+
 # ignore python3 coverage files
 htmlcov/
 .coverage
