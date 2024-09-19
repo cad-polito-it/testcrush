@@ -1,0 +1,13 @@
+{
+    "scopeName": "source.isalang",
+    "patterns": [
+        {
+            "match": "#.*",
+            "name": "comment"
+        },
+        {
+            "match": "[^#]+",
+            "name": "keyword.mnemonic"
+        }
+    ]
+  }

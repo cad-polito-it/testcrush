@@ -1,0 +1,54 @@
+{
+  "name": "isalang",
+  "displayName": "ISA Lang",
+  "description": "Simple highlighting of .isa files",
+  "version": "0.0.1",
+  "author": {
+    "name": "Nick Deligiannis"
+  },
+  "publisher": "Nick Deligiannis",
+  "engines": {
+    "vscode": "^1.45.0"
+  },
+  "categories": [],
+  "contributes": {
+    "languages": [
+      {
+        "id": "isalang",
+        "aliases": [
+          "ISA-Lang"
+        ],
+        "extensions": [
+          ".isa"
+        ]
+      }
+    ],
+    "grammars": [
+      {
+        "language": "isalang",
+        "scopeName": "source.isalang",
+        "path": "./isalang-grammar.json"
+      }
+    ],
+    "configurationDefaults": {
+      "editor.tokenColorCustomizations": {
+        "textMateRules": [
+          {
+            "scope": "source.isalang mnemonic",
+            "settings": {
+              "foreground": "#2fec00",
+              "fontStyle": "bold"
+            }
+          },
+          {
+            "scope": "source.isalang comment",
+            "settings": {
+              "foreground": "#ec0000",
+              "fontStyle": ""
+            }
+          }
+        ]
+      }
+    }
+  }
+}
