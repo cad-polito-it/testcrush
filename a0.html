@@ -1,26 +1,25 @@
-
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html lang="en" data-content_root="./">
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
     <title>a0 module &#8212; TestCrush 0.5.0 documentation</title>
-    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css?v=def86cc0" />
     
-    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/language_data.js"></script>
+    <script src="_static/documentation_options.js?v=1dd76d02"></script>
+    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     
-    <link rel="shortcut icon" href="_static/favicon.png"/>
+    <link rel="icon" href="_static/favicon.png"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="utils module" href="utils.html" />
     <link rel="prev" title="zoix module" href="zoix.html" /> 
   </head><body>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -35,7 +34,8 @@
         <li class="right" >
           <a href="zoix.html" title="zoix module"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">TestCrush 0.5.0 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">TestCrush 0.5.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">a0 module</a></li> 
       </ul>
     </div>  
 
@@ -44,27 +44,117 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="a0-module">
-<h1>a0 module<a class="headerlink" href="#a0-module" title="Permalink to this headline">¶</a></h1>
+  <section id="a0-module">
+<h1>a0 module<a class="headerlink" href="#a0-module" title="Link to this heading">¶</a></h1>
 <p>This module implements the <a class="reference external" href="https://doi.org/10.1109/TC.2016.2643663">A0 compaction algorithm</a> . The only difference
 with respect to the original A0 algorithm is that in order to validate a removal of an instruction from the STL, the
 evaluation happens on whether the new test application time is less or equal than the old test application time <strong>AND</strong>
 whether the new test coverage is <strong>greater or equal</strong> than the old test application time. However, with the provided
 utilities provided with the toolkit this can be extended or modified to the user’s needs. All it takes is a few LoC
 in the evaluation method of each iteration within the A0 class.</p>
-<div class="section" id="a0">
-<h2>A0<a class="headerlink" href="#a0" title="Permalink to this headline">¶</a></h2>
-</div>
-</div>
+<section id="a0">
+<h2>A0<a class="headerlink" href="#a0" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="a0.A0">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">a0.</span></span><span class="sig-name descname"><span class="pre">A0</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">isa</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">a0_asm_sources</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">a0_settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/a0.html#A0"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#a0.A0" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Implements the A0 compaction algorithm of <a class="reference external" href="https://doi.org/10.1109/TC.2016.2643663">https://doi.org/10.1109/TC.2016.2643663</a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="a0.A0.evaluate">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">previous_result</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_result</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/a0.html#A0.evaluate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#a0.A0.evaluate" title="Link to this definition">¶</a></dt>
+<dd><p>Evaluates the new results with respect to the previous ones.</p>
+<p>Specifically, if new tat &lt;= old tat and if new coverage &gt;= old coverage.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>previous_result</strong> (<em>tuple</em><em>[</em><em>int</em><em>, </em><em>float</em><em>]</em>) – the old tat value (int) and coverage (float) values.</p></li>
+<li><p><strong>new_result</strong> (<em>tuple</em><em>[</em><em>int</em><em>, </em><em>float</em><em>]</em>) – the new tat value (int) and coverage values.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">True</span></code> if new tat &lt;= old tat and new coverage &gt;= old coverage. <code class="docutils literal notranslate"><span class="pre">False</span></code> otherwise</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="a0.A0.pre_run">
+<span class="sig-name descname"><span class="pre">pre_run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/a0.html#A0.pre_run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#a0.A0.pre_run" title="Link to this definition">¶</a></dt>
+<dd><p>Extracts the initial test application time and coverage of the STL.</p>
+<p>The test application time is extracted by a logic simulation of the STL
+whereas the coverage is computed by performing a fault simulation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The test application time (index 0) and the
+coverage of the STL (index 1)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple[int, float]</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>SystemExit</strong> – If HDL sources cannot be compiled (if specified) or
+    if logic simulation cannot be performed.</p></li>
+<li><p><strong>TimeoutError</strong> – if logic or fault simulation timed out.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="a0.A0.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">initial_stl_stats</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">times_to_shuffle</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/a0.html#A0.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#a0.A0.run" title="Link to this definition">¶</a></dt>
+<dd><p>Main loop of the A0 algorithm</p>
+<ol class="arabic simple">
+<li><p>Removal of a random instruction</p></li>
+<li><dl class="simple">
+<dt>Cross-compilation</dt><dd><ol class="arabic simple">
+<li><p>If FAIL, Restore</p></li>
+</ol>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Logic simulation</dt><dd><ol class="arabic simple">
+<li><p>If TIMEOUT, Restore</p></li>
+</ol>
+</dd>
+</dl>
+</li>
+<li><p>Fault simulation</p></li>
+<li><p>Evaluation</p></li>
+</ol>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>initial_stl_stats</strong> (<em>tuple</em><em>[</em><em>int</em><em>, </em><em>float</em><em>]</em>) – The test application time (int) and coverage (float) of the original
+STL</p></li>
+<li><p><strong>times_to_shuffle</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of times to permutate the assembly candidates. Defaults to 100.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
 
 
+            <div class="clearer"></div>
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
 <h3><a href="index.html">Table of Contents</a></h3>
-<p class="caption"><span class="caption-text">Contents:</span></p>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="asm.html">asm module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="zoix.html">zoix module</a></li>
@@ -82,21 +172,21 @@ in the evaluation method of each iteration within the A0 class.</p>
             rel="nofollow">Show Source</a></li>
     </ul>
    </div>
-<div id="searchbox" style="display: none" role="search">
+<search id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
       <input type="submit" value="Go" />
     </form>
     </div>
-</div>
-<script>$('#searchbox').show(0);</script>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -111,12 +201,13 @@ in the evaluation method of each iteration within the A0 class.</p>
         <li class="right" >
           <a href="zoix.html" title="zoix module"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">TestCrush 0.5.0 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">TestCrush 0.5.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">a0 module</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2024, Nikolaos I. Deligiannis.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.4.
+    &#169; Copyright 2024, Nikolaos I. Deligiannis.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
     </div>
   </body>
 </html>

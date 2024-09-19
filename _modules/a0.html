@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>a0 &#8212; TestCrush 0.5.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=def86cc0" />
+    
+    <script src="../_static/documentation_options.js?v=1dd76d02"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    
+    <link rel="icon" href="../_static/favicon.png"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">TestCrush 0.5.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">a0</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for a0</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/python3</span>
+<span class="c1"># SPDX-License-Identifier: MIT</span>
+
+<span class="kn">import</span> <span class="nn">pathlib</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">csv</span>
+<span class="kn">import</span> <span class="nn">time</span>
+
+<span class="kn">from</span> <span class="nn">testcrush.utils</span> <span class="kn">import</span> <span class="n">log</span><span class="p">,</span> <span class="n">compile_assembly</span><span class="p">,</span> <span class="n">zip_archive</span>
+<span class="kn">from</span> <span class="nn">testcrush</span> <span class="kn">import</span> <span class="n">asm</span><span class="p">,</span> <span class="n">zoix</span>
+
+
+<span class="k">class</span> <span class="nc">CSVCompactionStatistics</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Manages I/O operations on the CSV file which logs the statistics of the A0.&quot;&quot;&quot;</span>
+    <span class="n">_header</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;asm_source&quot;</span><span class="p">,</span> <span class="s2">&quot;removed_codeline&quot;</span><span class="p">,</span> <span class="s2">&quot;compiles&quot;</span><span class="p">,</span> <span class="s2">&quot;lsim_ok&quot;</span><span class="p">,</span>
+               <span class="s2">&quot;tat&quot;</span><span class="p">,</span> <span class="s2">&quot;fsim_ok&quot;</span><span class="p">,</span> <span class="s2">&quot;coverage&quot;</span><span class="p">,</span> <span class="s2">&quot;verdict&quot;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output</span><span class="p">:</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;CSVCompactionStatistics&#39;</span><span class="p">:</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">writer</span><span class="p">:</span> <span class="n">csv</span><span class="o">.</span><span class="n">_writer</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">writer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_file</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_header</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__iadd__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rowline</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">(</span><span class="n">rowline</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_file</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+
+<div class="viewcode-block" id="A0">
+<a class="viewcode-back" href="../a0.html#a0.A0">[docs]</a>
+<span class="k">class</span> <span class="nc">A0</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Implements the A0 compaction algorithm of https://doi.org/10.1109/TC.2016.2643663&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">isa</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">a0_asm_sources</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">a0_settings</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;A0&quot;</span><span class="p">:</span>
+
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Generating AssemblyHandlers for </span><span class="si">{</span><span class="n">a0_asm_sources</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assembly_sources</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">asm</span><span class="o">.</span><span class="n">AssemblyHandler</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">asm</span><span class="o">.</span><span class="n">AssemblyHandler</span><span class="p">(</span><span class="n">isa</span><span class="p">,</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">asm_file</span><span class="p">),</span>
+                                                                                <span class="n">chunksize</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                                                            <span class="k">for</span> <span class="n">asm_file</span> <span class="ow">in</span> <span class="n">a0_asm_sources</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assembly_compilation_instructions</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">a0_settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;assembly_compilation_instructions&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fsim_report</span><span class="p">:</span> <span class="n">zoix</span><span class="o">.</span><span class="n">CSVFaultReport</span> <span class="o">=</span> <span class="n">zoix</span><span class="o">.</span><span class="n">CSVFaultReport</span><span class="p">(</span>
+            <span class="n">fault_summary</span><span class="o">=</span><span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">a0_settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;fsim_fault_summary&quot;</span><span class="p">)),</span>
+            <span class="n">fault_report</span><span class="o">=</span><span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">a0_settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;fsim_fault_report&quot;</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sff_config</span><span class="p">:</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">a0_settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;sff_config&quot;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">coverage_formula</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">a0_settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;coverage_formula&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Fault reports set to </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">fsim_report</span><span class="si">=}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">zoix_compilation_args</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">a0_settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;vcs_compilation_instructions&quot;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;VCS Compilation instructions for HDL sources set to </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">zoix_compilation_args</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">zoix_lsim_args</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">a0_settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;logic_simulation_instructions&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">zoix_lsim_kwargs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">re</span><span class="o">.</span><span class="n">Pattern</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">list</span><span class="p">]</span> <span class="o">=</span> \
+            <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="nb">eval</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">a0_settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;logic_simulation_options&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">zoix_fcm_file</span><span class="p">:</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">a0_settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;fcm_file&quot;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">zoix_fcm_kwargs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">a0_settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;fcm_options&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">zoix_fsim_args</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">a0_settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;fault_simulation_instructions&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">zoix_fsim_kwargs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> \
+            <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="nb">eval</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">a0_settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;fault_simulation_options&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">vc_zoix</span><span class="p">:</span> <span class="n">zoix</span><span class="o">.</span><span class="n">ZoixInvoker</span> <span class="o">=</span> <span class="n">zoix</span><span class="o">.</span><span class="n">ZoixInvoker</span><span class="p">()</span>
+
+<div class="viewcode-block" id="A0.evaluate">
+<a class="viewcode-back" href="../a0.html#a0.A0.evaluate">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span><span class="n">previous_result</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
+                 <span class="n">new_result</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Evaluates the new results with respect to the previous ones.</span>
+
+<span class="sd">        Specifically, if new tat &lt;= old tat and if new coverage &gt;= old coverage.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            previous_result (tuple[int, float]): the old tat value (int) and coverage (float) values.</span>
+<span class="sd">            new_result (tuple[int, float]): the new tat value (int) and coverage values.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            bool: ``True`` if new tat &lt;= old tat and new coverage &gt;= old coverage. ``False`` otherwise</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">old_tat</span><span class="p">,</span> <span class="n">old_coverage</span> <span class="o">=</span> <span class="n">previous_result</span>
+        <span class="n">new_tat</span><span class="p">,</span> <span class="n">new_coverage</span> <span class="o">=</span> <span class="n">new_result</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="n">new_tat</span> <span class="o">&lt;=</span> <span class="n">old_tat</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">new_coverage</span> <span class="o">&gt;=</span> <span class="n">old_coverage</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="A0.pre_run">
+<a class="viewcode-back" href="../a0.html#a0.A0.pre_run">[docs]</a>
+    <span class="k">def</span> <span class="nf">pre_run</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Extracts the initial test application time and coverage of the STL.</span>
+
+<span class="sd">        The test application time is extracted by a logic simulation of the STL</span>
+<span class="sd">        whereas the coverage is computed by performing a fault simulation.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            tuple[int, float]: The test application time (index 0) and the</span>
+<span class="sd">            coverage of the STL (index 1)</span>
+<span class="sd">        Raises:</span>
+<span class="sd">            SystemExit: If HDL sources cannot be compiled (if specified) or</span>
+<span class="sd">                        if logic simulation cannot be performed.</span>
+<span class="sd">            TimeoutError: if logic or fault simulation timed out.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">vc_zoix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vc_zoix</span>
+        <span class="n">fault_report</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fsim_report</span>
+
+        <span class="n">test_application_time</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+
+        <span class="n">compile_assembly</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">assembly_compilation_instructions</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">zoix_compilation_args</span><span class="p">:</span>
+
+            <span class="n">comp</span> <span class="o">=</span> <span class="n">vc_zoix</span><span class="o">.</span><span class="n">compile_sources</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">zoix_compilation_args</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">comp</span> <span class="o">==</span> <span class="n">zoix</span><span class="o">.</span><span class="n">Compilation</span><span class="o">.</span><span class="n">ERROR</span><span class="p">:</span>
+
+                <span class="n">log</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="s2">&quot;Unable to compile HDL sources!&quot;</span><span class="p">)</span>
+                <span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Initial logic simulation for TaT computation.&quot;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+
+            <span class="n">lsim</span> <span class="o">=</span> <span class="n">vc_zoix</span><span class="o">.</span><span class="n">logic_simulate</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">zoix_lsim_args</span><span class="p">,</span>
+                                          <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">zoix_lsim_kwargs</span><span class="p">,</span>
+                                          <span class="n">tat_value</span><span class="o">=</span><span class="n">test_application_time</span><span class="p">)</span>
+
+        <span class="k">except</span> <span class="n">zoix</span><span class="o">.</span><span class="n">LogicSimulationException</span><span class="p">:</span>
+
+            <span class="n">log</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="s2">&quot;Unable to perform logic simulation for TaT computation&quot;</span><span class="p">)</span>
+            <span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">lsim</span> <span class="o">==</span> <span class="n">zoix</span><span class="o">.</span><span class="n">LogicSimulation</span><span class="o">.</span><span class="n">TIMEOUT</span><span class="p">:</span>
+
+            <span class="k">raise</span> <span class="ne">TimeoutError</span><span class="p">(</span><span class="s2">&quot;Logic simulation timed out&quot;</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Initial fault simulation for coverage computation.&quot;</span><span class="p">)</span>
+
+        <span class="n">fsim</span> <span class="o">=</span> <span class="n">vc_zoix</span><span class="o">.</span><span class="n">fault_simulate</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">zoix_fsim_args</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">zoix_fsim_kwargs</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">fsim</span> <span class="o">==</span> <span class="n">zoix</span><span class="o">.</span><span class="n">FaultSimulation</span><span class="o">.</span><span class="n">TIMEOUT</span><span class="p">:</span>
+
+            <span class="k">raise</span> <span class="ne">TimeoutError</span><span class="p">(</span><span class="s2">&quot;Fault simulation timed out&quot;</span><span class="p">)</span>
+
+        <span class="n">fault_list</span> <span class="o">=</span> <span class="n">fault_report</span><span class="o">.</span><span class="n">parse_fault_report</span><span class="p">()</span>
+
+        <span class="n">coverage</span> <span class="o">=</span> <span class="n">fault_report</span><span class="o">.</span><span class="n">compute_flist_coverage</span><span class="p">(</span><span class="n">fault_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sff_config</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">coverage_formula</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="n">test_application_time</span><span class="o">.</span><span class="n">pop</span><span class="p">(),</span> <span class="n">coverage</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="A0.run">
+<a class="viewcode-back" href="../a0.html#a0.A0.run">[docs]</a>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">initial_stl_stats</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="n">times_to_shuffle</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Main loop of the A0 algorithm</span>
+
+<span class="sd">        1. Removal of a random instruction</span>
+<span class="sd">        2. Cross-compilation</span>
+<span class="sd">            1. If FAIL, Restore</span>
+<span class="sd">        3. Logic simulation</span>
+<span class="sd">            1. If TIMEOUT, Restore</span>
+<span class="sd">        4. Fault simulation</span>
+<span class="sd">        5. Evaluation</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            initial_stl_stats (tuple[int, float]): The test application time (int) and coverage (float) of the original</span>
+<span class="sd">                                                   STL</span>
+<span class="sd">            times_to_shuffle (int, optional): Number of times to permutate the assembly candidates. Defaults to 100.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">def</span> <span class="nf">_restore</span><span class="p">(</span><span class="n">asm_source</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Invokes the ``restore()`` function of a specific assembly handler.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assembly_sources</span><span class="p">[</span><span class="n">asm_source</span><span class="p">]</span><span class="o">.</span><span class="n">restore</span><span class="p">()</span>
+
+        <span class="c1"># To be used for generated file suffixes</span>
+        <span class="n">unique_id</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%d</span><span class="s2">_%b_%H%M&quot;</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">gmtime</span><span class="p">())</span>
+
+        <span class="c1"># Step 1: Compute initial stats of the STL</span>
+        <span class="n">initial_tat</span><span class="p">,</span> <span class="n">initial_coverage</span> <span class="o">=</span> <span class="n">initial_stl_stats</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Initial coverage </span><span class="si">{</span><span class="n">initial_coverage</span><span class="si">}</span><span class="s2">, TaT </span><span class="si">{</span><span class="n">initial_tat</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Z01X related classes aliases</span>
+        <span class="n">vc_zoix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vc_zoix</span>
+        <span class="n">fault_report</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fsim_report</span>
+
+        <span class="c1"># Statistics</span>
+        <span class="n">stats_filename</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;a0_statistics_</span><span class="si">{</span><span class="n">unique_id</span><span class="si">}</span><span class="s2">.csv&quot;</span>
+        <span class="n">stats</span> <span class="o">=</span> <span class="n">CSVCompactionStatistics</span><span class="p">(</span><span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">stats_filename</span><span class="p">))</span>
+
+        <span class="n">vc_zoix</span><span class="o">.</span><span class="n">create_fcm_script</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">zoix_fcm_file</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">zoix_fcm_kwargs</span><span class="p">)</span>
+
+        <span class="c1"># Keep a backup of all sources since</span>
+        <span class="c1"># they will be modified in-place.</span>
+        <span class="n">zip_archive</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;../backup_</span><span class="si">{</span><span class="n">unique_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="o">*</span><span class="p">[</span><span class="n">asm</span><span class="o">.</span><span class="n">get_asm_source</span><span class="p">()</span> <span class="k">for</span> <span class="n">asm</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">assembly_sources</span><span class="p">])</span>
+
+        <span class="c1"># Flatten candidates list</span>
+        <span class="n">all_instructions</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">asm</span><span class="o">.</span><span class="n">Codeline</span><span class="p">]</span> <span class="o">=</span> <span class="p">[(</span><span class="n">asm_id</span><span class="p">,</span> <span class="n">codeline</span><span class="p">)</span> <span class="k">for</span> <span class="n">asm_id</span><span class="p">,</span> <span class="n">asm</span> <span class="ow">in</span>
+                                                <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">assembly_sources</span><span class="p">)</span> <span class="k">for</span> <span class="n">codeline</span> <span class="ow">in</span> <span class="n">asm</span><span class="o">.</span><span class="n">get_code</span><span class="p">()]</span>
+
+        <span class="c1"># Randomize order for Step 2</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">times_to_shuffle</span><span class="p">):</span>
+            <span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">all_instructions</span><span class="p">)</span>
+
+        <span class="n">iteration_stats</span> <span class="o">=</span> <span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">CSVCompactionStatistics</span><span class="o">.</span><span class="n">_header</span><span class="p">)</span>
+
+        <span class="n">iteration_stats</span><span class="p">[</span><span class="s2">&quot;tat&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">initial_tat</span>
+        <span class="n">iteration_stats</span><span class="p">[</span><span class="s2">&quot;coverage&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">initial_coverage</span>
+
+        <span class="n">total_iterations</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">all_instructions</span><span class="p">)</span>
+
+        <span class="c1"># Step 2: Select instructions in a random order</span>
+        <span class="n">old_stl_stats</span> <span class="o">=</span> <span class="p">(</span><span class="n">initial_tat</span><span class="p">,</span> <span class="n">initial_coverage</span><span class="p">)</span>
+        <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">all_instructions</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">#############</span>
+<span class="s2"># ITERATION </span><span class="si">{</span><span class="n">total_iterations</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="n">all_instructions</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2"> / </span><span class="si">{</span><span class="n">total_iterations</span><span class="si">}</span>
+<span class="s2">#############</span>
+<span class="s2">&quot;&quot;&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Update statistics</span>
+            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">iteration_stats</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
+                <span class="n">stats</span> <span class="o">+=</span> <span class="n">iteration_stats</span>
+                <span class="n">iteration_stats</span> <span class="o">=</span> \
+                    <span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">CSVCompactionStatistics</span><span class="o">.</span><span class="n">_header</span><span class="p">)</span>
+
+            <span class="n">asm_id</span><span class="p">,</span> <span class="n">codeline</span> <span class="o">=</span> <span class="n">all_instructions</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">asm_source_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">assembly_sources</span><span class="p">[</span><span class="n">asm_id</span><span class="p">]</span><span class="o">.</span><span class="n">get_asm_source</span><span class="p">()</span><span class="o">.</span><span class="n">name</span>
+
+            <span class="n">iteration_stats</span><span class="p">[</span><span class="s2">&quot;asm_source&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">asm_source_file</span>
+            <span class="n">iteration_stats</span><span class="p">[</span><span class="s2">&quot;removed_codeline&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">codeline</span>
+
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Removing </span><span class="si">{</span><span class="n">codeline</span><span class="si">}</span><span class="s2"> of assembly source </span><span class="si">{</span><span class="n">asm_source_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="c1"># Step 3: Removal of the selected instruction</span>
+            <span class="n">handler</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">assembly_sources</span><span class="p">[</span><span class="n">asm_id</span><span class="p">]</span>
+            <span class="n">handler</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">codeline</span><span class="p">)</span>
+
+            <span class="c1"># +-+-+-+ +-+-+-+-+-+-+-+</span>
+            <span class="c1"># |A|S|M| |C|O|M|P|I|L|E|</span>
+            <span class="c1"># +-+-+-+ +-+-+-+-+-+-+-+</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Cross-compiling assembly sources.&quot;</span><span class="p">)</span>
+            <span class="n">asm_compilation</span> <span class="o">=</span> <span class="n">compile_assembly</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">assembly_compilation_instructions</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">asm_compilation</span><span class="p">:</span>
+
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="si">{</span><span class="n">asm_source_file</span><span class="si">}</span><span class="s2"> does not compile after the removal of: </span><span class="si">{</span><span class="n">codeline</span><span class="si">}</span><span class="s2">. Restoring!&quot;</span><span class="p">)</span>
+                <span class="n">iteration_stats</span><span class="p">[</span><span class="s2">&quot;compiles&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;NO&quot;</span>
+                <span class="n">iteration_stats</span><span class="p">[</span><span class="s2">&quot;verdict&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Restore&quot;</span>
+                <span class="n">_restore</span><span class="p">(</span><span class="n">asm_id</span><span class="p">)</span>
+                <span class="k">continue</span>
+
+            <span class="c1"># +-+-+-+ +-+-+-+-+-+-+-+</span>
+            <span class="c1"># |V|C|S| |C|O|M|P|I|L|E|</span>
+            <span class="c1"># +-+-+-+ +-+-+-+-+-+-+-+</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">zoix_compilation_args</span><span class="p">:</span>
+
+                <span class="n">comp</span> <span class="o">=</span> <span class="n">vc_zoix</span><span class="o">.</span><span class="n">compile_sources</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">zoix_compilation_args</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">comp</span> <span class="o">==</span> <span class="n">zoix</span><span class="o">.</span><span class="n">Compilation</span><span class="o">.</span><span class="n">ERROR</span><span class="p">:</span>
+
+                    <span class="n">log</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="s2">&quot;Unable to compile HDL sources!&quot;</span><span class="p">)</span>
+                    <span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+            <span class="c1"># +-+-+-+ +-+-+-+-+</span>
+            <span class="c1"># |V|C|S| |L|S|I|M|</span>
+            <span class="c1"># +-+-+-+ +-+-+-+-+</span>
+            <span class="n">test_application_time</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Initiating logic simulation.&quot;</span><span class="p">)</span>
+                <span class="n">lsim</span> <span class="o">=</span> <span class="n">vc_zoix</span><span class="o">.</span><span class="n">logic_simulate</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">zoix_lsim_args</span><span class="p">,</span>
+                                              <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">zoix_lsim_kwargs</span><span class="p">,</span>
+                                              <span class="n">tat_value</span><span class="o">=</span><span class="n">test_application_time</span><span class="p">)</span>
+
+            <span class="k">except</span> <span class="n">zoix</span><span class="o">.</span><span class="n">LogicSimulationException</span><span class="p">:</span>
+
+                <span class="n">log</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="s2">&quot;Unable to perform logic simulation for TaT computation. Simulation status not set!&quot;</span><span class="p">)</span>
+                <span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">lsim</span> <span class="o">!=</span> <span class="n">zoix</span><span class="o">.</span><span class="n">LogicSimulation</span><span class="o">.</span><span class="n">SUCCESS</span><span class="p">:</span>
+
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Logic simulation of </span><span class="si">{</span><span class="n">asm_source_file</span><span class="si">}</span><span class="s2"> resulted in </span><span class="si">{</span><span class="n">lsim</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2"> after removing </span><span class="si">{</span><span class="n">codeline</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Restoring.&quot;</span><span class="p">)</span>
+                <span class="n">iteration_stats</span><span class="p">[</span><span class="s2">&quot;compiles&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;YES&quot;</span>
+                <span class="n">iteration_stats</span><span class="p">[</span><span class="s2">&quot;lsim_ok&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;NO-</span><span class="si">{</span><span class="n">lsim</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="n">iteration_stats</span><span class="p">[</span><span class="s2">&quot;verdict&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Restore&quot;</span>
+                <span class="n">_restore</span><span class="p">(</span><span class="n">asm_id</span><span class="p">)</span>
+                <span class="k">continue</span>
+
+            <span class="n">test_application_time</span> <span class="o">=</span> <span class="n">test_application_time</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+            <span class="c1"># +-+-+-+ +-+-+-+-+</span>
+            <span class="c1"># |V|C|S| |F|S|I|M|</span>
+            <span class="c1"># +-+-+-+ +-+-+-+-+</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Initiating fault simulation.&quot;</span><span class="p">)</span>
+            <span class="n">fsim</span> <span class="o">=</span> <span class="n">vc_zoix</span><span class="o">.</span><span class="n">fault_simulate</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">zoix_fsim_args</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">zoix_fsim_kwargs</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">fsim</span> <span class="o">!=</span> <span class="n">zoix</span><span class="o">.</span><span class="n">FaultSimulation</span><span class="o">.</span><span class="n">SUCCESS</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Fault simulation of </span><span class="si">{</span><span class="n">asm_source_file</span><span class="si">}</span><span class="s2"> resulted in a </span><span class="si">{</span><span class="n">fsim</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2"> after removing </span><span class="si">{</span><span class="n">codeline</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Restoring.&quot;</span><span class="p">)</span>
+                <span class="n">iteration_stats</span><span class="p">[</span><span class="s2">&quot;compiles&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;YES&quot;</span>
+                <span class="n">iteration_stats</span><span class="p">[</span><span class="s2">&quot;lsim_ok&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;YES&quot;</span>
+                <span class="n">iteration_stats</span><span class="p">[</span><span class="s2">&quot;tat&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">test_application_time</span><span class="p">)</span>
+                <span class="n">iteration_stats</span><span class="p">[</span><span class="s2">&quot;fsim_ok&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;NO-</span><span class="si">{</span><span class="n">fsim</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="n">iteration_stats</span><span class="p">[</span><span class="s2">&quot;verdict&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Restore&quot;</span>
+                <span class="n">_restore</span><span class="p">(</span><span class="n">asm_id</span><span class="p">)</span>
+                <span class="k">continue</span>
+
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t\t</span><span class="s2">Parsing fault report.&quot;</span><span class="p">)</span>
+            <span class="n">fault_list</span> <span class="o">=</span> <span class="n">fault_report</span><span class="o">.</span><span class="n">parse_fault_report</span><span class="p">()</span>
+
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t\t</span><span class="s2">Computing coverage.&quot;</span><span class="p">)</span>
+            <span class="n">coverage</span> <span class="o">=</span> <span class="n">fault_report</span><span class="o">.</span><span class="n">compute_flist_coverage</span><span class="p">(</span><span class="n">fault_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sff_config</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">coverage_formula</span><span class="p">)</span>
+
+            <span class="n">new_stl_stats</span> <span class="o">=</span> <span class="p">(</span><span class="n">test_application_time</span><span class="p">,</span> <span class="n">coverage</span><span class="p">)</span>
+
+            <span class="n">iteration_stats</span><span class="p">[</span><span class="s2">&quot;compiles&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;YES&quot;</span>
+            <span class="n">iteration_stats</span><span class="p">[</span><span class="s2">&quot;lsim_ok&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;YES&quot;</span>
+            <span class="n">iteration_stats</span><span class="p">[</span><span class="s2">&quot;tat&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">test_application_time</span><span class="p">)</span>
+            <span class="n">iteration_stats</span><span class="p">[</span><span class="s2">&quot;fsim_ok&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;YES&quot;</span>
+            <span class="n">iteration_stats</span><span class="p">[</span><span class="s2">&quot;coverage&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">coverage</span><span class="p">)</span>
+
+            <span class="c1"># Step 4: Coverage and TaT evaluation.  Wrt</span>
+            <span class="c1"># the paper the evaluation happens  on  the</span>
+            <span class="c1"># coverage i.e., new &gt;= old rather than the</span>
+            <span class="c1"># comparisson of the set of detected faults</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">old_stl_stats</span><span class="p">,</span> <span class="n">new_stl_stats</span><span class="p">):</span>
+
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">STL has better stats than before!</span><span class="se">\n\t\t</span><span class="s2">Old TaT: </span><span class="se">\</span>
+<span class="si">{</span><span class="n">old_stl_stats</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> | Old Coverage: </span><span class="si">{</span><span class="n">old_stl_stats</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="se">\n\t\t</span><span class="s2">New TaT: </span><span class="se">\</span>
+<span class="si">{</span><span class="n">new_stl_stats</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> | New Coverage: </span><span class="si">{</span><span class="n">new_stl_stats</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="se">\n\t</span><span class="s2">Proceeding!&quot;</span><span class="p">)</span>
+
+                <span class="n">old_stl_stats</span> <span class="o">=</span> <span class="n">new_stl_stats</span>
+                <span class="n">iteration_stats</span><span class="p">[</span><span class="s2">&quot;verdict&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Proceed&quot;</span>
+
+            <span class="k">else</span><span class="p">:</span>
+
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">STL has worse stats than before!</span><span class="se">\n\t\t</span><span class="s2">Old TaT: </span><span class="se">\</span>
+<span class="si">{</span><span class="n">old_stl_stats</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> | Old Coverage: </span><span class="si">{</span><span class="n">old_stl_stats</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="se">\n\t\t</span><span class="s2">New TaT: </span><span class="se">\</span>
+<span class="si">{</span><span class="n">new_stl_stats</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> | New Coverage: </span><span class="si">{</span><span class="n">new_stl_stats</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="se">\n\t</span><span class="s2">Restoring!&quot;</span><span class="p">)</span>
+
+                <span class="n">iteration_stats</span><span class="p">[</span><span class="s2">&quot;verdict&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Restore&quot;</span>
+                <span class="n">_restore</span><span class="p">(</span><span class="n">asm_id</span><span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../index.html">Table of Contents</a></h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../asm.html">asm module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../zoix.html">zoix module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../a0.html">a0 module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../utils.html">utils module</a></li>
+</ul>
+
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">TestCrush 0.5.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">a0</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2024, Nikolaos I. Deligiannis.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
+    </div>
+  </body>
+</html>

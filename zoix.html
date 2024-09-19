@@ -1,26 +1,25 @@
-
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html lang="en" data-content_root="./">
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
     <title>zoix module &#8212; TestCrush 0.5.0 documentation</title>
-    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css?v=def86cc0" />
     
-    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/language_data.js"></script>
+    <script src="_static/documentation_options.js?v=1dd76d02"></script>
+    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     
-    <link rel="shortcut icon" href="_static/favicon.png"/>
+    <link rel="icon" href="_static/favicon.png"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="a0 module" href="a0.html" />
     <link rel="prev" title="asm module" href="asm.html" /> 
   </head><body>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -35,7 +34,8 @@
         <li class="right" >
           <a href="asm.html" title="asm module"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">TestCrush 0.5.0 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">TestCrush 0.5.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">zoix module</a></li> 
       </ul>
     </div>  
 
@@ -44,12 +44,12 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="zoix-module">
-<h1>zoix module<a class="headerlink" href="#zoix-module" title="Permalink to this headline">¶</a></h1>
+  <section id="zoix-module">
+<h1>zoix module<a class="headerlink" href="#zoix-module" title="Link to this heading">¶</a></h1>
 <p>The <code class="docutils literal notranslate"><span class="pre">zoix.py</span></code> module contains utilities to perform calls to <a class="reference external" href="https://www.synopsys.com/verification/simulation/vc-z01x.html">VC-Z01X</a>
 It is based on the <a class="reference external" href="https://docs.python.org/3/library/subprocess.html">subprocess</a> package and depends heavily on user-defined parameters.</p>
-<div class="section" id="zoixinvoker">
-<h2>ZoixInvoker<a class="headerlink" href="#zoixinvoker" title="Permalink to this headline">¶</a></h2>
+<section id="zoixinvoker">
+<h2>ZoixInvoker<a class="headerlink" href="#zoixinvoker" title="Link to this heading">¶</a></h2>
 <p>This class is the responsible for issuing calls to VC-Z01X. It offers utilities to compile HDL sources in VCS,
 logic simulate these sources, generate fault campaign manager sripts and finally, fault simulate the sources
 in Z01X. It assumes a pre-existing a tested and working VC-Z01X environment for a DUT and all function arguments
@@ -57,22 +57,328 @@ are passed as variadic args and keyword arguments. The reason for this design ch
 possible from any version-specific niece that VC-Z01X might have. Hence, we offer this layer of abstraction and
 leave it to the user to specify compilation and simulation isntructions to be executed in the methods of the
 <code class="docutils literal notranslate"><span class="pre">ZoixInvoker</span></code> e.g., by a .json configuration file.</p>
-</div>
-<div class="section" id="csvfaultreport">
-<h2>CSVFaultReport<a class="headerlink" href="#csvfaultreport" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="zoix.ZoixInvoker">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">zoix.</span></span><span class="sig-name descname"><span class="pre">ZoixInvoker</span></span><a class="reference internal" href="_modules/zoix.html#ZoixInvoker"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoix.ZoixInvoker" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A wrapper class to be used in handling calls to VCS-Z01X.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="zoix.ZoixInvoker.compile_sources">
+<span class="sig-name descname"><span class="pre">compile_sources</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">instructions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#zoix.Compilation" title="zoix.Compilation"><span class="pre">Compilation</span></a></span></span><a class="reference internal" href="_modules/zoix.html#ZoixInvoker.compile_sources"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoix.ZoixInvoker.compile_sources" title="Link to this definition">¶</a></dt>
+<dd><p>Performs compilation of HDL files</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>*instructions</strong> (<em>str</em>) – A variadic number of bash shell instructions</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><p>A status Enum to signify the success or failure of the compilation.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>ERROR: if any text was found in the <code class="docutils literal notranslate"><span class="pre">stderr</span></code> stream during the execution of an instruction.</p></li>
+<li><p>SUCCESS: otherwise.</p></li>
+</ul>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#zoix.Compilation" title="zoix.Compilation">Compilation</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoix.ZoixInvoker.create_fcm_script">
+<span class="sig-name descname"><span class="pre">create_fcm_script</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fcm_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">fcm_options</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Path</span></span></span><a class="reference internal" href="_modules/zoix.html#ZoixInvoker.create_fcm_script"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoix.ZoixInvoker.create_fcm_script" title="Link to this definition">¶</a></dt>
+<dd><p>Generates and returns a fault campaign manager TCL script based on user-defined settings from the setup file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fcm_file</strong> (<em>pathlib.Path</em>) – The full path (absolute or relative) of the fcm script.</p></li>
+<li><p><strong>**fcm_options</strong> – Keyword arguments where each key is an fcm command and the corresponding value the flags or
+options (if any). The commands should adhere to the supported commands documented in the
+VCS-Z01X user guide. No sanitization checks are performed by the method.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The absolute path of the generated file.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pathlib.Path</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoix.ZoixInvoker.execute">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">execute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">instruction</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/zoix.html#ZoixInvoker.execute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoix.ZoixInvoker.execute" title="Link to this definition">¶</a></dt>
+<dd><p>Executes a <strong>bash</strong> instruction and returns the <code class="docutils literal notranslate"><span class="pre">stdout</span></code> and <code class="docutils literal notranslate"><span class="pre">stderr</span></code> responses as a tuple.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>instruction</strong> (<em>str</em>) – The bash instruction to be executed.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The stdout (index 0) and the stderr (index 1)
+as strings.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple(str, str)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoix.ZoixInvoker.fault_simulate">
+<span class="sig-name descname"><span class="pre">fault_simulate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">instructions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#zoix.FaultSimulation" title="zoix.FaultSimulation"><span class="pre">FaultSimulation</span></a></span></span><a class="reference internal" href="_modules/zoix.html#ZoixInvoker.fault_simulate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoix.ZoixInvoker.fault_simulate" title="Link to this definition">¶</a></dt>
+<dd><p>Performs fault simulation of a user-defined firmware.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>*instructions</strong> (<em>str</em>) – A variadic number of shell instructions</p></li>
+<li><p><strong>Z01X.</strong> (<em>to invoke</em>)</p></li>
+<li><p><strong>**kwargs</strong> – <p>User-defined options for fault simulation control.</p>
+<ul>
+<li><p>timeout (float): A timeout in <strong>seconds</strong> for each fsim
+instruction.</p></li>
+<li><p>allow (list[re.Pattern]): Series of regexps to look for in
+<code class="docutils literal notranslate"><span class="pre">stderr</span></code> and allow continuation without raising any error
+messages.</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><p>A status Enum which is:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>TIMEOUT: if the timeout kwarg was provided and some
+instruction exceeded it.</p></li>
+<li><p>FSIM_ERROR: if the <code class="docutils literal notranslate"><span class="pre">stderr</span></code> stream contains text during the
+execution of an instruction.</p></li>
+<li><p>SUCCESS: if none of the above.</p></li>
+</ul>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#zoix.FaultSimulation" title="zoix.FaultSimulation">FaultSimulation</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoix.ZoixInvoker.logic_simulate">
+<span class="sig-name descname"><span class="pre">logic_simulate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">instructions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#zoix.LogicSimulation" title="zoix.LogicSimulation"><span class="pre">LogicSimulation</span></a></span></span><a class="reference internal" href="_modules/zoix.html#ZoixInvoker.logic_simulate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoix.ZoixInvoker.logic_simulate" title="Link to this definition">¶</a></dt>
+<dd><p>Performs logic simulation of user-defined firmware and captures the test application time.</p>
+<p>A timeout value must be specified in order to avoid endless loops that will hang the program. There are
+two important kwargs that the user must specify. The success regexp and the tat regexp. During a logic
+simulation, the simulator typically stops when a <code class="docutils literal notranslate"><span class="pre">$finish</span></code> call is met. However, in a non-trivial DUT case
+like e.g., a processor, there are many things that may go wrong like for instance an out-of-bounds read or
+write from/to a memory. In that case, it is up to the designer to handle accordingly the situation e.g., issue
+a <code class="docutils literal notranslate"><span class="pre">$fatal</span></code> call. Which means, that in order to be accurate and know whether the logic simulation terminates
+gracefully, some sort of <code class="docutils literal notranslate"><span class="pre">$display</span></code> must be specified -or- at least the <code class="docutils literal notranslate"><span class="pre">$finish</span></code> statement must be invoked
+from the correct place. For this reason, the success regexp is required in order to know that not only the logic
+simulation ended but that it also ended without causing any kind of violation in the DUT.</p>
+<p>When it comes to the tat regexp, this can be either a custom message again issued by the testbench or the time
+of the simulation that the correct <code class="docutils literal notranslate"><span class="pre">$finish</span></code> statement was issued. It is up to the user to specify it. However
+in order for the logic simulation to be considerred successful the success regexp AND the tat regexp must match
+something.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>*instructions</strong> (<em>str</em>) – A variadic number of bash instructions</p></li>
+<li><p><strong>**kwargs</strong> – <dl class="simple">
+<dt>User-defined options needed for the evaluation of the result of the logic simulation.</dt><dd><p>These options are:</p>
+</dd>
+</dl>
+<ul>
+<li><p><strong>timeout</strong> (float): A timeout in <strong>seconds</strong> to be used for <strong>each</strong> of the executed logic
+simulation instructions.</p></li>
+<li><p><strong>success_regexp</strong> (re.Pattern): A regular expression used for matching in every line of the
+<code class="docutils literal notranslate"><span class="pre">stdout</span></code> stream to mark the successful completion of the logic simulation.</p></li>
+<li><p><a href="#id1"><span class="problematic" id="id2">**</span></a>tat_regexp (re.Pattern): A regular expression used to match the line that reports the test
+application time from the simulator.</p></li>
+<li><p><strong>tat_regexp_capture_group</strong> (int): The index of the capture group in the custom regular
+expression for the TaT value. Default is 1, corresponding to the <code class="docutils literal notranslate"><span class="pre">success_regexp</span></code> group.</p></li>
+<li><p><strong>tat_value</strong> (list): An <strong>empty</strong> list to store the TaT value after being successfully matched with
+<code class="docutils literal notranslate"><span class="pre">success_regexp</span></code>. The list is used to mimic a pass-by-reference.</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><p>A status Enum which is:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>TIMEOUT: if user defined timeout has been triggered.</p></li>
+<li><p>SIM_ERROR: if any text was found in the <code class="docutils literal notranslate"><span class="pre">stderr</span></code> stream during the execution of an instruction.</p></li>
+<li><p>SUCCESS: if the halting regexp matched text from the <code class="docutils literal notranslate"><span class="pre">stdout</span></code> stream.</p></li>
+</ul>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#zoix.LogicSimulation" title="zoix.LogicSimulation">LogicSimulation</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="csvfaultreport">
+<h2>CSVFaultReport<a class="headerlink" href="#csvfaultreport" title="Link to this heading">¶</a></h2>
 <p>This class manages the results of the fault simulation which are expected to be in a <strong>CSV</strong> format. Namelly,
 the fault summary and the fault list which are generated when the fcm (fault campaign manager) script contains
 the <code class="docutils literal notranslate"><span class="pre">report</span> <span class="pre">-csv</span></code> instruction. This is a <strong>hard</strong> requirement for the whole TestCrush framework to work. The
 reason for not relying on the textual fault reports is once again the nieces that are introduced in different
 VC-Z01X versions. The <code class="docutils literal notranslate"><span class="pre">.txt</span></code> fault summary and report are sometimes poorly indented, and in general require
 regexp parsing. Hence, the CSVs. Nothing can go wrong with an ol’reliable format like this.</p>
-</div>
-<div class="section" id="fault">
-<h2>Fault<a class="headerlink" href="#fault" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="zoix.CSVFaultReport">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">zoix.</span></span><span class="sig-name descname"><span class="pre">CSVFaultReport</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fault_summary</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fault_report</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoix.html#CSVFaultReport"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoix.CSVFaultReport" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Manipulates the VC-Z01X summary and report <strong>CSV</strong> files.</p>
+<p>These files are expected to be generated after fault simulation.
+The <code class="docutils literal notranslate"><span class="pre">report</span></code> instruction specified in the <code class="docutils literal notranslate"><span class="pre">fcm.tcl</span></code> file <strong>MUST</strong> be
+executed with the <code class="docutils literal notranslate"><span class="pre">-csv</span></code> option.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="zoix.CSVFaultReport.compute_flist_coverage">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">compute_flist_coverage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fault_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#zoix.Fault" title="zoix.Fault"><span class="pre">Fault</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sff_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">formula</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">precision</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">status_attribute</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Status'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="_modules/zoix.html#CSVFaultReport.compute_flist_coverage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoix.CSVFaultReport.compute_flist_coverage" title="Link to this definition">¶</a></dt>
+<dd><p>Computes the test coverage value as described by <cite>formula</cite>, which must be comprised of mathematical operations
+of Z01X fault classes (i.e., 2 letter strings).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fault_list</strong> (<em>list</em><em>[</em><a class="reference internal" href="#zoix.Fault" title="zoix.Fault"><em>Fault</em></a><em>]</em>) – A fault-list generated after parsing the Z01X fault report csv file.</p></li>
+<li><p><strong>sff_file</strong> (<em>pathlib.Path</em>) – The fault format configuration file.</p></li>
+<li><p><strong>formula</strong> (<em>str</em>) – A formula which computes the coverage e.g., <code class="docutils literal notranslate"><span class="pre">&quot;DD/(NA</span> <span class="pre">+</span> <span class="pre">DA</span> <span class="pre">+</span> <span class="pre">DN</span> <span class="pre">+</span> <span class="pre">DD)&quot;</span></code>.</p></li>
+<li><p><strong>precision</strong> (<em>int</em>) – the number of decimals to consider for the coverage. Default is <code class="docutils literal notranslate"><span class="pre">4</span></code>.</p></li>
+<li><p><strong>status_attribute</strong> (<em>str</em>) – The attribute of the <code class="docutils literal notranslate"><span class="pre">Fault</span></code> object which represents its Z01X fault status.
+Default value is <code class="docutils literal notranslate"><span class="pre">&quot;Status&quot;</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The coverage value in [0.0, 1.0] i.e., the evaluated <code class="docutils literal notranslate"><span class="pre">formula</span></code>. Not as a precentage!</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>SystemExit</strong> – If the “StatusGroups” segment is not found in the configuration .sff file.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoix.CSVFaultReport.extract_summary_cells_from_row">
+<span class="sig-name descname"><span class="pre">extract_summary_cells_from_row</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">row</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">cols</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/zoix.html#CSVFaultReport.extract_summary_cells_from_row"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoix.CSVFaultReport.extract_summary_cells_from_row" title="Link to this definition">¶</a></dt>
+<dd><p>Returns a sequence of cells from a row of the <code class="docutils literal notranslate"><span class="pre">self.fault_summary</span></code> <strong>CSV</strong> file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>row</strong> (<em>int</em>) – the row number (1-based indexing).</p></li>
+<li><p><strong>*cols</strong> (<em>ints</em>) – the columns’ numbers (1-based indexing).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The cells of the fault summary.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[str]</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>SystemExit</strong> – If a requested column or row is out-of-bounds.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoix.CSVFaultReport.extract_summary_coverage">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">extract_summary_coverage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">summary</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">regexp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Pattern</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">group_index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="_modules/zoix.html#CSVFaultReport.extract_summary_coverage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoix.CSVFaultReport.extract_summary_coverage" title="Link to this definition">¶</a></dt>
+<dd><p>Extracts the coverage percentage from the summary text file
+file via multilined regex matching.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>summary</strong> (<em>pathlib.Path</em>) – The location of the <code class="docutils literal notranslate"><span class="pre">summary.txt</span></code> report.</p></li>
+<li><p><strong>regexp</strong> (<em>re.Pattern</em>) – The regular expression to match the intended coverage line. Note that it must have at
+least one capture group, which should precicely hold the coverage percentage.</p></li>
+<li><p><strong>group_index</strong> (<em>int</em>) – The capture group index of the regexp that holds the coverage percentage.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The coverage percentage which was captured as float.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ValueError</strong> – If the provided <cite>regexp</cite> does not match anything.</p></li>
+<li><p><strong>SystemExit</strong> – If the conversion of the matched capture group to float fails.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoix.CSVFaultReport.parse_fault_report">
+<span class="sig-name descname"><span class="pre">parse_fault_report</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#zoix.Fault" title="zoix.Fault"><span class="pre">Fault</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/zoix.html#CSVFaultReport.parse_fault_report"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoix.CSVFaultReport.parse_fault_report" title="Link to this definition">¶</a></dt>
+<dd><p>Parses the <code class="docutils literal notranslate"><span class="pre">self.fault_report</span></code> <strong>CSV</strong> file and returns  a dictionary with its contents, ommiting
+any column if specified.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A list with <cite>Fault</cite> entries.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list[<a class="reference internal" href="#zoix.Fault" title="zoix.Fault">Fault</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoix.CSVFaultReport.set_fault_report">
+<span class="sig-name descname"><span class="pre">set_fault_report</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fault_report</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/zoix.html#CSVFaultReport.set_fault_report"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoix.CSVFaultReport.set_fault_report" title="Link to this definition">¶</a></dt>
+<dd><p>Setter method for fault report.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>fault_report</strong> (<em>str</em>) – The new fault report filename.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>FileExistsError</strong> – If the file does not exist.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoix.CSVFaultReport.set_fault_summary">
+<span class="sig-name descname"><span class="pre">set_fault_summary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fault_summary</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/zoix.html#CSVFaultReport.set_fault_summary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoix.CSVFaultReport.set_fault_summary" title="Link to this definition">¶</a></dt>
+<dd><p>Setter method for fault summary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>fault_summary</strong> (<em>str</em>) – The new fault summary filename.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>FileExistsError</strong> – if the file does not exist.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="fault">
+<h2>Fault<a class="headerlink" href="#fault" title="Link to this heading">¶</a></h2>
 <p>This class is used to represent a fault. However, once again in order to make it as general as possible, all
 attributes of the <code class="docutils literal notranslate"><span class="pre">Fault</span></code> class are passed as keyword arguments. Hence, they can be arbitrarily selected.
 For instance, the CSV fault report of VC-Z01X contains the faults like this:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="go">&gt;&gt;&gt;</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt;</span>
 <span class="go">&quot;FID&quot;,&quot;Test Name&quot;,&quot;Prime&quot;,&quot;Status&quot;,&quot;Model&quot;,&quot;Timing&quot;,&quot;Cycle Injection&quot;,&quot;Cycle End&quot;,&quot;Class&quot;,&quot;Location&quot;</span>
 <span class="go">1,&quot;test1&quot;,&quot;yes&quot;,&quot;ON&quot;,&quot;0&quot;,&quot;&quot;,&quot;&quot;,&quot;&quot;,&quot;PORT&quot;,&quot;tb_top.wrapper_i.top_i.core_i.ex_stage_i.alu_i.U10.Z&quot;</span>
 <span class="go">2,&quot;test1&quot;,1,&quot;ON&quot;,&quot;0&quot;,&quot;&quot;,&quot;&quot;,&quot;&quot;,&quot;PORT&quot;,&quot;tb_top.wrapper_i.top_i.core_i.ex_stage_i.alu_i.U10.A&quot;</span>
@@ -83,20 +389,134 @@ For instance, the CSV fault report of VC-Z01X contains the faults like this:</p>
 substituted with underscores (_) (e.g., <code class="docutils literal notranslate"><span class="pre">&quot;Test</span> <span class="pre">Name&quot;</span> <span class="pre">-&gt;</span> <span class="pre">&quot;Test_Name&quot;</span></code>) and each subsequent row contains
 the corresponding values to those attributes. Its used by the <code class="docutils literal notranslate"><span class="pre">CSVFaultReport</span></code> for coverage computation
 and fault list parsing.</p>
-</div>
-<div class="section" id="vc-z01x-status-enumerators">
-<h2>VC-Z01X Status Enumerators<a class="headerlink" href="#vc-z01x-status-enumerators" title="Permalink to this headline">¶</a></h2>
-</div>
-</div>
+<dl class="py class">
+<dt class="sig sig-object py" id="zoix.Fault">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">zoix.</span></span><span class="sig-name descname"><span class="pre">Fault</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">fault_attributes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoix.html#Fault"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoix.Fault" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Generic representation of a fault. All attributes are set as strings.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="zoix.Fault.cast_attribute">
+<span class="sig-name descname"><span class="pre">cast_attribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">attribute</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">callable</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/zoix.html#Fault.cast_attribute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoix.Fault.cast_attribute" title="Link to this definition">¶</a></dt>
+<dd><p>Casts the type of the internal attribute</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>attribute</strong> (<em>str</em>) – The requested attribute of the fault to be casted.</p></li>
+<li><p><strong>func</strong> (<em>callable</em>) – A function to cast the fault attribute.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>KeyError</strong> – If the requested attribute does not exist.</p></li>
+<li><p><strong>ValueError</strong> – If the cast cannot be performed e.g., when
+    <code class="docutils literal notranslate"><span class="pre">int('a')</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoix.Fault.get">
+<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">attribute</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Any</span></span></span><a class="reference internal" href="_modules/zoix.html#Fault.get"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoix.Fault.get" title="Link to this definition">¶</a></dt>
+<dd><p>Generic getter method for arbitrary attribute.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>attribute</strong> (<em>str</em>) – The requested attribute of the fault.</p></li>
+<li><p><strong>default</strong> (<em>str</em><em> | </em><em>None</em>) – A default value to be used as a guard.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The fault attribute. If no cast has been performed on
+the attribute then the default type is <code class="docutils literal notranslate"><span class="pre">str</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str | Any</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="vc-z01x-status-enumerators">
+<h2>VC-Z01X Status Enumerators<a class="headerlink" href="#vc-z01x-status-enumerators" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="zoix.Compilation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">zoix.</span></span><span class="sig-name descname"><span class="pre">Compilation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoix.html#Compilation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoix.Compilation" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
+<p>Statuses for the VCS compilation of HDL sources.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoix.Compilation.ERROR">
+<span class="sig-name descname"><span class="pre">ERROR</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'ERROR'</span></em><a class="headerlink" href="#zoix.Compilation.ERROR" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoix.Compilation.SUCCESS">
+<span class="sig-name descname"><span class="pre">SUCCESS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'SUCCESS'</span></em><a class="headerlink" href="#zoix.Compilation.SUCCESS" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="zoix.LogicSimulation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">zoix.</span></span><span class="sig-name descname"><span class="pre">LogicSimulation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoix.html#LogicSimulation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoix.LogicSimulation" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
+<p>Statuses for the simv logic simulation of a given program.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoix.LogicSimulation.SIM_ERROR">
+<span class="sig-name descname"><span class="pre">SIM_ERROR</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'ERROR'</span></em><a class="headerlink" href="#zoix.LogicSimulation.SIM_ERROR" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoix.LogicSimulation.SUCCESS">
+<span class="sig-name descname"><span class="pre">SUCCESS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'SUCCESS'</span></em><a class="headerlink" href="#zoix.LogicSimulation.SUCCESS" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoix.LogicSimulation.TIMEOUT">
+<span class="sig-name descname"><span class="pre">TIMEOUT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'TIMEOUT'</span></em><a class="headerlink" href="#zoix.LogicSimulation.TIMEOUT" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="zoix.FaultSimulation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">zoix.</span></span><span class="sig-name descname"><span class="pre">FaultSimulation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoix.html#FaultSimulation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoix.FaultSimulation" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
+<p>Statuses for the Z01X fault simulation.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoix.FaultSimulation.FSIM_ERROR">
+<span class="sig-name descname"><span class="pre">FSIM_ERROR</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'ERROR'</span></em><a class="headerlink" href="#zoix.FaultSimulation.FSIM_ERROR" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoix.FaultSimulation.SUCCESS">
+<span class="sig-name descname"><span class="pre">SUCCESS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'SUCCESS'</span></em><a class="headerlink" href="#zoix.FaultSimulation.SUCCESS" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="zoix.FaultSimulation.TIMEOUT">
+<span class="sig-name descname"><span class="pre">TIMEOUT</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'TIMEOUT'</span></em><a class="headerlink" href="#zoix.FaultSimulation.TIMEOUT" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
 
 
+            <div class="clearer"></div>
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
 <h3><a href="index.html">Table of Contents</a></h3>
-<p class="caption"><span class="caption-text">Contents:</span></p>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="asm.html">asm module</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">zoix module</a><ul>
@@ -117,21 +537,21 @@ and fault list parsing.</p>
             rel="nofollow">Show Source</a></li>
     </ul>
    </div>
-<div id="searchbox" style="display: none" role="search">
+<search id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
       <input type="submit" value="Go" />
     </form>
     </div>
-</div>
-<script>$('#searchbox').show(0);</script>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -146,12 +566,13 @@ and fault list parsing.</p>
         <li class="right" >
           <a href="asm.html" title="asm module"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">TestCrush 0.5.0 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">TestCrush 0.5.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">zoix module</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2024, Nikolaos I. Deligiannis.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.4.
+    &#169; Copyright 2024, Nikolaos I. Deligiannis.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
     </div>
   </body>
 </html>

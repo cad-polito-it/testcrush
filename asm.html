@@ -1,26 +1,25 @@
-
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html lang="en" data-content_root="./">
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
     <title>asm module &#8212; TestCrush 0.5.0 documentation</title>
-    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css?v=def86cc0" />
     
-    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/language_data.js"></script>
+    <script src="_static/documentation_options.js?v=1dd76d02"></script>
+    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     
-    <link rel="shortcut icon" href="_static/favicon.png"/>
+    <link rel="icon" href="_static/favicon.png"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="zoix module" href="zoix.html" />
     <link rel="prev" title="TestCrush documentation" href="index.html" /> 
   </head><body>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -35,7 +34,8 @@
         <li class="right" >
           <a href="index.html" title="TestCrush documentation"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">TestCrush 0.5.0 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">TestCrush 0.5.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">asm module</a></li> 
       </ul>
     </div>  
 
@@ -44,40 +44,219 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="asm-module">
-<h1>asm module<a class="headerlink" href="#asm-module" title="Permalink to this headline">¶</a></h1>
+  <section id="asm-module">
+<h1>asm module<a class="headerlink" href="#asm-module" title="Link to this heading">¶</a></h1>
 <p>The <code class="docutils literal notranslate"><span class="pre">asm.py</span></code> module contains utilities to handle file I/O operations on arbitrary assembly files.
 The purpose is to remove and to restore lines from the associated assembly file accurately.</p>
 <div class="toctree-wrapper compound">
 </div>
-<div class="section" id="isa">
-<h2>ISA<a class="headerlink" href="#isa" title="Permalink to this headline">¶</a></h2>
+<section id="isa">
+<h2>ISA<a class="headerlink" href="#isa" title="Link to this heading">¶</a></h2>
 <p>This class, which implements the Singleton pattern, is used to parse a
 user-defined <a class="reference external" href="https://github.com/cad-polito-it/testcrush/tree/main/langs">language file</a> and offers
 utilities to check whether an arbitrary string is a valid instruction according to the language file.</p>
-</div>
-<div class="section" id="codeline">
-<h2>Codeline<a class="headerlink" href="#codeline" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="asm.ISA">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">asm.</span></span><span class="sig-name descname"><span class="pre">ISA</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/asm.html#ISA"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#asm.ISA" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p><strong>Singleton</strong> class to provide utilities for the considered ISA.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="asm.ISA.get_mnemonics">
+<span class="sig-name descname"><span class="pre">get_mnemonics</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">set</span></span></span><a class="reference internal" href="_modules/asm.html#ISA.get_mnemonics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#asm.ISA.get_mnemonics" title="Link to this definition">¶</a></dt>
+<dd><p>Returns a set with the ISA-lang mnemonics.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>None</strong></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A set with all the ISA-lang mnemonics.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>set</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="asm.ISA.is_instruction">
+<span class="sig-name descname"><span class="pre">is_instruction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">assembly_line</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/asm.html#ISA.is_instruction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#asm.ISA.is_instruction" title="Link to this definition">¶</a></dt>
+<dd><p>Checks if <code class="docutils literal notranslate"><span class="pre">assembly_line</span></code>’s first sub-string is present the class <code class="docutils literal notranslate"><span class="pre">keywords</span></code> set.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>assembly_line</strong> (<em>str</em>) – an assembly mnemonic.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if <code class="docutils literal notranslate"><span class="pre">assembly_line</span></code> is in <code class="docutils literal notranslate"><span class="pre">mnemonics</span></code>, False otherwise.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="codeline">
+<h2>Codeline<a class="headerlink" href="#codeline" title="Link to this heading">¶</a></h2>
 <p>This is a dataclass to represent a single line of assembly code. Note that the <code class="docutils literal notranslate"><span class="pre">lineno</span></code> attribute
 which corresponds to the line number of the code line in the assembly file uses <strong>0-based</strong> indexing!</p>
-</div>
-<div class="section" id="assemblyhandler">
-<h2>AssemblyHandler<a class="headerlink" href="#assemblyhandler" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="asm.Codeline">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">asm.</span></span><span class="sig-name descname"><span class="pre">Codeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lineno</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">valid_insn</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/asm.html#Codeline"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#asm.Codeline" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Represents a line of assembly code</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="asm.Codeline.data">
+<span class="sig-name descname"><span class="pre">data</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#asm.Codeline.data" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="asm.Codeline.lineno">
+<span class="sig-name descname"><span class="pre">lineno</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#asm.Codeline.lineno" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="asm.Codeline.valid_insn">
+<span class="sig-name descname"><span class="pre">valid_insn</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#asm.Codeline.valid_insn" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="assemblyhandler">
+<h2>AssemblyHandler<a class="headerlink" href="#assemblyhandler" title="Link to this heading">¶</a></h2>
 <p>This class, utilises <code class="docutils literal notranslate"><span class="pre">ISA</span></code> and <code class="docutils literal notranslate"><span class="pre">Codeline</span></code> to parse a <strong>single</strong> assembly file and store its code
 in chunks (lists) of <code class="docutils literal notranslate"><span class="pre">Codeline</span></code> objects. It offers utilities for removing and restoring arbitrary
 lines of code from the file while keeping track of the changes performed and accurately updating the
 <code class="docutils literal notranslate"><span class="pre">lineno</span></code> attributes of the stored code lines when needed.</p>
-</div>
-</div>
+<dl class="py class">
+<dt class="sig sig-object py" id="asm.AssemblyHandler">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">asm.</span></span><span class="sig-name descname"><span class="pre">AssemblyHandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">isa</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#asm.ISA" title="asm.ISA"><span class="pre">ISA</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">assembly_source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunksize</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/asm.html#AssemblyHandler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#asm.AssemblyHandler" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Manages <strong>one</strong> assembly file.</p>
+<p>It operates on the file by removing/restoring lines of code.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="asm.AssemblyHandler.get_asm_source">
+<span class="sig-name descname"><span class="pre">get_asm_source</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Path</span></span></span><a class="reference internal" href="_modules/asm.html#AssemblyHandler.get_asm_source"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#asm.AssemblyHandler.get_asm_source" title="Link to this definition">¶</a></dt>
+<dd><p>Returns the assembly source file <code class="docutils literal notranslate"><span class="pre">pathlib.Path</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The assembly source <code class="docutils literal notranslate"><span class="pre">pathlib.Path</span></code>.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>pathlib.Path</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="asm.AssemblyHandler.get_candidate">
+<span class="sig-name descname"><span class="pre">get_candidate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lineno</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#asm.Codeline" title="asm.Codeline"><span class="pre">Codeline</span></a></span></span><a class="reference internal" href="_modules/asm.html#AssemblyHandler.get_candidate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#asm.AssemblyHandler.get_candidate" title="Link to this definition">¶</a></dt>
+<dd><p>Returns the Codeline in candidates with the specified lineno</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>lineno</strong> (<em>int</em>) – the line number of the candidate to be found.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the <code class="docutils literal notranslate"><span class="pre">Codeline</span></code> with <code class="docutils literal notranslate"><span class="pre">Codeline.lineno</span> <span class="pre">==</span> <span class="pre">lineno</span></code> if found.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#asm.Codeline" title="asm.Codeline">Codeline</a></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>LookUpError</strong> – If the requested Codeline does not exist</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="asm.AssemblyHandler.get_code">
+<span class="sig-name descname"><span class="pre">get_code</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#asm.Codeline" title="asm.Codeline"><span class="pre">Codeline</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/asm.html#AssemblyHandler.get_code"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#asm.AssemblyHandler.get_code" title="Link to this definition">¶</a></dt>
+<dd><p>Returns the parsed code as a list of <code class="docutils literal notranslate"><span class="pre">Codelines</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A list of <code class="docutils literal notranslate"><span class="pre">Codeline</span></code> entries.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="asm.AssemblyHandler.get_random_candidate">
+<span class="sig-name descname"><span class="pre">get_random_candidate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pop_candidate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#asm.Codeline" title="asm.Codeline"><span class="pre">Codeline</span></a></span></span><a class="reference internal" href="_modules/asm.html#AssemblyHandler.get_random_candidate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#asm.AssemblyHandler.get_random_candidate" title="Link to this definition">¶</a></dt>
+<dd><p>In a uniform random manner selects one <code class="docutils literal notranslate"><span class="pre">Codeline</span></code> and returns it while also optionally removing it from
+the <code class="docutils literal notranslate"><span class="pre">candidate</span></code> collection.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>pop_candidate</strong> (<em>bool</em>) – When True, deletes the <code class="docutils literal notranslate"><span class="pre">Codeline</span></code> from the collection after identifying it.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A random <code class="docutils literal notranslate"><span class="pre">Codeline</span></code> from a random <code class="docutils literal notranslate"><span class="pre">self.candidates</span></code> chunk.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#asm.Codeline" title="asm.Codeline">Codeline</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="asm.AssemblyHandler.remove">
+<span class="sig-name descname"><span class="pre">remove</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">codeline</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#asm.Codeline" title="asm.Codeline"><span class="pre">Codeline</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/asm.html#AssemblyHandler.remove"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#asm.AssemblyHandler.remove" title="Link to this definition">¶</a></dt>
+<dd><p>Removes the codeline from the assembly file.</p>
+<p>Creates a new assembly file by using the current <code class="docutils literal notranslate"><span class="pre">self.asm_code</span></code> as a source and skips the the line which
+corresponds to <code class="docutils literal notranslate"><span class="pre">codeline</span></code>’s <code class="docutils literal notranslate"><span class="pre">lineno</span></code> attribute. The <code class="docutils literal notranslate"><span class="pre">self.candidates</span></code> lineno fields are updated (-1)
+if &gt;= than the entry which is being restored.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>codeline</strong> (<a class="reference internal" href="#asm.Codeline" title="asm.Codeline"><em>Codeline</em></a>) – The <code class="docutils literal notranslate"><span class="pre">Codeline</span></code> to be removed from the assembly file.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="asm.AssemblyHandler.restore">
+<span class="sig-name descname"><span class="pre">restore</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/asm.html#AssemblyHandler.restore"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#asm.AssemblyHandler.restore" title="Link to this definition">¶</a></dt>
+<dd><p>Re-enters the last <code class="docutils literal notranslate"><span class="pre">Codeline</span></code> from the changelog to the assembly file.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">self.candidates</span></code> lineno fields are updated (+1) if &gt;= than the entry which is being restored.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="asm.AssemblyHandler.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/asm.html#AssemblyHandler.save"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#asm.AssemblyHandler.save" title="Link to this definition">¶</a></dt>
+<dd><p>Saves the current version of assembly file. The filename will be the original stem plus all current changelog
+codelines’ linenos seperated with a dash. If <code class="docutils literal notranslate"><span class="pre">self.asm_file_changelog</span></code> is empty, it does nothing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
 
 
+            <div class="clearer"></div>
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
 <h3><a href="index.html">Table of Contents</a></h3>
-<p class="caption"><span class="caption-text">Contents:</span></p>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">asm module</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#isa">ISA</a></li>
@@ -97,21 +276,21 @@ lines of code from the file while keeping track of the changes performed and acc
             rel="nofollow">Show Source</a></li>
     </ul>
    </div>
-<div id="searchbox" style="display: none" role="search">
+<search id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
       <input type="submit" value="Go" />
     </form>
     </div>
-</div>
-<script>$('#searchbox').show(0);</script>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -126,12 +305,13 @@ lines of code from the file while keeping track of the changes performed and acc
         <li class="right" >
           <a href="index.html" title="TestCrush documentation"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">TestCrush 0.5.0 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">TestCrush 0.5.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">asm module</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2024, Nikolaos I. Deligiannis.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.4.
+    &#169; Copyright 2024, Nikolaos I. Deligiannis.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
     </div>
   </body>
 </html>

@@ -1,25 +1,24 @@
-
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html lang="en" data-content_root="./">
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
     <title>TestCrush documentation &#8212; TestCrush 0.5.0 documentation</title>
-    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css?v=def86cc0" />
     
-    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/language_data.js"></script>
+    <script src="_static/documentation_options.js?v=1dd76d02"></script>
+    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     
-    <link rel="shortcut icon" href="_static/favicon.png"/>
+    <link rel="icon" href="_static/favicon.png"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="asm module" href="asm.html" /> 
   </head><body>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -31,7 +30,8 @@
         <li class="right" >
           <a href="asm.html" title="asm module"
              accesskey="N">next</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">TestCrush 0.5.0 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="#">TestCrush 0.5.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">TestCrush documentation</a></li> 
       </ul>
     </div>  
 
@@ -40,8 +40,8 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="testcrush-documentation">
-<h1>TestCrush documentation<a class="headerlink" href="#testcrush-documentation" title="Permalink to this headline">¶</a></h1>
+  <section id="testcrush-documentation">
+<h1>TestCrush documentation<a class="headerlink" href="#testcrush-documentation" title="Link to this heading">¶</a></h1>
 <img alt="_images/testcrush.png" src="_images/testcrush.png" />
 <p>TestCrush is a toolkit for compaction of software test libraries
 which are written in assembly. The tool expects a configuration JSON file
@@ -55,7 +55,7 @@ Transactions on Computers, vol. 66, no. 7, pp. 1268-1273, doi: 10.1109/TC.2016.2
 </div></blockquote>
 <p>Version 0.5.0</p>
 <div class="toctree-wrapper compound">
-<p class="caption"><span class="caption-text">Contents:</span></p>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="asm.html">asm module</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="asm.html#isa">ISA</a></li>
@@ -74,19 +74,27 @@ Transactions on Computers, vol. 66, no. 7, pp. 1268-1273, doi: 10.1109/TC.2016.2
 <li class="toctree-l2"><a class="reference internal" href="a0.html#a0">A0</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="utils.html">utils module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utils.html">utils module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="utils.html#utils.Singleton"><code class="docutils literal notranslate"><span class="pre">Singleton</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="utils.html#utils.Timer"><code class="docutils literal notranslate"><span class="pre">Timer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="utils.html#utils.compile_assembly"><code class="docutils literal notranslate"><span class="pre">compile_assembly()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="utils.html#utils.setup_logger"><code class="docutils literal notranslate"><span class="pre">setup_logger()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="utils.html#utils.zip_archive"><code class="docutils literal notranslate"><span class="pre">zip_archive()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </div>
-</div>
+</section>
 
 
+            <div class="clearer"></div>
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
 <h3><a href="#">Table of Contents</a></h3>
-<p class="caption"><span class="caption-text">Contents:</span></p>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="asm.html">asm module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="zoix.html">zoix module</a></li>
@@ -101,21 +109,21 @@ Transactions on Computers, vol. 66, no. 7, pp. 1268-1273, doi: 10.1109/TC.2016.2
             rel="nofollow">Show Source</a></li>
     </ul>
    </div>
-<div id="searchbox" style="display: none" role="search">
+<search id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
       <input type="submit" value="Go" />
     </form>
     </div>
-</div>
-<script>$('#searchbox').show(0);</script>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -127,12 +135,13 @@ Transactions on Computers, vol. 66, no. 7, pp. 1268-1273, doi: 10.1109/TC.2016.2
         <li class="right" >
           <a href="asm.html" title="asm module"
              >next</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">TestCrush 0.5.0 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="#">TestCrush 0.5.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">TestCrush documentation</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2024, Nikolaos I. Deligiannis.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.4.
+    &#169; Copyright 2024, Nikolaos I. Deligiannis.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
     </div>
   </body>
 </html>
