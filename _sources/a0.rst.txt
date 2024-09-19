@@ -1,0 +1,18 @@
+=========
+a0 module
+=========
+
+This module implements the `A0 compaction algorithm <https://doi.org/10.1109/TC.2016.2643663>`_ . The only difference 
+with respect to the original A0 algorithm is that in order to validate a removal of an instruction from the STL, the 
+evaluation happens on whether the new test application time is less or equal than the old test application time **AND**
+whether the new test coverage is **greater or equal** than the old test application time. However, with the provided
+utilities provided with the toolkit this can be extended or modified to the user's needs. All it takes is a few LoC
+in the evaluation method of each iteration within the A0 class.
+
+A0
+--
+
+.. autoclass:: a0.A0
+   :members:
+   :undoc-members:
+   :show-inheritance:

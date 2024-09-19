@@ -1,0 +1,172 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>utils module &#8212; TestCrush 0.5.0 documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    
+    <link rel="shortcut icon" href="_static/favicon.png"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="a0 module" href="a0.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="a0.html" title="a0 module"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">TestCrush 0.5.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="utils-module">
+<h1>utils module<a class="headerlink" href="#utils-module" title="Permalink to this headline">¶</a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">utils.py</span></code> module contains utility classes and functions that are used by all of the other modules such as e.g, logging.</p>
+<span class="target" id="module-utils"></span><dl class="class">
+<dt id="utils.Singleton">
+<em class="property">class </em><code class="sig-prename descclassname">utils.</code><code class="sig-name descname">Singleton</code><a class="reference internal" href="_modules/utils.html#Singleton"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.Singleton" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">type</span></code></p>
+<p>Singleton design pattern. To be used as a metaclass: <code class="docutils literal notranslate"><span class="pre">class</span> <span class="pre">A(metaclass</span> <span class="pre">=</span> <span class="pre">Singleton)</span></code></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="utils.Timer">
+<em class="property">class </em><code class="sig-prename descclassname">utils.</code><code class="sig-name descname">Timer</code><a class="reference internal" href="_modules/utils.html#Timer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.Timer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Context manager style timer. To be used as: <code class="docutils literal notranslate"><span class="pre">with</span> <span class="pre">Timer():</span></code></p>
+<dl class="method">
+<dt id="utils.Timer.format_time">
+<code class="sig-name descname">format_time</code><span class="sig-paren">(</span><em class="sig-param">seconds</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#Timer.format_time"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.Timer.format_time" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.compile_assembly">
+<code class="sig-prename descclassname">utils.</code><code class="sig-name descname">compile_assembly</code><span class="sig-paren">(</span><em class="sig-param">*instructions</em>, <em class="sig-param">exit_on_error: bool = False</em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/utils.html#compile_assembly"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.compile_assembly" title="Permalink to this definition">¶</a></dt>
+<dd><p>Executes a sequence of bash instructions to compile the <cite>self.asm_file</cite>. Uses subprocess for each instruction and
+optionally exits on error.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>exit_on_error</strong> (<em>bool</em>) – If an error is encountered during compilation and this is True, then the program
+terminates. Otherwise it continues.</p></li>
+<li><p><strong>*instructions</strong> (<em>str</em>) – A sequence of bash commands required in order to (cross) compile the assembly files.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>True if no message was written to <code class="docutils literal notranslate"><span class="pre">stderr</span></code> from any of the executed instructions (subprocesses).
+False otherwise.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>SystemExit</strong> – if <code class="docutils literal notranslate"><span class="pre">stderr</span></code> contains text and <code class="docutils literal notranslate"><span class="pre">exit_on_error</span></code> is True.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.setup_logger">
+<code class="sig-prename descclassname">utils.</code><code class="sig-name descname">setup_logger</code><span class="sig-paren">(</span><em class="sig-param">name: str = 'testcrush logger'</em>, <em class="sig-param">log_file: str = 'testcrush_debug.log'</em><span class="sig-paren">)</span> &#x2192; logging.Logger<a class="reference internal" href="_modules/utils.html#setup_logger"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.setup_logger" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set up a logger with stream and file handlers.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.zip_archive">
+<code class="sig-prename descclassname">utils.</code><code class="sig-name descname">zip_archive</code><span class="sig-paren">(</span><em class="sig-param">archive_name: str</em>, <em class="sig-param">*files</em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="_modules/utils.html#zip_archive"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.zip_archive" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates a .zip archive of arbitrary files.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>archive_name</strong> (<em>str</em>) – The filename (stem) of the zip archive.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The generated archive path string.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="index.html">Table of Contents</a></h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="asm.html">asm module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="zoix.html">zoix module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="a0.html">a0 module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">utils module</a></li>
+</ul>
+
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/utils.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="a0.html" title="a0 module"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">TestCrush 0.5.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2024, Nikolaos I. Deligiannis.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.4.
+    </div>
+  </body>
+</html>

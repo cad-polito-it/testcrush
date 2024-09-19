@@ -1,0 +1,157 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>zoix module &#8212; TestCrush 0.5.0 documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    
+    <link rel="shortcut icon" href="_static/favicon.png"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="a0 module" href="a0.html" />
+    <link rel="prev" title="asm module" href="asm.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="a0.html" title="a0 module"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="asm.html" title="asm module"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">TestCrush 0.5.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="zoix-module">
+<h1>zoix module<a class="headerlink" href="#zoix-module" title="Permalink to this headline">¶</a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">zoix.py</span></code> module contains utilities to perform calls to <a class="reference external" href="https://www.synopsys.com/verification/simulation/vc-z01x.html">VC-Z01X</a>
+It is based on the <a class="reference external" href="https://docs.python.org/3/library/subprocess.html">subprocess</a> package and depends heavily on user-defined parameters.</p>
+<div class="section" id="zoixinvoker">
+<h2>ZoixInvoker<a class="headerlink" href="#zoixinvoker" title="Permalink to this headline">¶</a></h2>
+<p>This class is the responsible for issuing calls to VC-Z01X. It offers utilities to compile HDL sources in VCS,
+logic simulate these sources, generate fault campaign manager sripts and finally, fault simulate the sources
+in Z01X. It assumes a pre-existing a tested and working VC-Z01X environment for a DUT and all function arguments
+are passed as variadic args and keyword arguments. The reason for this design choice is to abstract as much as
+possible from any version-specific niece that VC-Z01X might have. Hence, we offer this layer of abstraction and
+leave it to the user to specify compilation and simulation isntructions to be executed in the methods of the
+<code class="docutils literal notranslate"><span class="pre">ZoixInvoker</span></code> e.g., by a .json configuration file.</p>
+</div>
+<div class="section" id="csvfaultreport">
+<h2>CSVFaultReport<a class="headerlink" href="#csvfaultreport" title="Permalink to this headline">¶</a></h2>
+<p>This class manages the results of the fault simulation which are expected to be in a <strong>CSV</strong> format. Namelly,
+the fault summary and the fault list which are generated when the fcm (fault campaign manager) script contains
+the <code class="docutils literal notranslate"><span class="pre">report</span> <span class="pre">-csv</span></code> instruction. This is a <strong>hard</strong> requirement for the whole TestCrush framework to work. The
+reason for not relying on the textual fault reports is once again the nieces that are introduced in different
+VC-Z01X versions. The <code class="docutils literal notranslate"><span class="pre">.txt</span></code> fault summary and report are sometimes poorly indented, and in general require
+regexp parsing. Hence, the CSVs. Nothing can go wrong with an ol’reliable format like this.</p>
+</div>
+<div class="section" id="fault">
+<h2>Fault<a class="headerlink" href="#fault" title="Permalink to this headline">¶</a></h2>
+<p>This class is used to represent a fault. However, once again in order to make it as general as possible, all
+attributes of the <code class="docutils literal notranslate"><span class="pre">Fault</span></code> class are passed as keyword arguments. Hence, they can be arbitrarily selected.
+For instance, the CSV fault report of VC-Z01X contains the faults like this:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="go">&gt;&gt;&gt;</span>
+<span class="go">&quot;FID&quot;,&quot;Test Name&quot;,&quot;Prime&quot;,&quot;Status&quot;,&quot;Model&quot;,&quot;Timing&quot;,&quot;Cycle Injection&quot;,&quot;Cycle End&quot;,&quot;Class&quot;,&quot;Location&quot;</span>
+<span class="go">1,&quot;test1&quot;,&quot;yes&quot;,&quot;ON&quot;,&quot;0&quot;,&quot;&quot;,&quot;&quot;,&quot;&quot;,&quot;PORT&quot;,&quot;tb_top.wrapper_i.top_i.core_i.ex_stage_i.alu_i.U10.Z&quot;</span>
+<span class="go">2,&quot;test1&quot;,1,&quot;ON&quot;,&quot;0&quot;,&quot;&quot;,&quot;&quot;,&quot;&quot;,&quot;PORT&quot;,&quot;tb_top.wrapper_i.top_i.core_i.ex_stage_i.alu_i.U10.A&quot;</span>
+<span class="go">3,&quot;test1&quot;,&quot;yes&quot;,&quot;ON&quot;,&quot;1&quot;,&quot;&quot;,&quot;&quot;,&quot;&quot;,&quot;PORT&quot;,&quot;tb_top.wrapper_i.top_i.core_i.ex_stage_i.alu_i.U10.Z&quot;</span>
+</pre></div>
+</div>
+<p>The header row of this CSV snippet represents the attributes of the <code class="docutils literal notranslate"><span class="pre">Fault</span></code> objects, with all spaces
+substituted with underscores (_) (e.g., <code class="docutils literal notranslate"><span class="pre">&quot;Test</span> <span class="pre">Name&quot;</span> <span class="pre">-&gt;</span> <span class="pre">&quot;Test_Name&quot;</span></code>) and each subsequent row contains
+the corresponding values to those attributes. Its used by the <code class="docutils literal notranslate"><span class="pre">CSVFaultReport</span></code> for coverage computation
+and fault list parsing.</p>
+</div>
+<div class="section" id="vc-z01x-status-enumerators">
+<h2>VC-Z01X Status Enumerators<a class="headerlink" href="#vc-z01x-status-enumerators" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="index.html">Table of Contents</a></h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="asm.html">asm module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">zoix module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#zoixinvoker">ZoixInvoker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#csvfaultreport">CSVFaultReport</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#fault">Fault</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#vc-z01x-status-enumerators">VC-Z01X Status Enumerators</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="a0.html">a0 module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utils.html">utils module</a></li>
+</ul>
+
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/zoix.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="a0.html" title="a0 module"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="asm.html" title="asm module"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">TestCrush 0.5.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2024, Nikolaos I. Deligiannis.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.4.
+    </div>
+  </body>
+</html>
