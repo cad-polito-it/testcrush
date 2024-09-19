@@ -1,103 +1,18 @@
 #!/usr/bin/python3
 # SPDX-License-Identifier: MIT
 
-import os
 import pathlib
-import shutil
-import subprocess
 import re
 import random
-import zipfile
 import csv
 import time
 
-from testcrush.utils import log, Timer
+from testcrush.utils import log, compile_assembly, zip_archive
 from testcrush import asm, zoix
 
 
-def compile_assembly(*instructions, exit_on_error: bool = False) -> bool:
-    """
-    Executes a sequence of bash instructions to compile the `self.asm_file`. Uses subprocess for each instruction and
-    optionally exits on error.
-
-    Args:
-        exit_on_error (bool): If an error is encountered during compilation and this is True, then the program
-                              terminates. Otherwise it continues.
-        *instructions (str): A sequence of bash commands required in order to (cross) compile the assembly files.
-
-    Returns:
-        bool: True if no message was written to ``stderr`` from any of the executed instructions (subprocesses).
-        False otherwise.
-
-    Raises:
-        SystemExit: if ``stderr`` contains text and ``exit_on_error`` is True.
-    """
-    log.debug("Compiling assembly sources.")
-
-    for cmd in instructions:
-
-        log.debug(f"Executing instruction \"{cmd}\".")
-
-        with subprocess.Popen(["/bin/bash", "-c", cmd],
-                              stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                              stderr=subprocess.PIPE, text=True) as process:
-
-            stdout, stderr = process.communicate()
-
-            if stderr:
-
-                log.debug(f"Error during execution of {cmd}\n\
-                ---------[MESSAGE]---------\n\
-                {'-'.join(stderr.splitlines())}\n\
-                ---------------------------\n")
-
-                if exit_on_error:
-
-                    log.critical("Unrecoverable Error during compilation of assembly files. Exiting...")
-                    exit(1)
-
-                return False
-
-            for line in stdout.splitlines():
-                log.debug(f"{cmd}: {line.rstrip()}")
-
-    return True
-
-
-def zip_archive(archive_name: str, *files) -> str:
-    """
-    Generates a .zip archive of arbitrary files.
-
-    Args:
-        archive_name (str): The filename (stem) of the zip archive.
-
-    Returns:
-        str: The generated archive path string.
-    """
-    archive = pathlib.Path(archive_name)
-    archive.mkdir(exist_ok=True)
-
-    for file_ in files:
-        shutil.copy(file_, archive)
-
-    archive = archive.resolve()
-    zip_filename = f"{archive.parent}/{archive.stem}.zip"
-
-    with zipfile.ZipFile(zip_filename, 'w') as zipf:
-
-        for foldername, _, filenames in os.walk(archive_name):
-
-            for filename in filenames:
-
-                file_path = f"{foldername}/{filename}"
-                zipf.write(file_path, filename)
-
-    shutil.rmtree(archive)
-    return zip_filename
-
-
 class CSVCompactionStatistics():
-
+    """Manages I/O operations on the CSV file which logs the statistics of the A0."""
     _header = ["asm_source", "removed_codeline", "compiles", "lsim_ok",
                "tat", "fsim_ok", "coverage", "verdict"]
 
