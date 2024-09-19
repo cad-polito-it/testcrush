@@ -1,5 +1,4 @@
-name: Linting for zoix.py
-
+name: Linting checks for all .py sources
 on:
   push:
     branches: [ "main" ]
@@ -26,7 +25,23 @@ jobs:
         python -m pip install --upgrade pip
         pip install flake8
 
-    - name: Lint with flake8
+    - name: Lint asm.py 
       run: |
         cd src/testcrush
+        flake8 asm.py --max-line-length 120
+
+    - name: Lint zoix.py
+      run: |
+        cd src/testcrush
+        flake8 asm.py --max-line-length 120
         flake8 zoix.py --max-line-length 120
+
+    - name: Lint a0.py
+      run: |
+        cd src/testcrush
+        flake8 a0.py --max-line-length 120
+
+    - name: Lint utils.py
+      run: |
+        cd src/testcrush
+        flake8 utils.py --max-line-length 120
