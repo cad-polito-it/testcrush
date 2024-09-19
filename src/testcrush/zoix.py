@@ -111,7 +111,7 @@ class CSVFaultReport():
     """Manipulates the VC-Z01X summary and report **CSV** files.
 
     These files are expected to be generated after fault simulation.
-    The ``report`` instruction specified in the``fcm.tcl`` file **MUST** be
+    The ``report`` instruction specified in the ``fcm.tcl`` file **MUST** be
     executed with the ``-csv`` option."""
 
     def __init__(self, fault_summary: pathlib.Path,
