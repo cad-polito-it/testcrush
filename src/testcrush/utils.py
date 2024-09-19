@@ -5,20 +5,30 @@ import time
 import logging
 import sys
 
-log = logging.getLogger("testcrush logger")
-log.setLevel(logging.DEBUG)
+def setup_logger(name: str = "testcrush logger", log_file: str = "testcrush_debug.log") -> logging.Logger:
+    """Set up a logger with stream and file handlers."""
+    logger = logging.getLogger(name)
+    logger.setLevel(logging.DEBUG)
 
-log_stream = logging.StreamHandler(stream=sys.stdout)
-log_stream.setLevel(logging.INFO)
-log_stream.setFormatter(logging.Formatter('[%(levelname)s]: %(message)s'))
+    # Check if handlers already exist (to prevent adding them multiple times)
+    if not logger.hasHandlers():
+        # Stream handler (INFO level)
+        log_stream = logging.StreamHandler(stream=sys.stdout)
+        log_stream.setLevel(logging.INFO)
+        log_stream.setFormatter(logging.Formatter('[%(levelname)s]: %(message)s'))
 
-log_file = logging.FileHandler(filename="testcrush_debug.log", mode='w')
-log_file.setLevel(logging.DEBUG)
-log_file.setFormatter(logging.Formatter('%(lineno)d:[%(levelname)s|%(module)s|%(funcName)s]: %(message)s'))
+        # File handler (DEBUG level)
+        log_file_handler = logging.FileHandler(filename=log_file, mode='w')
+        log_file_handler.setLevel(logging.DEBUG)
+        log_file_handler.setFormatter(logging.Formatter(
+            '%(lineno)d:[%(levelname)s|%(module)s|%(funcName)s]: %(message)s'))
 
-log.addHandler(log_stream)
-log.addHandler(log_file)
+        logger.addHandler(log_stream)
+        logger.addHandler(log_file_handler)
 
+    return logger
+
+log = setup_logger()
 
 class Timer():
     """
