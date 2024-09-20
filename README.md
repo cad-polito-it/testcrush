@@ -6,7 +6,7 @@ TestCrush is a framework that implements compaction algorithms for an existing S
 
 >M. Gaudesi, I. Pomeranz, M. Sonza Reorda and G. Squillero, "New Techniques to Reduce the Execution Time of Functional Test Programs," in IEEE Transactions on Computers, vol. 66, no. 7, pp. 1268-1273, 1 July 2017, doi: [10.1109/TC.2016.2643663.](https://doi.org/10.1109/TC.2016.2643663)
 
-## Dependencies ##
+## Dependencies 🔗 ##
 
 In order to use TestCrush, you must have a pre-existing logic and fault simulation flow for your design. That is, a flow which supports
 
@@ -17,5 +17,9 @@ In order to use TestCrush, you must have a pre-existing logic and fault simulati
 
 Iff such a structure exists, then TestCrush can be easily attached to the flow.
 
-## !TestCrush is currently under active development phase! ##
+## Documentation 📚 ##
+
+You can find the documentation of testcrush [here.](https://cad-polito-it.github.io/testcrush/)
+
+## ! TestCrush is currently under active development phase! ##
 
