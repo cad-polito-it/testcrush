@@ -2,7 +2,7 @@
 
 try:
 
-    from testcrush import asm
+    from testcrush import zoix
 
 except ModuleNotFoundError:
 
@@ -297,38 +297,6 @@ Day Month HH:MM:SS YYYY
 
             logic_simulation = test_obj.logic_simulate("mock_logic_simulation_instruction")
             self.assertEqual(logic_simulation, zoix.LogicSimulation.TIMEOUT)
-
-    def test_create_fcm_script(self):
-
-        fcm_name = pathlib.Path("fcm.tcl")
-
-        fcm_dict = {
-        "set_config" : "-global_max_jobs 64",
-        "create_testcases" : '-name {"test1"} -exec ${::env(VCS_WORK_DIR)}/simv -args "./simv +firmware=${::env(FIRMWARE)}" -fsim_args "-fsim=fault+dictionary"',
-        "fsim" : "-verbose",
-        "report" : "-campaign NAME -report fsim_out.rpt -overwrite",
-        "report" : "-campaign NAME -report fsim_out_hier.rpt -overwrite -hierarchical 3"}
-
-        expected_text = r"""set_config -global_max_jobs 64
-create_testcases -name {"test1"} -exec ${::env(VCS_WORK_DIR)}/simv -args "./simv +firmware=${::env(FIRMWARE)}" -fsim_args "-fsim=fault+dictionary"
-fsim -verbose
-report -campaign NAME -report fsim_out_hier.rpt -overwrite -hierarchical 3
-"""
-
-        test_obj = zoix.ZoixInvoker()
-
-        test_obj.create_fcm_script(fcm_name, **fcm_dict)
-
-        self.assertTrue(pathlib.Path(fcm_name).exists())
-
-        with open(fcm_name) as source:
-
-            data = source.read()
-
-        self.assertEqual(data, expected_text)
-
-        # Remove the file
-        fcm_name.unlink()
 
     def test_fault_simulate(self):
 

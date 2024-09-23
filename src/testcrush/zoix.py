@@ -527,33 +527,6 @@ expression '{tat_regexp}' ?")
 
         return simulation_status
 
-    def create_fcm_script(self, fcm_file: pathlib.Path, **fcm_options) -> pathlib.Path:
-        """
-        Generates and returns a fault campaign manager TCL script based on user-defined settings from the setup file.
-
-        Args:
-            fcm_file (pathlib.Path): The full path (absolute or relative) of the fcm script.
-            **fcm_options: Keyword arguments where each key is an fcm command and the corresponding value the flags or
-                           options (if any). The commands should adhere to the supported commands documented in the
-                           VCS-Z01X user guide. No sanitization checks are performed by the method.
-
-        Returns:
-            pathlib.Path: The absolute path of the generated file.
-        """
-
-        log.debug(f"Generating fault campaign manager script \
-{fcm_file.absolute()}.")
-
-        with open(fcm_file, 'w') as fcm_script:
-
-            for command, flags in fcm_options.items():
-
-                fcm_script.write(fr"{command} {flags}" if flags else
-                                 fr"{command}")
-                fcm_script.write("\n")
-
-        return fcm_file.absolute()
-
     def fault_simulate(self, *instructions: str, **kwargs) -> FaultSimulation:
         """
         Performs fault simulation of a user-defined firmware.

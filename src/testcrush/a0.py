@@ -54,9 +54,6 @@ class A0():
         self.zoix_lsim_kwargs: dict[str, float | re.Pattern | int | list] = \
             {k: eval(v) for k, v in a0_settings.get("logic_simulation_options").items()}
 
-        self.zoix_fcm_file: pathlib.Path = pathlib.Path(a0_settings.get("fcm_file"))
-        self.zoix_fcm_kwargs: dict[str, str] = a0_settings.get("fcm_options")
-
         self.zoix_fsim_args: list[str] = a0_settings.get("fault_simulation_instructions")
         self.zoix_fsim_kwargs: dict[str, float] = \
             {k: eval(v) for k, v in a0_settings.get("fault_simulation_options").items()}
