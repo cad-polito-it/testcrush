@@ -184,8 +184,6 @@ class A0():
         stats_filename = f"a0_statistics_{unique_id}.csv"
         stats = CSVCompactionStatistics(pathlib.Path(stats_filename))
 
-        vc_zoix.create_fcm_script(self.zoix_fcm_file, **self.zoix_fcm_kwargs)
-
         # Keep a backup of all sources since
         # they will be modified in-place.
         zip_archive(f"../backup_{unique_id}",
