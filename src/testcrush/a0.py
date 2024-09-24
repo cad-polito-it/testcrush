@@ -43,6 +43,10 @@ class A0():
         self.fsim_report: zoix.CSVFaultReport = zoix.CSVFaultReport(
             fault_summary=pathlib.Path(a0_settings.get("fsim_fault_summary")),
             fault_report=pathlib.Path(a0_settings.get("fsim_fault_report")))
+
+        self.summary_coverage_row: int = a0_settings.get("summary_row", None)
+        self.summary_coverage_col: int = a0_settings.get("summary_col", None)
+
         self.sff_config: pathlib.Path = pathlib.Path(a0_settings.get("sff_config"))
         self.coverage_formula: str = a0_settings.get("coverage_formula")
         log.debug(f"Fault reports set to {self.fsim_report=}")
@@ -81,6 +85,45 @@ class A0():
 
         return (new_tat <= old_tat) and (new_coverage >= old_coverage)
 
+    def deduce_coverage(self, precision: int = 4, fault_status_attr: str = "Status") -> float:
+        """
+        Returns the fault coverage value by selecting one of the two supported coverage extraction methods based on the
+        configuration.
+
+        The fault coverage can be computed -or- extracted. If the user has specified custom status group in his sff
+        file (safety flow) then its advised to specify the config && coverage formula at the configuration file in order
+        for the coverage to be computed. Otherwise, if the default statuses are used and no custom coverage formula
+        is specified (manufacturing flow) then its advised to specify a column and a row from the summary csv file to
+        extract the coverage value from the summary.csv file.
+
+        Args:
+            precision (int, optional): Specifies the precision of the coverage value when this is computed.
+            fault_status_attr (str, optional): Indicates which column of the header row of the faultlist.csv file is
+                                                specifying the fault status attribute of the fault. As of now the
+                                                default column value is "Status". If the user specifies otherwise in the
+                                                configuration file then this value shall be used instead.
+
+        Returns:
+            float: The fault coverage.
+        """
+        coverage = None
+
+        if self.sff_config.exists() and self.coverage_formula != "":
+
+            fault_list = self.fsim_report.parse_fault_report()
+            coverage = self.fsim_report.compute_flist_coverage(fault_list,
+                                                               self.sff_config,
+                                                               precision,
+                                                               fault_status_attr)
+
+        else:
+            coverage = self.fsim_report.extract_summary_cells_from_row(self.summary_coverage_row,
+                                                                       self.summary_coverage_col).pop()
+            if '%' in coverage:
+                coverage = float(coverage.replace('%', ''))
+
+        return coverage
+
     def pre_run(self) -> tuple[int, float]:
         """
         Extracts the initial test application time and coverage of the STL.
@@ -98,7 +141,6 @@ class A0():
         """
 
         vc_zoix = self.vc_zoix
-        fault_report = self.fsim_report
 
         test_application_time = list()
 
@@ -137,9 +179,7 @@ class A0():
 
             raise TimeoutError("Fault simulation timed out")
 
-        fault_list = fault_report.parse_fault_report()
-
-        coverage = fault_report.compute_flist_coverage(fault_list, self.sff_config, self.coverage_formula)
+        coverage = self.deduce_coverage()
 
         return (test_application_time.pop(), coverage)
 
@@ -176,9 +216,8 @@ class A0():
         initial_tat, initial_coverage = initial_stl_stats
         log.debug(f"Initial coverage {initial_coverage}, TaT {initial_tat}")
 
-        # Z01X related classes aliases
+        # Z01X alias
         vc_zoix = self.vc_zoix
-        fault_report = self.fsim_report
 
         # Statistics
         stats_filename = f"a0_statistics_{unique_id}.csv"
@@ -186,8 +225,7 @@ class A0():
 
         # Keep a backup of all sources since
         # they will be modified in-place.
-        zip_archive(f"../backup_{unique_id}",
-                    *[asm.get_asm_source() for asm in self.assembly_sources])
+        zip_archive(f"../backup_{unique_id}", *[asm.get_asm_source() for asm in self.assembly_sources])
 
         # Flatten candidates list
         all_instructions: list[asm.Codeline] = [(asm_id, codeline) for asm_id, asm in
@@ -217,8 +255,7 @@ class A0():
             # Update statistics
             if any(iteration_stats.values()):
                 stats += iteration_stats
-                iteration_stats = \
-                    dict.fromkeys(CSVCompactionStatistics._header)
+                iteration_stats = dict.fromkeys(CSVCompactionStatistics._header)
 
             asm_id, codeline = all_instructions.pop(0)
             asm_source_file = self.assembly_sources[asm_id].get_asm_source().name
@@ -301,11 +338,8 @@ class A0():
                 _restore(asm_id)
                 continue
 
-            print("\t\tParsing fault report.")
-            fault_list = fault_report.parse_fault_report()
-
             print("\t\tComputing coverage.")
-            coverage = fault_report.compute_flist_coverage(fault_list, self.sff_config, self.coverage_formula)
+            coverage = self.deduce_coverage()
 
             new_stl_stats = (test_application_time, coverage)
 
