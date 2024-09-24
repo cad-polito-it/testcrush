@@ -304,14 +304,12 @@ class CSVFaultReport():
                 if status in fault_statuses:
                     status_groups[group] += fault_statuses[status]
 
-        # Finally get any group only present
-        # in the formula and set it to 0.
+        # Finally get any group only present in the formula and set it to 0.
         non_present_statuses = dict()
 
         for status in re.findall(r"[A-Z]{2}", formula):
 
-            if status not in fault_statuses.keys() and \
-               status not in status_groups.keys():
+            if status not in fault_statuses.keys() and status not in status_groups.keys():
                 non_present_statuses[status] = 0
 
         return round(eval(formula, {**fault_statuses, **status_groups, **non_present_statuses}), precision)
