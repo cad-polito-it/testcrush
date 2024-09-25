@@ -1,0 +1,97 @@
+[user_defines]
+###########################
+# Custom Definitions      #
+###########################
+sbst_dir = "../../cv32e40p/sbst"
+test_dir = "../../cv32e40p/sbst/tests"
+root_dir = "../../cv32e40p"
+run_dir = "../../cv32e40p/run/vc-z01x"
+
+[isa]
+###########################
+# ISALANG Location        #
+###########################
+isa_file = "../../langs/riscv.isa"
+
+[assembly_sources]
+###########################
+# STL Sources             #
+###########################
+sources = [
+  '%test_dir%/test1.S',
+  '%test_dir%/patterns_base.s',
+  '%test_dir%/patterns_enhanced_1.s',
+  '%test_dir%/patterns_enhanced_2.s',
+  '%test_dir%/patterns_enhanced_3.s',
+  '%test_dir%/patterns_enhanced_4.s',
+  '%test_dir%/patterns_enhanced_5.s',
+  '%test_dir%/patterns_enhanced_6.s',
+  '%test_dir%/patterns_enhanced_7.s'
+]
+
+[cross_compilation]
+###########################
+# Cross Compilation       #
+###########################
+instructions = [
+  'make -C %sbst_dir% clean',
+  'make -C %sbst_dir% all'
+]
+
+[vcs_hdl_compilation]
+###########################
+# HDL Sources Compilation #
+###########################
+instructions = []
+
+[vcs_logic_simulation]
+###########################
+# Logic Simulation (lsim) #
+###########################
+instructions = [
+  'make -C  %root_dir% vcs/sim/gate/shell'
+]
+
+[vcs_logic_simulation_control]
+###########################
+# Lsim configurations     #
+###########################
+
+timeout = 60.0
+simulation_ok_regex = 'EXIT\sSUCCESS'
+test_application_time_regex = 'test application time = ([0-9]+)'
+test_application_time_regex_group_no = 1
+
+[zoix_fault_simulation]
+###########################
+# Fault Simulation (fsim) #
+###########################
+instructions = [
+  'make -C %root_dir% vcs/fgen/saf',
+  'make -C %root_dir% vcs/fsim/gate/shell'
+]
+
+[zoix_fault_simulation_control]
+###########################
+# Fsim configurations     #
+###########################
+timeout = 360.0
+allow_regexs = ['Info: Connected to started server']
+
+[fault_simulation_csv_report]
+###########################
+# CSV fsim files          #
+###########################
+fsim_fault_summary = '%run_dir%/fsim_out_csv_files/DEFAULT_summary.csv'
+fsim_fault_report = '%run_dir%/fsim_out_csv_files/DEFAULT_faultlist.csv'
+
+[coverage]
+###########################
+# Coverage                #
+###########################
+sff_config = '%root_dir%/fsim/config.sff'
+coverage_formula = '(DD + DN)/(NA + DA + DN + DD + SU)'
+fault_status_attribute = 'Status'
+# Mutually Exclussive with the ones above #
+coverage_summary_col = ''
+coverage_summary_row = ''
