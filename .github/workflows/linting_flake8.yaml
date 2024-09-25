@@ -45,3 +45,8 @@ jobs:
       run: |
         cd src/testcrush
         flake8 utils.py --max-line-length 120
+    
+    - name: Lint config.py
+      run: |
+        cd src/testcrush
+        flake8 config.py --max-line-length 120
