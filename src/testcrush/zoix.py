@@ -405,13 +405,13 @@ class ZoixInvoker():
                 - **timeout** (float): A timeout in **seconds** to be used for **each** of the executed logic
                   simulation instructions.
 
-                - **success_regexp** (re.Pattern): A regular expression used for matching in every line of the
+                - **simulation_ok_regex** (re.Pattern): A regular expression used for matching in every line of the
                   ``stdout`` stream to mark the successful completion of the logic simulation.
 
-                - **tat_regexp (re.Pattern): A regular expression used to match the line that reports the test
-                  application time from the simulator.
+                - **test_application_time_regex (re.Pattern): A regular expression used to match the line that reports
+                  the test application time from the simulator.
 
-                - **tat_regexp_capture_group** (int): The index of the capture group in the custom regular
+                - **test_application_time_regex_group_no** (int): The index of the capture group in the custom regular
                   expression for the TaT value. Default is 1, corresponding to the ``success_regexp`` group.
 
                 - **tat_value** (list): An **empty** list to store the TaT value after being successfully matched with
@@ -441,8 +441,8 @@ class ZoixInvoker():
         # Hence, be as accurate as possible!!!
         default_regexp = re.compile(r"\$finish[^0-9]+([0-9]+)[m|u|n|p]s", re.DOTALL)
 
-        success_regexp: re.Pattern = kwargs.get("success_regexp", default_regexp)
-        tat_regexp: re.Pattern = kwargs.get("tat_regexp", default_regexp)
+        success_regexp: re.Pattern = kwargs.get("simulation_ok_regex", default_regexp)
+        tat_regexp: re.Pattern = kwargs.get("test_application_time_regex", default_regexp)
 
         # By default, a single capturing  group
         # is expected in the regexp, which maps
@@ -450,7 +450,7 @@ class ZoixInvoker():
         # is provided however, with >1  groups,
         # then the user must specify  which  is
         # the expected capture group.
-        tat_capture_group: int = kwargs.get("tat_regexp_capture_group", 1)
+        tat_capture_group: int = kwargs.get("test_application_time_regex_group_no", 1)
 
         # An empty mutable container is expected
         # to store the TaT  value  matched  from
@@ -536,7 +536,7 @@ expression '{tat_regexp}' ?")
 
                 - timeout (float): A timeout in **seconds** for each fsim
                   instruction.
-                - allow (list[re.Pattern]): Series of regexps to look for in
+                - allow_regexs (list[re.Pattern]): Series of regexps to look for in
                   ``stderr`` and allow continuation without raising any error
                   messages.
 
@@ -553,7 +553,7 @@ expression '{tat_regexp}' ?")
         fault_simulation_status = FaultSimulation.SUCCESS
 
         timeout: float = kwargs.get("timeout", None)
-        allow: list[re.Pattern] = kwargs.get("allow", None)
+        allow: list[re.Pattern] = kwargs.get("allow_regexs", None)
 
         for cmd in instructions:
 
@@ -569,6 +569,7 @@ expression '{tat_regexp}' ?")
 
                         if regexp.search(stderr):
 
+                            log.debug(f"Allowing message {regexp.search(stderr)}")
                             continue_execution = True
                             break
 

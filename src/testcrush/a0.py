@@ -9,6 +9,7 @@ import time
 
 from testcrush.utils import log, compile_assembly, zip_archive
 from testcrush import asm, zoix
+from typing import Any
 
 
 class CSVCompactionStatistics():
@@ -32,7 +33,7 @@ class CSVCompactionStatistics():
 class A0():
     """Implements the A0 compaction algorithm of https://doi.org/10.1109/TC.2016.2643663"""
 
-    def __init__(self, isa: str, *a0_asm_sources: str, **a0_settings) -> "A0":
+    def __init__(self, isa: str, a0_asm_sources: list[str], a0_settings: dict[str, Any]) -> "A0":
 
         log.debug(f"Generating AssemblyHandlers for {a0_asm_sources}")
         self.assembly_sources: list[asm.AssemblyHandler] = [asm.AssemblyHandler(isa, pathlib.Path(asm_file),
@@ -41,11 +42,11 @@ class A0():
 
         self.assembly_compilation_instructions: list[str] = a0_settings.get("assembly_compilation_instructions")
         self.fsim_report: zoix.CSVFaultReport = zoix.CSVFaultReport(
-            fault_summary=pathlib.Path(a0_settings.get("fsim_fault_summary")),
-            fault_report=pathlib.Path(a0_settings.get("fsim_fault_report")))
+            fault_summary=pathlib.Path(a0_settings.get("csv_fault_summary")),
+            fault_report=pathlib.Path(a0_settings.get("csv_fault_report")))
 
-        self.summary_coverage_row: int = a0_settings.get("summary_row", None)
-        self.summary_coverage_col: int = a0_settings.get("summary_col", None)
+        self.summary_coverage_row: int = a0_settings.get("coverage_summary_row", None)
+        self.summary_coverage_col: int = a0_settings.get("coverage_summary_col", None)
 
         self.sff_config: pathlib.Path = pathlib.Path(a0_settings.get("sff_config"))
         self.coverage_formula: str = a0_settings.get("coverage_formula")
@@ -54,13 +55,13 @@ class A0():
         self.zoix_compilation_args: list[str] = a0_settings.get("vcs_compilation_instructions")
         log.debug(f"VCS Compilation instructions for HDL sources set to {self.zoix_compilation_args}")
 
-        self.zoix_lsim_args: list[str] = a0_settings.get("logic_simulation_instructions")
+        self.zoix_lsim_args: list[str] = a0_settings.get("vcs_logic_simulation_instructions")
         self.zoix_lsim_kwargs: dict[str, float | re.Pattern | int | list] = \
-            {k: eval(v) for k, v in a0_settings.get("logic_simulation_options").items()}
+            {k: v for k, v in a0_settings.get("vcs_logic_simulation_control").items()}
 
-        self.zoix_fsim_args: list[str] = a0_settings.get("fault_simulation_instructions")
+        self.zoix_fsim_args: list[str] = a0_settings.get("zoix_fault_simulation_instructions")
         self.zoix_fsim_kwargs: dict[str, float] = \
-            {k: eval(v) for k, v in a0_settings.get("fault_simulation_options").items()}
+            {k: v for k, v in a0_settings.get("zoix_fault_simulation_control").items()}
 
         self.vc_zoix: zoix.ZoixInvoker = zoix.ZoixInvoker()
 
@@ -113,6 +114,7 @@ class A0():
             fault_list = self.fsim_report.parse_fault_report()
             coverage = self.fsim_report.compute_flist_coverage(fault_list,
                                                                self.sff_config,
+                                                               self.coverage_formula,
                                                                precision,
                                                                fault_status_attr)
 
@@ -167,17 +169,19 @@ class A0():
             log.critical("Unable to perform logic simulation for TaT computation")
             exit(1)
 
-        if lsim == zoix.LogicSimulation.TIMEOUT:
+        if lsim != zoix.LogicSimulation.SUCCESS:
 
-            raise TimeoutError("Logic simulation timed out")
+            log.critical("Error during initial logic simulation! Check the debug log!")
+            exit(1)
 
         print("Initial fault simulation for coverage computation.")
 
         fsim = vc_zoix.fault_simulate(*self.zoix_fsim_args, **self.zoix_fsim_kwargs)
 
-        if fsim == zoix.FaultSimulation.TIMEOUT:
+        if fsim != zoix.FaultSimulation.SUCCESS:
 
-            raise TimeoutError("Fault simulation timed out")
+            log.critical("Error during initial fault simulation! Check the debug log!")
+            exit(1)
 
         coverage = self.deduce_coverage()
 

@@ -256,9 +256,9 @@ CPU Time:      4.660 seconds;       Data structure size:   6.4Mb
 Day Month HH:MM:SS YYYY
 """
         tat_dict = {
-            "success_regexp": re.compile(r"EXIT\sSUCCESS"),
-            "tat_regexp": re.compile(r"test application time = ([0-9]+)"),
-            "tat_regexp_capture_group": 1,
+            "simulation_ok_regex": re.compile(r"EXIT\sSUCCESS"),
+            "test_application_time_regex": re.compile(r"test application time = ([0-9]+)"),
+            "test_application_time_regex_group_no": 1,
             "tat_value": []
         }
 
@@ -274,7 +274,7 @@ Day Month HH:MM:SS YYYY
             self.assertEqual(tat_dict["tat_value"].pop(), 48209)
 
             # Do not supply a regexp, let the default one work and capture $finish
-            del tat_dict["tat_regexp"]
+            del tat_dict["test_application_time_regex"]
             logic_simulation = test_obj.logic_simulate("mock_logic_simulation_instruction", **tat_dict)
 
             self.assertEqual(logic_simulation, zoix.LogicSimulation.SUCCESS)
@@ -311,7 +311,7 @@ Day Month HH:MM:SS YYYY
         with mock.patch("testcrush.zoix.ZoixInvoker.execute", return_value = ("Some fault sim text", "Stderr text but must be ignored!")) as mocked_execute:
 
             fault_simulation = test_obj.fault_simulate("mock_fsim_instruction1", "mock_fsim_instruction2",
-                                                       allow = [re.compile(r"Stderr text but must be ignored\!")])
+                                                       allow_regexs = [re.compile(r"Stderr text but must be ignored\!")])
             self.assertEqual(fault_simulation, zoix.FaultSimulation.SUCCESS)
 
         # FSIM Error
