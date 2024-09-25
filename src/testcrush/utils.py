@@ -9,10 +9,6 @@ import subprocess
 import pathlib
 import zipfile
 import os
-import toml
-import re
-
-from typing import Any
 
 
 def compile_assembly(*instructions, exit_on_error: bool = False) -> bool:
@@ -121,89 +117,6 @@ def setup_logger(name: str = "testcrush logger", log_file: str = "testcrush_debu
 
 
 log = setup_logger()
-
-
-def replace_toml_placeholders(item: Any, defines: dict[str, str]) -> dict[str, Any]:
-    """Recursively replaces any string or string within list and dicts with user defined values.
-
-    Args:
-        item (Any): A string, list or dict to act upon and replace any matching %...% pattern with defines.
-        defines (dict[str, str]): A dictionary whose keys will be searched on item to be replaced with the associated
-                                  values.
-
-    Returns:
-        dict[str, Any]: The parsed TOML dict where all substitutions have been performed on the user-defined keys.
-    """
-
-    if isinstance(item, str):
-        for key, value in defines.items():
-            placeholder = f"%{key}%"
-            item = item.replace(placeholder, value)
-        return item
-
-    elif isinstance(item, list):
-        return [replace_toml_placeholders(sub_item, defines) for sub_item in item]
-
-    elif isinstance(item, dict):
-        return {k: replace_toml_placeholders(v, defines) for k, v in item.items()}
-
-    else:
-        # Return the item unchanged if it's not a string, list, or dict
-        return item
-
-
-def replace_toml_regex(item: Any, substitute: bool = False) -> dict[str, Any]:
-    """
-    Recursively substitues all values corresponding to keys which include 'regex' with ``re.Patterns``.
-
-    All generated patterns have a ``re.DOTALL`` flag set.
-
-    Args:
-         item (Any): A string, list or dict to act upon and replace any regex string with re.Pattern.
-        substitute (bool, optional): Flag to allow substitution of value. Defaults to False.
-
-    Returns:
-        dict[str, Any]: The parsed TOML dict where all substitutions have been performed on the regex strings.
-    """
-    if isinstance(item, str) and substitute:
-        return re.compile(f'{item}', re.DOTALL)
-
-    elif isinstance(item, list):
-        return [replace_toml_regex(elem, substitute) for elem in item]
-
-    elif isinstance(item, dict):
-        return {k: replace_toml_regex(v, True if "regex" in k else False) for k, v in item.items()}
-    else:
-        return item
-
-
-def parse_a0_configuration(config_file: str) -> dict:
-    """_summary_
-
-    Args:
-        config_file (str): _description_
-
-    Returns:
-        dict: _description_
-    """
-
-    try:
-        config = toml.load(config_file)
-    except toml.TomlDecodeError as e:
-        print(f"Error decoding TOML: {e}")
-
-    try:
-        user_defines = config["user_defines"]
-    except KeyError:
-        pass
-
-    if user_defines:
-        config = replace_toml_placeholders(config, user_defines)
-
-    # Change regex keys to re.Patterns
-    config = replace_toml_regex(config)
-
-    # TODO: Continue...
 
 
 class Timer():
