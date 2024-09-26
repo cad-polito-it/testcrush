@@ -11,7 +11,7 @@ run_dir = "../../cv32e40p/run/vc-z01x"
 ###########################
 # ISALANG Location        #
 ###########################
-isa_file = "../../langs/riscv.isa"
+isa_file = '../../langs/riscv.isa'
 
 [assembly_sources]
 ###########################
