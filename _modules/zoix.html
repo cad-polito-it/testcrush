@@ -167,11 +167,13 @@
 <div class="viewcode-block" id="CSVFaultReport">
 <a class="viewcode-back" href="../zoix.html#zoix.CSVFaultReport">[docs]</a>
 <span class="k">class</span> <span class="nc">CSVFaultReport</span><span class="p">():</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Manipulates the VC-Z01X summary and report **CSV** files.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Manipulates the VC-Z01X summary and report **CSV** files.</span>
 
 <span class="sd">    These files are expected to be generated after fault simulation.</span>
-<span class="sd">    The ``report`` instruction specified in the ``fcm.tcl`` file **MUST** be</span>
-<span class="sd">    executed with the ``-csv`` option.&quot;&quot;&quot;</span>
+<span class="sd">    The ``report`` instruction specified in the fault campaign manager script</span>
+<span class="sd">    **MUST** be executed with the ``-csv`` option.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fault_summary</span><span class="p">:</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">,</span>
                  <span class="n">fault_report</span><span class="p">:</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;CSVFaultReport&quot;</span><span class="p">:</span>
@@ -192,11 +194,11 @@
 <span class="sd">            None</span>
 
 <span class="sd">        Raises:</span>
-<span class="sd">            FileExistsError: if the file does not exist.</span>
+<span class="sd">            FileNotFoundError: if the file does not exist.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">fault_summary</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-            <span class="k">raise</span> <span class="ne">FileExistsError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">fault_summary</span><span class="si">=}</span><span class="s2"> does not exist!&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">fault_summary</span><span class="si">=}</span><span class="s2"> does not exist!&quot;</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">fault_summary</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">fault_summary</span><span class="p">)</span><span class="o">.</span><span class="n">absolute</span><span class="p">()</span></div>
 
@@ -214,10 +216,10 @@
 <span class="sd">            None</span>
 
 <span class="sd">        Raises:</span>
-<span class="sd">            FileExistsError: If the file does not exist.&quot;&quot;&quot;</span>
+<span class="sd">            FileNotFoundError: If the file does not exist.&quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">fault_report</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-            <span class="k">raise</span> <span class="ne">FileExistsError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">fault_report</span><span class="si">=}</span><span class="s2"> does not exist!&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">fault_report</span><span class="si">=}</span><span class="s2"> does not exist!&quot;</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">fault_report</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">fault_report</span><span class="p">)</span><span class="o">.</span><span class="n">absolute</span><span class="p">()</span></div>
 
@@ -230,7 +232,7 @@
 
 <span class="sd">        Args:</span>
 <span class="sd">            row (int): the row number (1-based indexing).</span>
-<span class="sd">            *cols (ints): the columns&#39; numbers (1-based indexing).</span>
+<span class="sd">            cols (ints): the columns&#39; numbers (1-based indexing).</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            list[str]: The cells of the fault summary.</span>
@@ -380,14 +382,12 @@
                 <span class="k">if</span> <span class="n">status</span> <span class="ow">in</span> <span class="n">fault_statuses</span><span class="p">:</span>
                     <span class="n">status_groups</span><span class="p">[</span><span class="n">group</span><span class="p">]</span> <span class="o">+=</span> <span class="n">fault_statuses</span><span class="p">[</span><span class="n">status</span><span class="p">]</span>
 
-        <span class="c1"># Finally get any group only present</span>
-        <span class="c1"># in the formula and set it to 0.</span>
+        <span class="c1"># Finally get any group only present in the formula and set it to 0.</span>
         <span class="n">non_present_statuses</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
 
         <span class="k">for</span> <span class="n">status</span> <span class="ow">in</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;[A-Z]</span><span class="si">{2}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">formula</span><span class="p">):</span>
 
-            <span class="k">if</span> <span class="n">status</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">fault_statuses</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="ow">and</span> \
-               <span class="n">status</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">status_groups</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">status</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">fault_statuses</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="ow">and</span> <span class="n">status</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">status_groups</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
                 <span class="n">non_present_statuses</span><span class="p">[</span><span class="n">status</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
 
         <span class="k">return</span> <span class="nb">round</span><span class="p">(</span><span class="nb">eval</span><span class="p">(</span><span class="n">formula</span><span class="p">,</span> <span class="p">{</span><span class="o">**</span><span class="n">fault_statuses</span><span class="p">,</span> <span class="o">**</span><span class="n">status_groups</span><span class="p">,</span> <span class="o">**</span><span class="n">non_present_statuses</span><span class="p">}),</span> <span class="n">precision</span><span class="p">)</span></div>
@@ -442,7 +442,7 @@
 <span class="sd">        Performs compilation of HDL files</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            *instructions (str): A variadic number of bash shell instructions</span>
+<span class="sd">            instructions (str): A variadic number of bash shell instructions</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            Compilation: A status Enum to signify the success or failure of the compilation.</span>
@@ -488,20 +488,20 @@
 
 
 <span class="sd">        Args:</span>
-<span class="sd">            *instructions (str): A variadic number of bash instructions</span>
-<span class="sd">            **kwargs: User-defined options needed for the evaluation of the result of the logic simulation.</span>
-<span class="sd">                      These options are:</span>
+<span class="sd">            instructions (str): A variadic number of bash instructions</span>
+<span class="sd">            kwargs: User-defined options needed for the evaluation of the result of the logic simulation.</span>
+<span class="sd">                    These options are:</span>
 
 <span class="sd">                - **timeout** (float): A timeout in **seconds** to be used for **each** of the executed logic</span>
 <span class="sd">                  simulation instructions.</span>
 
-<span class="sd">                - **success_regexp** (re.Pattern): A regular expression used for matching in every line of the</span>
+<span class="sd">                - **simulation_ok_regex** (re.Pattern): A regular expression used for matching in every line of the</span>
 <span class="sd">                  ``stdout`` stream to mark the successful completion of the logic simulation.</span>
 
-<span class="sd">                - **tat_regexp (re.Pattern): A regular expression used to match the line that reports the test</span>
-<span class="sd">                  application time from the simulator.</span>
+<span class="sd">                - **test_application_time_regex** (re.Pattern): A regular expression used to match the line that reports</span>
+<span class="sd">                  the test application time from the simulator.</span>
 
-<span class="sd">                - **tat_regexp_capture_group** (int): The index of the capture group in the custom regular</span>
+<span class="sd">                - **test_application_time_regex_group_no** (int): The index of the capture group in the custom regular</span>
 <span class="sd">                  expression for the TaT value. Default is 1, corresponding to the ``success_regexp`` group.</span>
 
 <span class="sd">                - **tat_value** (list): An **empty** list to store the TaT value after being successfully matched with</span>
@@ -531,8 +531,8 @@
         <span class="c1"># Hence, be as accurate as possible!!!</span>
         <span class="n">default_regexp</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\$finish[^0-9]+([0-9]+)[m|u|n|p]s&quot;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">DOTALL</span><span class="p">)</span>
 
-        <span class="n">success_regexp</span><span class="p">:</span> <span class="n">re</span><span class="o">.</span><span class="n">Pattern</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;success_regexp&quot;</span><span class="p">,</span> <span class="n">default_regexp</span><span class="p">)</span>
-        <span class="n">tat_regexp</span><span class="p">:</span> <span class="n">re</span><span class="o">.</span><span class="n">Pattern</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;tat_regexp&quot;</span><span class="p">,</span> <span class="n">default_regexp</span><span class="p">)</span>
+        <span class="n">success_regexp</span><span class="p">:</span> <span class="n">re</span><span class="o">.</span><span class="n">Pattern</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;simulation_ok_regex&quot;</span><span class="p">,</span> <span class="n">default_regexp</span><span class="p">)</span>
+        <span class="n">tat_regexp</span><span class="p">:</span> <span class="n">re</span><span class="o">.</span><span class="n">Pattern</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;test_application_time_regex&quot;</span><span class="p">,</span> <span class="n">default_regexp</span><span class="p">)</span>
 
         <span class="c1"># By default, a single capturing  group</span>
         <span class="c1"># is expected in the regexp, which maps</span>
@@ -540,7 +540,7 @@
         <span class="c1"># is provided however, with &gt;1  groups,</span>
         <span class="c1"># then the user must specify  which  is</span>
         <span class="c1"># the expected capture group.</span>
-        <span class="n">tat_capture_group</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;tat_regexp_capture_group&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">tat_capture_group</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;test_application_time_regex_group_no&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 
         <span class="c1"># An empty mutable container is expected</span>
         <span class="c1"># to store the TaT  value  matched  from</span>
@@ -616,36 +616,6 @@
         <span class="k">return</span> <span class="n">simulation_status</span></div>
 
 
-<div class="viewcode-block" id="ZoixInvoker.create_fcm_script">
-<a class="viewcode-back" href="../zoix.html#zoix.ZoixInvoker.create_fcm_script">[docs]</a>
-    <span class="k">def</span> <span class="nf">create_fcm_script</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fcm_file</span><span class="p">:</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">,</span> <span class="o">**</span><span class="n">fcm_options</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Generates and returns a fault campaign manager TCL script based on user-defined settings from the setup file.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            fcm_file (pathlib.Path): The full path (absolute or relative) of the fcm script.</span>
-<span class="sd">            **fcm_options: Keyword arguments where each key is an fcm command and the corresponding value the flags or</span>
-<span class="sd">                           options (if any). The commands should adhere to the supported commands documented in the</span>
-<span class="sd">                           VCS-Z01X user guide. No sanitization checks are performed by the method.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            pathlib.Path: The absolute path of the generated file.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Generating fault campaign manager script </span><span class="se">\</span>
-<span class="si">{</span><span class="n">fcm_file</span><span class="o">.</span><span class="n">absolute</span><span class="p">()</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
-
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fcm_file</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fcm_script</span><span class="p">:</span>
-
-            <span class="k">for</span> <span class="n">command</span><span class="p">,</span> <span class="n">flags</span> <span class="ow">in</span> <span class="n">fcm_options</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-
-                <span class="n">fcm_script</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">fr</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">command</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">flags</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">flags</span> <span class="k">else</span>
-                                 <span class="sa">fr</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">command</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-                <span class="n">fcm_script</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">fcm_file</span><span class="o">.</span><span class="n">absolute</span><span class="p">()</span></div>
-
-
 <div class="viewcode-block" id="ZoixInvoker.fault_simulate">
 <a class="viewcode-back" href="../zoix.html#zoix.ZoixInvoker.fault_simulate">[docs]</a>
     <span class="k">def</span> <span class="nf">fault_simulate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">instructions</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FaultSimulation</span><span class="p">:</span>
@@ -653,13 +623,13 @@
 <span class="sd">        Performs fault simulation of a user-defined firmware.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            *instructions (str): A variadic number of shell instructions</span>
-<span class="sd">            to invoke Z01X.</span>
-<span class="sd">            **kwargs: User-defined options for fault simulation control.</span>
+<span class="sd">            instructions (str): A variadic number of shell instructions</span>
+<span class="sd">                                to invoke Z01X.</span>
+<span class="sd">            kwargs: User-defined options for fault simulation control.</span>
 
 <span class="sd">                - timeout (float): A timeout in **seconds** for each fsim</span>
 <span class="sd">                  instruction.</span>
-<span class="sd">                - allow (list[re.Pattern]): Series of regexps to look for in</span>
+<span class="sd">                - allow_regexs (list[re.Pattern]): Series of regexps to look for in</span>
 <span class="sd">                  ``stderr`` and allow continuation without raising any error</span>
 <span class="sd">                  messages.</span>
 
@@ -676,7 +646,7 @@
         <span class="n">fault_simulation_status</span> <span class="o">=</span> <span class="n">FaultSimulation</span><span class="o">.</span><span class="n">SUCCESS</span>
 
         <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;timeout&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="n">allow</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">re</span><span class="o">.</span><span class="n">Pattern</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;allow&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">allow</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">re</span><span class="o">.</span><span class="n">Pattern</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;allow_regexs&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">cmd</span> <span class="ow">in</span> <span class="n">instructions</span><span class="p">:</span>
 
@@ -692,6 +662,7 @@
 
                         <span class="k">if</span> <span class="n">regexp</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">stderr</span><span class="p">):</span>
 
+                            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Allowing message </span><span class="si">{</span><span class="n">regexp</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">stderr</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
                             <span class="n">continue_execution</span> <span class="o">=</span> <span class="kc">True</span>
                             <span class="k">break</span>
 
@@ -730,6 +701,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../zoix.html">zoix module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../a0.html">a0 module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../utils.html">utils module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../config.html">config module</a></li>
 </ul>
 
 <search id="searchbox" style="display: none" role="search">

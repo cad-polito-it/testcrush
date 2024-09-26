@@ -56,9 +56,38 @@ in the evaluation method of each iteration within the A0 class.</p>
 <h2>A0<a class="headerlink" href="#a0" title="Link to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="a0.A0">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">a0.</span></span><span class="sig-name descname"><span class="pre">A0</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">isa</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">a0_asm_sources</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">a0_settings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/a0.html#A0"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#a0.A0" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">a0.</span></span><span class="sig-name descname"><span class="pre">A0</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">isa</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a0_asm_sources</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a0_settings</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/a0.html#A0"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#a0.A0" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Implements the A0 compaction algorithm of <a class="reference external" href="https://doi.org/10.1109/TC.2016.2643663">https://doi.org/10.1109/TC.2016.2643663</a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="a0.A0.deduce_coverage">
+<span class="sig-name descname"><span class="pre">deduce_coverage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">precision</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fault_status_attr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Status'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="_modules/a0.html#A0.deduce_coverage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#a0.A0.deduce_coverage" title="Link to this definition">¶</a></dt>
+<dd><p>Returns the fault coverage value by selecting one of the two supported coverage extraction methods based on the
+configuration.</p>
+<p>The fault coverage can be computed -or- extracted. If the user has specified custom status group in his sff
+file (safety flow) then its advised to specify the config &amp;&amp; coverage formula at the configuration file in order
+for the coverage to be computed. Otherwise, if the default statuses are used and no custom coverage formula
+is specified (manufacturing flow) then its advised to specify a column and a row from the summary csv file to
+extract the coverage value from the summary.csv file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>precision</strong> (<em>int</em><em>, </em><em>optional</em>) – Specifies the precision of the coverage value when this is computed.</p></li>
+<li><p><strong>fault_status_attr</strong> (<em>str</em><em>, </em><em>optional</em>) – Indicates which column of the header row of the faultlist.csv file is
+specifying the fault status attribute of the fault. As of now the
+default column value is “Status”. If the user specifies otherwise in the
+configuration file then this value shall be used instead.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The fault coverage.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="a0.A0.evaluate">
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">previous_result</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_result</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/a0.html#A0.evaluate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#a0.A0.evaluate" title="Link to this definition">¶</a></dt>
@@ -111,21 +140,22 @@ coverage of the STL (index 1)</p>
 <ol class="arabic simple">
 <li><p>Removal of a random instruction</p></li>
 <li><dl class="simple">
-<dt>Cross-compilation</dt><dd><ol class="arabic simple">
-<li><p>If FAIL, Restore</p></li>
-</ol>
+<dt>Cross-compilation</dt><dd><p>2.1 If FAIL, Restore</p>
 </dd>
 </dl>
 </li>
 <li><dl class="simple">
-<dt>Logic simulation</dt><dd><ol class="arabic simple">
-<li><p>If TIMEOUT, Restore</p></li>
-</ol>
+<dt>Logic simulation</dt><dd><p>3.1 If ERROR or TIMEOUT, Restore</p>
 </dd>
 </dl>
 </li>
-<li><p>Fault simulation</p></li>
+<li><dl class="simple">
+<dt>Fault simulation</dt><dd><p>4.1 If ERROR or TIMEOUT, Restore</p>
+</dd>
+</dl>
+</li>
 <li><p>Evaluation</p></li>
+<li><p>Goto 1.</p></li>
 </ol>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -163,6 +193,7 @@ STL</p></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="utils.html">utils module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">config module</a></li>
 </ul>
 
   <div role="note" aria-label="source link">

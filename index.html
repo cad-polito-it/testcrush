@@ -43,11 +43,11 @@
   <section id="testcrush-documentation">
 <h1>TestCrush documentation<a class="headerlink" href="#testcrush-documentation" title="Link to this heading">¶</a></h1>
 <img alt="_images/testcrush.png" src="_images/testcrush.png" />
-<p>TestCrush is a toolkit for compaction of software test libraries
-which are written in assembly. The tool expects a configuration JSON file
-from the user and a pre-existing logic and fault simulation flow for your
-design(s).</p>
-<p>TestCrush implements the algorithms <code class="docutils literal notranslate"><span class="pre">A0</span></code> and <code class="docutils literal notranslate"><span class="pre">A1xx</span></code> of the journal publication</p>
+<p>Welcome to the documentation of TestCrush.
+TestCrush is a toolkit designed to compact software test libraries written in assembly.
+It relies heavily on the (VC-)Z01X logic and fault simulator.
+The tool requires a pre-existing testing environment for evaluating the STL compaction process.</p>
+<p>TestCrush implements the algorithms <code class="docutils literal notranslate"><span class="pre">A0</span></code> and <code class="docutils literal notranslate"><span class="pre">A1xx</span></code> of:</p>
 <blockquote>
 <div><p>M. Gaudesi, I. Pomeranz, M. S. Reorda and G. Squillero, “New Techniques to
 Reduce the Execution Time of Functional Test Programs,” in IEEE
@@ -82,6 +82,10 @@ Transactions on Computers, vol. 66, no. 7, pp. 1268-1273, doi: 10.1109/TC.2016.2
 <li class="toctree-l2"><a class="reference internal" href="utils.html#utils.zip_archive"><code class="docutils literal notranslate"><span class="pre">zip_archive()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">config module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="config.html#module-config">TOML Parsing Utilities</a></li>
+</ul>
+</li>
 </ul>
 </div>
 </section>
@@ -100,6 +104,7 @@ Transactions on Computers, vol. 66, no. 7, pp. 1268-1273, doi: 10.1109/TC.2016.2
 <li class="toctree-l1"><a class="reference internal" href="zoix.html">zoix module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="a0.html">a0 module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utils.html">utils module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">config module</a></li>
 </ul>
 
   <div role="note" aria-label="source link">

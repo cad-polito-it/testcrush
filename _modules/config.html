@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>config &#8212; TestCrush 0.5.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=def86cc0" />
+    
+    <script src="../_static/documentation_options.js?v=1dd76d02"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    
+    <link rel="icon" href="../_static/favicon.png"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">TestCrush 0.5.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">config</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for config</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/python3</span>
+<span class="c1"># SPDX-License-Identifier: MIT</span>
+
+<span class="kn">import</span> <span class="nn">toml</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">pathlib</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span>
+
+<span class="n">A0_KEYS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;assembly_compilation_instructions&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;cross_compilation&quot;</span><span class="p">,</span> <span class="s2">&quot;instructions&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;vcs_compilation_instructions&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;vcs_hdl_compilation&quot;</span><span class="p">,</span> <span class="s2">&quot;instructions&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;vcs_logic_simulation_instructions&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;vcs_logic_simulation&quot;</span><span class="p">,</span> <span class="s2">&quot;instructions&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;vcs_logic_simulation_control&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;vcs_logic_simulation_control&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;zoix_fault_simulation_instructions&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;zoix_fault_simulation&quot;</span><span class="p">,</span> <span class="s2">&quot;instructions&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;zoix_fault_simulation_control&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;zoix_fault_simulation_control&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;csv_fault_summary&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;fault_simulation_csv_report&quot;</span><span class="p">,</span> <span class="s2">&quot;fsim_fault_summary&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;csv_fault_report&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;fault_simulation_csv_report&quot;</span><span class="p">,</span> <span class="s2">&quot;fsim_fault_report&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;coverage_formula&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;coverage&quot;</span><span class="p">,</span> <span class="s2">&quot;coverage_formula&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;sff_config&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;coverage&quot;</span><span class="p">,</span> <span class="s2">&quot;sff_config&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;fault_status_attribute&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;coverage&quot;</span><span class="p">,</span> <span class="s2">&quot;fault_status_attribute&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;coverage_summary_row&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;coverage&quot;</span><span class="p">,</span> <span class="s2">&quot;coverage_summary_row&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;coverage_summary_col&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;coverage&quot;</span><span class="p">,</span> <span class="s2">&quot;coverage_summary_col&quot;</span><span class="p">],</span>
+<span class="p">}</span>
+
+
+<div class="viewcode-block" id="replace_toml_placeholders">
+<a class="viewcode-back" href="../config.html#config.replace_toml_placeholders">[docs]</a>
+<span class="k">def</span> <span class="nf">replace_toml_placeholders</span><span class="p">(</span><span class="n">item</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">defines</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Recursively replaces any string or string within list and dicts with user defined values.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        item (Any): A string, list or dict to act upon and replace any matching %...% pattern with defines.</span>
+<span class="sd">        defines (dict[str, str]): A dictionary whose keys will be searched on item to be replaced with the associated</span>
+<span class="sd">                                  values.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        dict[str, Any]: The parsed TOML dict where all substitutions have been performed on the user-defined keys.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">defines</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">placeholder</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;%</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">%&quot;</span>
+            <span class="n">item</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">placeholder</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">item</span>
+
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">replace_toml_placeholders</span><span class="p">(</span><span class="n">sub_item</span><span class="p">,</span> <span class="n">defines</span><span class="p">)</span> <span class="k">for</span> <span class="n">sub_item</span> <span class="ow">in</span> <span class="n">item</span><span class="p">]</span>
+
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">replace_toml_placeholders</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">defines</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">item</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Return the item unchanged if it&#39;s not a string, list, or dict</span>
+        <span class="k">return</span> <span class="n">item</span></div>
+
+
+
+<div class="viewcode-block" id="replace_toml_regex">
+<a class="viewcode-back" href="../config.html#config.replace_toml_regex">[docs]</a>
+<span class="k">def</span> <span class="nf">replace_toml_regex</span><span class="p">(</span><span class="n">item</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">substitute</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Recursively substitues all values corresponding to keys which include &#39;regex&#39; with ``re.Patterns``.</span>
+
+<span class="sd">    All generated patterns have a ``re.DOTALL`` flag set.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">         item (Any): A string, list or dict to act upon and replace any regex string with re.Pattern.</span>
+<span class="sd">        substitute (bool, optional): Flag to allow substitution of value. Defaults to False.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        dict[str, Any]: The parsed TOML dict where all substitutions have been performed on the regex strings.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">substitute</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">item</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">DOTALL</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">replace_toml_regex</span><span class="p">(</span><span class="n">elem</span><span class="p">,</span> <span class="n">substitute</span><span class="p">)</span> <span class="k">for</span> <span class="n">elem</span> <span class="ow">in</span> <span class="n">item</span><span class="p">]</span>
+
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">replace_toml_regex</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="kc">True</span> <span class="k">if</span> <span class="s2">&quot;regex&quot;</span> <span class="ow">in</span> <span class="n">k</span> <span class="k">else</span> <span class="kc">False</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">item</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">item</span></div>
+
+
+
+<div class="viewcode-block" id="sanitize_a0_configuration">
+<a class="viewcode-back" href="../config.html#config.sanitize_a0_configuration">[docs]</a>
+<span class="k">def</span> <span class="nf">sanitize_a0_configuration</span><span class="p">(</span><span class="n">config_file</span><span class="p">:</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Checks whether all key-value pairs have been defined in the TOML file.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        config_file (pathlib.Path): The TOML configuration file.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        TomlDecodeError: if loading the file fails.</span>
+<span class="sd">        KeyError: if a key is missing from the TOML file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">toml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">config_file</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">toml</span><span class="o">.</span><span class="n">TomlDecodeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error decoding TOML: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">toml_path</span> <span class="ow">in</span> <span class="n">A0_KEYS</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+
+        <span class="n">section</span> <span class="o">=</span> <span class="n">toml_path</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">section</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Section </span><span class="si">{</span><span class="n">section</span><span class="si">}</span><span class="s2"> not in </span><span class="si">{</span><span class="n">config_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">toml_path</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">subkeys</span> <span class="o">=</span> <span class="n">toml_path</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+
+            <span class="k">for</span> <span class="n">subkey</span> <span class="ow">in</span> <span class="n">subkeys</span><span class="p">:</span>
+
+                <span class="k">if</span> <span class="n">subkey</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="n">section</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+
+                    <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Subsection </span><span class="si">{</span><span class="n">subkey</span><span class="si">}</span><span class="s2"> not in </span><span class="si">{</span><span class="n">config_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="parse_a0_configuration">
+<a class="viewcode-back" href="../config.html#config.parse_a0_configuration">[docs]</a>
+<span class="k">def</span> <span class="nf">parse_a0_configuration</span><span class="p">(</span><span class="n">config_file</span><span class="p">:</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parses the TOML configuration file of A0 and returns the A0 constructor args.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        config_file (pathlib.Path): The configuration file.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple: A triplet with the ISA file (str), a list of the assembly sources (strs), and a dictionary with all the</span>
+<span class="sd">        a0 settings.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">get_nested_value</span><span class="p">(</span><span class="n">d</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">keys</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Helper function to get a nested value from a dictionary, safely.&quot;&quot;&quot;</span>
+
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+
+            <span class="n">d</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="p">{})</span>
+
+        <span class="k">return</span> <span class="n">d</span> <span class="k">if</span> <span class="n">d</span> <span class="k">else</span> <span class="n">default</span>
+
+    <span class="n">sanitize_a0_configuration</span><span class="p">(</span><span class="n">config_file</span><span class="p">)</span>
+
+    <span class="n">config</span> <span class="o">=</span> <span class="n">toml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">config_file</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">user_defines</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;user_defines&quot;</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="k">pass</span>
+
+    <span class="k">if</span> <span class="n">user_defines</span><span class="p">:</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">replace_toml_placeholders</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">user_defines</span><span class="p">)</span>
+
+    <span class="c1"># Change regex keys to re.Patterns</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">replace_toml_regex</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+
+    <span class="n">isa</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;isa&quot;</span><span class="p">][</span><span class="s2">&quot;isa_file&quot;</span><span class="p">]</span>
+    <span class="n">asm_sources</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;assembly_sources&quot;</span><span class="p">][</span><span class="s2">&quot;sources&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Dynamically build the a0_settings dictionary using the defined key mappings</span>
+    <span class="n">a0_settings</span> <span class="o">=</span> <span class="p">{</span><span class="n">setting</span><span class="p">:</span> <span class="n">get_nested_value</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span> <span class="k">for</span> <span class="n">setting</span><span class="p">,</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">A0_KEYS</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">isa</span><span class="p">,</span> <span class="n">asm_sources</span><span class="p">,</span> <span class="n">a0_settings</span><span class="p">)</span></div>
+
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../index.html">Table of Contents</a></h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../asm.html">asm module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../zoix.html">zoix module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../a0.html">a0 module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../utils.html">utils module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../config.html">config module</a></li>
+</ul>
+
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">TestCrush 0.5.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">config</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2024, Nikolaos I. Deligiannis.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
+    </div>
+  </body>
+</html>

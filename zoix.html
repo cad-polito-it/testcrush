@@ -68,7 +68,7 @@ leave it to the user to specify compilation and simulation isntructions to be ex
 <dd><p>Performs compilation of HDL files</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>*instructions</strong> (<em>str</em>) – A variadic number of bash shell instructions</p>
+<dd class="field-odd"><p><strong>instructions</strong> (<em>str</em>) – A variadic number of bash shell instructions</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><p>A status Enum to signify the success or failure of the compilation.</p>
@@ -82,28 +82,6 @@ leave it to the user to specify compilation and simulation isntructions to be ex
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="#zoix.Compilation" title="zoix.Compilation">Compilation</a></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="zoix.ZoixInvoker.create_fcm_script">
-<span class="sig-name descname"><span class="pre">create_fcm_script</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fcm_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">fcm_options</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Path</span></span></span><a class="reference internal" href="_modules/zoix.html#ZoixInvoker.create_fcm_script"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoix.ZoixInvoker.create_fcm_script" title="Link to this definition">¶</a></dt>
-<dd><p>Generates and returns a fault campaign manager TCL script based on user-defined settings from the setup file.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>fcm_file</strong> (<em>pathlib.Path</em>) – The full path (absolute or relative) of the fcm script.</p></li>
-<li><p><strong>**fcm_options</strong> – Keyword arguments where each key is an fcm command and the corresponding value the flags or
-options (if any). The commands should adhere to the supported commands documented in the
-VCS-Z01X user guide. No sanitization checks are performed by the method.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>The absolute path of the generated file.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>pathlib.Path</p>
 </dd>
 </dl>
 </dd></dl>
@@ -133,13 +111,13 @@ as strings.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>*instructions</strong> (<em>str</em>) – A variadic number of shell instructions</p></li>
-<li><p><strong>Z01X.</strong> (<em>to invoke</em>)</p></li>
-<li><p><strong>**kwargs</strong> – <p>User-defined options for fault simulation control.</p>
+<li><p><strong>instructions</strong> (<em>str</em>) – A variadic number of shell instructions
+to invoke Z01X.</p></li>
+<li><p><strong>kwargs</strong> – <p>User-defined options for fault simulation control.</p>
 <ul>
 <li><p>timeout (float): A timeout in <strong>seconds</strong> for each fsim
 instruction.</p></li>
-<li><p>allow (list[re.Pattern]): Series of regexps to look for in
+<li><p>allow_regexs (list[re.Pattern]): Series of regexps to look for in
 <code class="docutils literal notranslate"><span class="pre">stderr</span></code> and allow continuation without raising any error
 messages.</p></li>
 </ul>
@@ -185,19 +163,19 @@ something.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>*instructions</strong> (<em>str</em>) – A variadic number of bash instructions</p></li>
-<li><p><strong>**kwargs</strong> – <dl class="simple">
+<li><p><strong>instructions</strong> (<em>str</em>) – A variadic number of bash instructions</p></li>
+<li><p><strong>kwargs</strong> – <dl class="simple">
 <dt>User-defined options needed for the evaluation of the result of the logic simulation.</dt><dd><p>These options are:</p>
 </dd>
 </dl>
 <ul>
 <li><p><strong>timeout</strong> (float): A timeout in <strong>seconds</strong> to be used for <strong>each</strong> of the executed logic
 simulation instructions.</p></li>
-<li><p><strong>success_regexp</strong> (re.Pattern): A regular expression used for matching in every line of the
+<li><p><strong>simulation_ok_regex</strong> (re.Pattern): A regular expression used for matching in every line of the
 <code class="docutils literal notranslate"><span class="pre">stdout</span></code> stream to mark the successful completion of the logic simulation.</p></li>
-<li><p><a href="#id1"><span class="problematic" id="id2">**</span></a>tat_regexp (re.Pattern): A regular expression used to match the line that reports the test
-application time from the simulator.</p></li>
-<li><p><strong>tat_regexp_capture_group</strong> (int): The index of the capture group in the custom regular
+<li><p><strong>test_application_time_regex</strong> (re.Pattern): A regular expression used to match the line that reports
+the test application time from the simulator.</p></li>
+<li><p><strong>test_application_time_regex_group_no</strong> (int): The index of the capture group in the custom regular
 expression for the TaT value. Default is 1, corresponding to the <code class="docutils literal notranslate"><span class="pre">success_regexp</span></code> group.</p></li>
 <li><p><strong>tat_value</strong> (list): An <strong>empty</strong> list to store the TaT value after being successfully matched with
 <code class="docutils literal notranslate"><span class="pre">success_regexp</span></code>. The list is used to mimic a pass-by-reference.</p></li>
@@ -229,18 +207,18 @@ expression for the TaT value. Default is 1, corresponding to the <code class="do
 <h2>CSVFaultReport<a class="headerlink" href="#csvfaultreport" title="Link to this heading">¶</a></h2>
 <p>This class manages the results of the fault simulation which are expected to be in a <strong>CSV</strong> format. Namelly,
 the fault summary and the fault list which are generated when the fcm (fault campaign manager) script contains
-the <code class="docutils literal notranslate"><span class="pre">report</span> <span class="pre">-csv</span></code> instruction. This is a <strong>hard</strong> requirement for the whole TestCrush framework to work. The
-reason for not relying on the textual fault reports is once again the nieces that are introduced in different
-VC-Z01X versions. The <code class="docutils literal notranslate"><span class="pre">.txt</span></code> fault summary and report are sometimes poorly indented, and in general require
-regexp parsing. Hence, the CSVs. Nothing can go wrong with an ol’reliable format like this.</p>
+the <code class="docutils literal notranslate"><span class="pre">report</span> <span class="pre">-csv</span></code> instruction. For instance, if this command is specified <code class="docutils literal notranslate"><span class="pre">report</span> <span class="pre">-csv</span> <span class="pre">-report</span> <span class="pre">fsim_out</span></code> then
+after the fault simulation, in the run directory a folder named <code class="docutils literal notranslate"><span class="pre">fsim_out_csv_files</span></code> will be generated which will
+include two .csv files. The first file is called <code class="docutils literal notranslate"><span class="pre">DEFAULT_summary.csv</span></code> and the second <code class="docutils literal notranslate"><span class="pre">DEFAULT_faultlist.csv</span></code>.
+These correspond to the two constructor arguments of the <code class="docutils literal notranslate"><span class="pre">CSVFaultReport</span></code> object.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="zoix.CSVFaultReport">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">zoix.</span></span><span class="sig-name descname"><span class="pre">CSVFaultReport</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fault_summary</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fault_report</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoix.html#CSVFaultReport"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoix.CSVFaultReport" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Manipulates the VC-Z01X summary and report <strong>CSV</strong> files.</p>
 <p>These files are expected to be generated after fault simulation.
-The <code class="docutils literal notranslate"><span class="pre">report</span></code> instruction specified in the <code class="docutils literal notranslate"><span class="pre">fcm.tcl</span></code> file <strong>MUST</strong> be
-executed with the <code class="docutils literal notranslate"><span class="pre">-csv</span></code> option.</p>
+The <code class="docutils literal notranslate"><span class="pre">report</span></code> instruction specified in the fault campaign manager script
+<strong>MUST</strong> be executed with the <code class="docutils literal notranslate"><span class="pre">-csv</span></code> option.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="zoix.CSVFaultReport.compute_flist_coverage">
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">compute_flist_coverage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fault_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#zoix.Fault" title="zoix.Fault"><span class="pre">Fault</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sff_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">formula</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">precision</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">status_attribute</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Status'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="_modules/zoix.html#CSVFaultReport.compute_flist_coverage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoix.CSVFaultReport.compute_flist_coverage" title="Link to this definition">¶</a></dt>
@@ -277,7 +255,7 @@ Default value is <code class="docutils literal notranslate"><span class="pre">&q
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>row</strong> (<em>int</em>) – the row number (1-based indexing).</p></li>
-<li><p><strong>*cols</strong> (<em>ints</em>) – the columns’ numbers (1-based indexing).</p></li>
+<li><p><strong>cols</strong> (<em>ints</em>) – the columns’ numbers (1-based indexing).</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -348,7 +326,7 @@ any column if specified.</p>
 <dd class="field-even"><p>None</p>
 </dd>
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>FileExistsError</strong> – If the file does not exist.</p>
+<dd class="field-odd"><p><strong>FileNotFoundError</strong> – If the file does not exist.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -365,7 +343,7 @@ any column if specified.</p>
 <dd class="field-even"><p>None</p>
 </dd>
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>FileExistsError</strong> – if the file does not exist.</p>
+<dd class="field-odd"><p><strong>FileNotFoundError</strong> – if the file does not exist.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -528,6 +506,7 @@ the attribute then the default type is <code class="docutils literal notranslate
 </li>
 <li class="toctree-l1"><a class="reference internal" href="a0.html">a0 module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utils.html">utils module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">config module</a></li>
 </ul>
 
   <div role="note" aria-label="source link">

@@ -28,10 +28,10 @@ CSVFaultReport
 --------------
 This class manages the results of the fault simulation which are expected to be in a **CSV** format. Namelly,
 the fault summary and the fault list which are generated when the fcm (fault campaign manager) script contains 
-the ``report -csv`` instruction. This is a **hard** requirement for the whole TestCrush framework to work. The
-reason for not relying on the textual fault reports is once again the nieces that are introduced in different
-VC-Z01X versions. The ``.txt`` fault summary and report are sometimes poorly indented, and in general require
-regexp parsing. Hence, the CSVs. Nothing can go wrong with an ol'reliable format like this.
+the ``report -csv`` instruction. For instance, if this command is specified ``report -csv -report fsim_out`` then
+after the fault simulation, in the run directory a folder named ``fsim_out_csv_files`` will be generated which will
+include two .csv files. The first file is called ``DEFAULT_summary.csv`` and the second ``DEFAULT_faultlist.csv``. 
+These correspond to the two constructor arguments of the ``CSVFaultReport`` object.
 
 .. autoclass:: zoix.CSVFaultReport
    :members:

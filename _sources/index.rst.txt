@@ -8,12 +8,13 @@ TestCrush documentation
 
 .. image:: _static/testcrush.png
 
-TestCrush is a toolkit for compaction of software test libraries 
-which are written in assembly. The tool expects a configuration JSON file 
-from the user and a pre-existing logic and fault simulation flow for your 
-design(s).
+Welcome to the documentation of TestCrush.
+TestCrush is a toolkit designed to compact software test libraries written in assembly. 
+It relies heavily on the (VC-)Z01X logic and fault simulator. 
+The tool requires a pre-existing testing environment for evaluating the STL compaction process.
 
-TestCrush implements the algorithms ``A0`` and ``A1xx`` of the journal publication
+
+TestCrush implements the algorithms ``A0`` and ``A1xx`` of:
 
    M. Gaudesi, I. Pomeranz, M. S. Reorda and G. Squillero, "New Techniques to 
    Reduce the Execution Time of Functional Test Programs," in IEEE 
@@ -31,3 +32,4 @@ Version 0.5.0
    zoix
    a0
    utils
+   config
