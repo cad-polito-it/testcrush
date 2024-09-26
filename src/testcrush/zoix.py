@@ -108,11 +108,13 @@ member of {self.__class__}")
 
 
 class CSVFaultReport():
-    """Manipulates the VC-Z01X summary and report **CSV** files.
+    """
+    Manipulates the VC-Z01X summary and report **CSV** files.
 
     These files are expected to be generated after fault simulation.
-    The ``report`` instruction specified in the ``fcm.tcl`` file **MUST** be
-    executed with the ``-csv`` option."""
+    The ``report`` instruction specified in the fault campaign manager script
+    **MUST** be executed with the ``-csv`` option.
+    """
 
     def __init__(self, fault_summary: pathlib.Path,
                  fault_report: pathlib.Path) -> "CSVFaultReport":
@@ -131,11 +133,11 @@ class CSVFaultReport():
             None
 
         Raises:
-            FileExistsError: if the file does not exist.
+            FileNotFoundError: if the file does not exist.
         """
 
         if not pathlib.Path(fault_summary).exists():
-            raise FileExistsError(f"{fault_summary=} does not exist!")
+            raise FileNotFoundError(f"{fault_summary=} does not exist!")
 
         self.fault_summary = pathlib.Path(fault_summary).absolute()
 
@@ -150,10 +152,10 @@ class CSVFaultReport():
             None
 
         Raises:
-            FileExistsError: If the file does not exist."""
+            FileNotFoundError: If the file does not exist."""
 
         if not pathlib.Path(fault_report).exists():
-            raise FileExistsError(f"{fault_report=} does not exist!")
+            raise FileNotFoundError(f"{fault_report=} does not exist!")
 
         self.fault_report = pathlib.Path(fault_report).absolute()
 
@@ -163,7 +165,7 @@ class CSVFaultReport():
 
         Args:
             row (int): the row number (1-based indexing).
-            *cols (ints): the columns' numbers (1-based indexing).
+            cols (ints): the columns' numbers (1-based indexing).
 
         Returns:
             list[str]: The cells of the fault summary.
@@ -355,7 +357,7 @@ class ZoixInvoker():
         Performs compilation of HDL files
 
         Args:
-            *instructions (str): A variadic number of bash shell instructions
+            instructions (str): A variadic number of bash shell instructions
 
         Returns:
             Compilation: A status Enum to signify the success or failure of the compilation.
@@ -398,9 +400,9 @@ class ZoixInvoker():
 
 
         Args:
-            *instructions (str): A variadic number of bash instructions
-            **kwargs: User-defined options needed for the evaluation of the result of the logic simulation.
-                      These options are:
+            instructions (str): A variadic number of bash instructions
+            kwargs: User-defined options needed for the evaluation of the result of the logic simulation.
+                    These options are:
 
                 - **timeout** (float): A timeout in **seconds** to be used for **each** of the executed logic
                   simulation instructions.
@@ -408,7 +410,7 @@ class ZoixInvoker():
                 - **simulation_ok_regex** (re.Pattern): A regular expression used for matching in every line of the
                   ``stdout`` stream to mark the successful completion of the logic simulation.
 
-                - **test_application_time_regex (re.Pattern): A regular expression used to match the line that reports
+                - **test_application_time_regex** (re.Pattern): A regular expression used to match the line that reports
                   the test application time from the simulator.
 
                 - **test_application_time_regex_group_no** (int): The index of the capture group in the custom regular
@@ -530,9 +532,9 @@ expression '{tat_regexp}' ?")
         Performs fault simulation of a user-defined firmware.
 
         Args:
-            *instructions (str): A variadic number of shell instructions
-            to invoke Z01X.
-            **kwargs: User-defined options for fault simulation control.
+            instructions (str): A variadic number of shell instructions
+                                to invoke Z01X.
+            kwargs: User-defined options for fault simulation control.
 
                 - timeout (float): A timeout in **seconds** for each fsim
                   instruction.

@@ -65,7 +65,7 @@ class CSVFaultReportTest(unittest.TestCase):
 
         test_obj = zoix.CSVFaultReport(pathlib.Path("mock_fault_summary"), pathlib.Path("mock_fault_report"))
 
-        with self.assertRaises(FileExistsError) as cm:
+        with self.assertRaises(FileNotFoundError) as cm:
 
             test_obj.set_fault_summary("new_mock_summary")
 
@@ -81,7 +81,7 @@ class CSVFaultReportTest(unittest.TestCase):
 
         test_obj = zoix.CSVFaultReport(pathlib.Path("mock_fault_summary"), pathlib.Path("mock_fault_report"))
 
-        with self.assertRaises(FileExistsError) as cm:
+        with self.assertRaises(FileNotFoundError) as cm:
 
             test_obj.set_fault_report("new_mock_report")
 

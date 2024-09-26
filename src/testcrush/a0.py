@@ -193,11 +193,13 @@ class A0():
 
         1. Removal of a random instruction
         2. Cross-compilation
-            1. If FAIL, Restore
+            2.1 If FAIL, Restore
         3. Logic simulation
-            1. If TIMEOUT, Restore
+            3.1 If ERROR or TIMEOUT, Restore
         4. Fault simulation
+            4.1 If ERROR or TIMEOUT, Restore
         5. Evaluation
+        6. Goto 1.
 
         Args:
             initial_stl_stats (tuple[int, float]): The test application time (int) and coverage (float) of the original

@@ -119,7 +119,7 @@ def parse_a0_configuration(config_file: pathlib.Path) -> tuple[str, list, dict]:
 
     Returns:
         tuple: A triplet with the ISA file (str), a list of the assembly sources (strs), and a dictionary with all the
-               a0 settings.
+        a0 settings.
     """
 
     def get_nested_value(d: dict, keys: list, default=None) -> Any:
