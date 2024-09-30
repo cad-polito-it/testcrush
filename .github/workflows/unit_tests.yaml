@@ -1,4 +1,4 @@
-name: Unit Tests for asm.py
+name: Python3 Unit Tests
 
 on:
   push:
