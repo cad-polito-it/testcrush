@@ -7,9 +7,11 @@ import random
 import csv
 import time
 
-from testcrush.utils import log, compile_assembly, zip_archive
+from testcrush.utils import get_logger, compile_assembly, zip_archive
 from testcrush import asm, zoix
 from typing import Any
+
+log = get_logger()
 
 
 class CSVCompactionStatistics():

@@ -7,8 +7,10 @@ import tempfile
 import random
 import shutil
 
-from testcrush.utils import Singleton, log
+from testcrush.utils import Singleton, get_logger
 from dataclasses import dataclass
+
+log = get_logger()
 
 
 @dataclass

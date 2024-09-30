@@ -7,8 +7,10 @@ import enum
 import pathlib
 import csv
 
-from testcrush.utils import log
+from testcrush.utils import get_logger
 from typing import Any
+
+log = get_logger()
 
 
 class Compilation(enum.Enum):

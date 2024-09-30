@@ -11,6 +11,46 @@ import zipfile
 import os
 
 
+def setup_logger(stream_logging_level: int, log_file: str | None = None) -> logging.Logger:
+    """Set up a logger with stream and file handlers."""
+    class IndentedFormatter(logging.Formatter):
+        """Indents the record's body."""
+        def format(self, record):
+
+            original_message = super().format(record)
+
+            indented_message = "\n>\t".join(original_message.splitlines())
+
+            return indented_message
+
+    logger = logging.getLogger(__name__)
+    logger.setLevel(stream_logging_level)
+
+    # Check if handlers already exist (to prevent adding them multiple times)
+    if not logger.hasHandlers():
+
+        log_stream = logging.StreamHandler(stream=sys.stdout)
+        log_stream.setLevel(stream_logging_level)
+        log_stream.setFormatter(logging.Formatter('%(levelname)s: %(message)s'))
+        logger.addHandler(log_stream)
+
+        if log_file:
+            log_file_handler = logging.FileHandler(filename=log_file, mode='w')
+            log_file_handler.setLevel(stream_logging_level)
+            log_file_handler.setFormatter(IndentedFormatter(
+                '[%(levelname)s] @ %(module)s/%(funcName)s/line%(lineno)d\n%(message)s'))
+
+            logger.addHandler(log_file_handler)
+
+
+def get_logger() -> logging.Logger:
+    """Return the pre-configured logger."""
+    return logging.getLogger(__name__)
+
+
+log = get_logger()
+
+
 def compile_assembly(*instructions, exit_on_error: bool = False) -> bool:
     """
     Executes a sequence of bash instructions to compile the `self.asm_file`. Uses subprocess for each instruction and
@@ -90,33 +130,6 @@ def zip_archive(archive_name: str, *files) -> str:
 
     shutil.rmtree(archive)
     return zip_filename
-
-
-def setup_logger(name: str = "testcrush logger", log_file: str = "testcrush_debug.log") -> logging.Logger:
-    """Set up a logger with stream and file handlers."""
-    logger = logging.getLogger(name)
-    logger.setLevel(logging.DEBUG)
-
-    # Check if handlers already exist (to prevent adding them multiple times)
-    if not logger.hasHandlers():
-        # Stream handler (INFO level)
-        log_stream = logging.StreamHandler(stream=sys.stdout)
-        log_stream.setLevel(logging.INFO)
-        log_stream.setFormatter(logging.Formatter('[%(levelname)s]: %(message)s'))
-
-        # File handler (DEBUG level)
-        log_file_handler = logging.FileHandler(filename=log_file, mode='w')
-        log_file_handler.setLevel(logging.DEBUG)
-        log_file_handler.setFormatter(logging.Formatter(
-            '%(lineno)d:[%(levelname)s|%(module)s|%(funcName)s]: %(message)s'))
-
-        logger.addHandler(log_stream)
-        logger.addHandler(log_file_handler)
-
-    return logger
-
-
-log = setup_logger()
 
 
 class Timer():
