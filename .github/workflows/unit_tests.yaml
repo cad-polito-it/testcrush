@@ -27,6 +27,7 @@ jobs:
         cd src/ 
         pip install -e .
         pip install toml
+        pip install lark
 
     - name: (asm.py) Codeline Test Cases
       run: |
