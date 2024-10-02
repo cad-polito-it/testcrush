@@ -41,20 +41,18 @@ class FaultSimulation(enum.Enum):
 
 
 class Fault():
-    """Generic representation of a fault. All attributes are set as strings."""
+    """Generic representation of a fault"""
 
-    def __init__(self, **fault_attributes: dict[str, str]) -> 'Fault':
+    def __init__(self, **fault_attributes: dict[str, Any]) -> 'Fault':
         for attribute, value in fault_attributes.items():
             setattr(self, attribute.replace(" ", "_"), value)
 
     def __repr__(self):
-        attrs = ', '.join(f'{key}={value!r}' for key, value in
-                          self.__dict__.items())
+        attrs = ', '.join(f'{key}={value!r}' for key, value in self.__dict__.items())
         return f'{self.__class__.__name__}({attrs})'
 
     def __str__(self):
-        return ', '.join(f'{key}: {value}' for key, value in
-                         self.__dict__.items())
+        return ', '.join(f'{key}: {value}' for key, value in self.__dict__.items())
 
     def __eq__(self, other):
 
@@ -100,12 +98,10 @@ class Fault():
             self.__dict__[attribute] = func(getattr(self, attribute))
 
         except KeyError:
-            log.error(f"Attribute {attribute} not a \
-member of {self.__class__}")
+            log.error(f"Attribute {attribute} not a member of {self.__class__}")
 
         except ValueError:
-            log.critical(f"Unable to perform the cast operation to \
-{repr(func)} of attribute {getattr(self, attribute)}")
+            log.critical(f"Unable to cast to {repr(func)} of attribute {getattr(self, attribute)}")
             exit(1)
 
 

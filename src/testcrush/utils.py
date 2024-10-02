@@ -11,7 +11,7 @@ import zipfile
 import os
 
 
-def setup_logger(stream_logging_level: int, log_file: str | None = None) -> logging.Logger:
+def setup_logger(stream_logging_level: int, log_file: str | None = None) -> None:
     """Set up a logger with stream and file handlers."""
     class IndentedFormatter(logging.Formatter):
         """Indents the record's body."""
