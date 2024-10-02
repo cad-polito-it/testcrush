@@ -1,0 +1,115 @@
+# SPDX-License-Identifier: MIT
+
+start: "FaultList" optional_name? "{" fault+ "}"
+?optional_name: CNAME
+
+fault: fault_info?   \
+       fault_status  \
+       fault_type    \
+       timing_info?  \
+       location_info \
+       attributes?
+
+# Example:
+# <1 1 1 0> NA 0 { PORT "testbench.dut.blkA.Z"}
+#  ^^^^^^^
+fault_info: "<" [CNAME | NUMBER]* ">"
+
+# Example:
+# <1 1 1 0> NA 0 { PORT "testbench.dut.blkA.Z"}
+#           ^^
+fault_status: FSTATUS
+
+# Example:
+# <1 1 1 0> NA 0 { PORT "testbench.dut.blkA.Z"}
+#              ^
+fault_type: FTYPE
+
+# Example: Covers also multi point injection 
+# <1 1 1 0> NA 0 { PORT "testbench.dut.blkA.Z"} + { PORT "testbench.dut.blkA.Z"}
+#                  ^^^^ ^^^^^^^^^^^^^^^^^^^^^^      ^^^^ ^^^^^^^^^^^^^^^^^^^^^^
+location_info: _repetition_delim_t{loc_and_site, "+"}
+loc_and_site: "{" _LOCATION_TYPE FAULT_SITE "}"
+
+# Example:
+# <1 1 1 0> NA 0 { PORT "testbench.dut.blkA.Z"} (* "test1"->attr=0123 *)
+#                                                ^^^^^^^^^^^^^^^^^^^^^^
+attributes: "(*" _repetition_nodelim_t{attribute_and_value} "*)"
+attribute_and_value: "\"" _CNAME "\"" "->" CNAME "=" "\""? ATTRIBUTE_VALUE "\""? ";"
+
+# Example:
+# <  1> NN R (7.52ns) {PORT "tb_top.wrapper_i.top_i.core_i.ex_stage_i.mult_i.U10.A1"}
+#             ^^^^^^
+timing_info: "(" [ _repetition_delim_t{INT,","} | _repetition_delim_t{TIME_STAMP,","} ] ")" 
+
+
+///////////////
+// TEMPLATES //
+///////////////
+
+_repetition_delim_t{x, sep}: x (sep x)*
+_repetition_nodelim_t{x}: x (x)*
+
+///////////////
+// TERMINALS //
+///////////////
+
+FSTATUS: UCASE_LETTER UCASE_LETTER  # e.g., DD, NA
+       | "--"                       # equivalent fault
+
+FTYPE: "0"  # stuck-at 0
+     | "1"  # stuck-at 1
+     | "~"  # bit-flip 
+     | "R"  # slow-to-rise
+     | "F"  # slow-to-fall
+
+_LOCATION_TYPE: "PORT"
+              | "FLOP"
+              | "ARRY"
+              | "WIRE"
+              | "PRIM"
+              | "VARI"
+
+HEX_NUMBER: "0x"? HEXDIGIT+
+
+ATTRIBUTE_VALUE: HEX_NUMBER
+               | CNAME
+               | TIME_STAMP
+
+_CNAME: CNAME
+
+///////////////
+// REGEX     //
+// TERMINALS //
+///////////////
+
+FAULT_SITE: /
+    "                 # Opening quotes
+    [\w\.]+           # Any sequence of word characters and dots
+    (\[\d+[:\d+]?\])? # Optional bit range segment [msb:lsb] or just a bit [bitno]
+    "                 # Closing quotes
+/x
+
+TIME_STAMP: /
+    [\d\.]+         # One or more digits
+    [smunp]s        # Time unit
+/x
+
+///////////////
+// IMPORTS   //
+///////////////
+
+%import common.HEXDIGIT
+%import common.NUMBER
+%import common.INT
+%import common.UCASE_LETTER
+%import common.CNAME
+%import common.NUMBER
+%import common.WS
+
+///////////////
+// IGNORE    //
+///////////////
+
+# Ignore Whitespace
+%ignore WS

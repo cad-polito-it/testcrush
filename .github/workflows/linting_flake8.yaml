@@ -50,3 +50,8 @@ jobs:
       run: |
         cd src/testcrush
         flake8 config.py --max-line-length 120
+    
+    - name: Lint transformers.py
+      run: |
+        cd src/testcrush/grammars
+        flake8 transformers.py --max-line-length 120

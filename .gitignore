@@ -22,3 +22,5 @@ htmlcov/
 *.tar.gz
 *.tar
 *.zip
+# ignore vscode
+.vscode
