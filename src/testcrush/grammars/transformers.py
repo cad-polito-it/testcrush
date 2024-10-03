@@ -3,7 +3,7 @@
 
 import lark
 
-from typing import Literal, Any
+from typing import Literal, Any, Iterable
 from testcrush.zoix import Fault
 from testcrush.utils import get_logger
 
@@ -14,11 +14,34 @@ class FaultListTransformer(lark.Transformer):
 
     _prev_fstatus: str = ""
 
+    @staticmethod
+    def filter_out_discards(container: Iterable) -> filter:
+
+        return filter(lambda x: x is not lark.Discard, container)
+
     def start(self, faults: list[Fault]) -> list[Fault]:
         """
         Parsing is finished. The fault list has been generated.
         """
+
+        faults = list(self.filter_out_discards(faults))
+
         return faults
+
+    def optional_name(self, fault_list_name: str) -> lark.visitors._DiscardType:
+        """
+        Discard the name of the fault list.
+
+        .. highlight:: python
+        .. code-block:: python
+
+            FaultList SomeCNAMEfaultListName {
+                      ^^^^^^^^^^^^^^^^^^^^^^
+                           discarded
+        """
+        log.debug(f"Discarding Fault List Name: {str(fault_list_name)}")
+        return lark.Discard
+
 
     def fault(self, fault_parts: list[tuple[str, Any]]) -> Fault:
         """
@@ -45,7 +68,7 @@ class FaultListTransformer(lark.Transformer):
             - Fault Sites: list[str]
             - Fault Attributes: dict[str, str]
         """
-        fault_parts = list(filter(lambda x: x is not lark.Discard, fault_parts))
+        fault_parts = list(self.filter_out_discards(fault_parts))
 
         log.debug(repr(Fault(**dict(fault_parts))))
         return Fault(**dict(fault_parts))

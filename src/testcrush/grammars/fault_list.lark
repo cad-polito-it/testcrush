@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MIT
 
 start: "FaultList" optional_name? "{" fault+ "}"
-?optional_name: CNAME
+optional_name: CNAME
 
 fault: fault_info?   \
        fault_status  \
@@ -84,10 +84,14 @@ _CNAME: CNAME
 ///////////////
 
 FAULT_SITE: /
-    "                 # Opening quotes
-    [\w\.]+           # Any sequence of word characters and dots
-    (\[\d+[:\d+]?\])? # Optional bit range segment [msb:lsb] or just a bit [bitno]
-    "                 # Closing quotes
+    "                     # Opening quotes
+    [\w\.]+               # Any sequence of word characters and dots
+    (?:                   # Optional [msb:lsb] or [bitno] segment 
+       \[\d+(?:             # [xxx part followed by
+               :\d+)?       # Non-capturing optional group of :xxxx
+       \]                   # ] closing bracket
+    )?                      # 0 or 1 instances
+    "                     # Closing quotes
 /x
 
 TIME_STAMP: /
