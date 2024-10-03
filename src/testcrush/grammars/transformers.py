@@ -11,7 +11,17 @@ log = get_logger()
 
 
 class FaultListTransformer(lark.Transformer):
+    """
+    This class is expected to act on the grammar defined for the ``FaultList`` segment of a Z01X txt fault report.
 
+    After parsing the segment is returning a list of ``zoix.Fault`` objects with the following attributes:
+
+    - Fault_Status (str): 2-uppercase-letter status
+    - Fault_Type (str): 0|1|R|F|~
+    - Timing_Info (list[str]): A list with all timing info (if present) e.g., ['6.532ns']
+    - Fault_Sites (list[str]): A list of fault sites represented as strings
+    - Fault_Attributes (dict[str, str]): A dictionary with all fault attributes (if present)
+    """
     _prev_fstatus: str = ""
 
     @staticmethod
