@@ -73,3 +73,8 @@ jobs:
       run: |
         cd src/unit_tests
         python3 -m unittest test_config
+
+    - name: (grammars/transformers.py) FaultListTransformer Tests Cases
+      run: |
+        cd src/unit_tests
+        python3 -m unittest test_transformers
