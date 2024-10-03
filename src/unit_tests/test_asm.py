@@ -866,9 +866,18 @@ test1:
 
     def test_restore(self):
 
-        total_lines = len(self.EXPECTED_CODE)
+        total_lines = self.RISCV_SNIPPET.count('\n')
 
-        for lineno in range(total_lines):
+        # Try to restore but nothing should happen
+        # as no changes have been performed yet ie
+        # changelog is empty!
+        with open("temp_asm.S", 'w') as outf:
+            outf.write(self.RISCV_SNIPPET)
+
+        test_obj = self.gen_rv_handler(pathlib.Path("temp_asm.S"))
+        test_obj.restore()
+
+        for lineno in range(total_lines + 1):
 
            # Generate a temporary .S file
             with open("temp_asm.S", 'w') as outf:
@@ -913,6 +922,10 @@ test1:
                 outf.write(self.RISCV_SNIPPET)
 
             test_obj = self.gen_rv_handler(pathlib.Path("temp_asm.S"))
+
+            retval = test_obj.save()
+
+            self.assertIsNone(retval)
 
             try:
                 candidate = test_obj.get_candidate(lineno)
