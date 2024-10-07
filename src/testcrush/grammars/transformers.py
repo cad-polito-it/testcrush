@@ -292,27 +292,3 @@ class TraceTransformerCV32E40P(lark.Transformer):
         """
         reg_and_mem = f"\"{', '.join([ str(pair).strip() for pair in reg_val_pairs])}\""
         return reg_and_mem
-
-
-if __name__ == "__main__":
-    A = lark.Lark(grammar = open('trace_cv32e40p.lark').read(),
-                  start="start",
-                  parser='lalr',
-                  transformer=TraceTransformerCV32E40P())
-
-    dummy_text = r"""Time          Cycle      PC       Instr    Decoded instruction Register and memory contents
-130         61 00000150 4481     c.li    x9,0        x9=0x00000000
-132         62 00000152 00008437 lui     x8,0x8      x8=0x00008000
-134         63 00000156 fff40413 addi    x8,x8,-1    x8:0x00008000  x8=0x00007fff
-136         64 0000015a 8c65     c.and   x8,x9       x8:0x00007fff  x9:0x00000000  x8=0x00000000
-142         67 0000015c c622     c.swsp  x8,12(x2)   x2:0x00002000  x8:0x00000000 PA:0x0000200c store:0x00000000  load:0xffffffff
-    """
-
-    #dummy_text = r"""Time	Cycle	PC	Instr	Decoded instruction	Register and memory contents
-    #905ns              86 00000e36 00a005b3 c.add            x11,  x0, x10       x11=00000e5c x10:00000e5c
-    #"""
-    #dummy_text = open("../../../sandbox/logfiles/trace.log",'r').read()
-    a = A.parse(dummy_text)
-    for el in a:
-
-        print(el)
