@@ -1,0 +1,88 @@
+# SPDX-License-Identifier: MIT
+
+start: header _NEWLINE entries+
+
+# Header is expected to be 
+# Time\tCycle\tPC\tInstr\tDecoded instruction\tRegister and memory contents
+
+header: HEADER_FIELD+
+         
+# Entries are expected to be e.g.,
+#    935ns              89 00000e3c 00000513 c.addi           x10,  x0, 0         x10=00000000
+#    945ns              90 00000e3e 2b40006f c.jal             x0, 692
+#    975ns              93 000010f2 0d01a703 lw               x14, 208(x3)        x14=00002b20  x3:00003288  PA:00003358
+
+entries: TIME                \
+         CYCLE               \
+         PC                  \
+         INSTR               \
+         DECODED_INSTRUCTION \
+         reg_and_mem? _NEWLINE
+
+reg_and_mem: REG_AND_MEM+ 
+
+///////////////
+// TERMINALS //
+///////////////
+
+CYCLE: INT
+
+PC: HEXDIGIT+
+
+INSTR: HEXDIGIT+
+
+_NEWLINE: NEWLINE
+
+///////////////
+// REGEX     //
+// TERMINALS //
+///////////////
+
+HEADER_FIELD: /
+    [A-Z]{1,2}
+    [a-z ]*
+/x
+
+TIME: /
+    [\d\.]+         # One or more digits
+    (?:[smunp]s)?   # Time unit
+/x
+
+DECODED_INSTRUCTION: /
+    [a-z\.]+             # Instruction mnemonic
+    ([-a-z0-9, ()]+)?    # Optional operand part (rd,rs1,rs2, etc.)      
+    (?=                  # Stop when 
+        x[0-9]{1,2}[=:]  # Either you hit an xN= or xN:
+        |PA:             # or you meet PA:
+        |store:          # or you meet store:
+        |load:           # or you meet load
+        |\s*$            # or there is no REG_AND_MEM and you meet a \n
+    )
+/xim
+
+
+REG_AND_MEM: /
+    (?:[x[0-9]+|PA|store|load) # xN or xN or PA
+    [=|:]                      # : or =
+    [0-9a-fx]+                 # A hexadecimal value which can include x vals.
+/xi
+
+///////////////
+// IMPORTS   //
+///////////////
+
+%import common.HEXDIGIT
+%import common.NUMBER
+%import common.INT
+%import common.UCASE_LETTER
+%import common.CNAME
+%import common.NUMBER
+%import common.WS_INLINE
+%import common.WS
+%import common.NEWLINE
+
+///////////////
+// IGNORE    //
+///////////////
+
+%ignore WS_INLINE

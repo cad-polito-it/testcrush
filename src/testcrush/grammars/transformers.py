@@ -52,7 +52,6 @@ class FaultListTransformer(lark.Transformer):
         log.debug(f"Discarding Fault List Name: {str(fault_list_name)}")
         return lark.Discard
 
-
     def fault(self, fault_parts: list[tuple[str, Any]]) -> Fault:
         """
         Returns a ``Fault`` object for each line in the FaultList section.
@@ -222,3 +221,98 @@ class FaultListTransformer(lark.Transformer):
 
         log.debug(f"Returning ({attribute_name}, {attribute_value}) pair.")
         return (str(attribute_name), str(attribute_value))
+
+
+class TraceTransformerCV32E40P(lark.Transformer):
+    """
+    Transformer for the grammar of the tracer of CV32E40P.
+
+    When applied, returns the trace as a list of strings. The string at index 0
+    is the header and the rest the trace entries. Intended for converting the
+    textual trace format to CSV.
+
+    More information about the CV32E40P tracer format `here. <https://cv32e40p.readthedocs.io/en/latest/tracer.html>`_
+    """
+
+    def start(self, header_and_entries: list[str]) -> list[str]:
+        """
+        Parsing is finished. Accepts the trace as a list of strings and returns it as-is.
+        """
+        return header_and_entries
+
+    @lark.v_args(inline=True)
+    def header(self, *fields: lark.lexer.Token) -> str:
+        """
+        Handles the header line of the trace.
+
+        .. highlight:: python
+        .. code-block:: python
+
+            Time          Cycle      PC       Instr    Decoded instruction Register and memory contents
+            ^^^^          ^^^^^      ^^       ^^^^^    ^^^^^^^^^^^^^^^^^^^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            captured     captured  captured  captured  captured            captured
+        """
+        return ','.join([str(field).strip() for field in fields])
+
+    @lark.v_args(inline=True)
+    def entries(self, time: lark.lexer.Token, cycle: lark.lexer.Token, pc: lark.lexer.Token, instr: lark.lexer.Token,
+                decoded_instr: lark.lexer.Token, reg_and_mem: lark.lexer.Token | None = None) -> str:
+        """
+        Processes a single entry line and returns it as a csv-ready string.
+
+        .. highlight:: python
+        .. code-block:: python
+
+            142  67 0000015c c622 c.swsp  x8,12(x2) x2:0x00002000 x8:0x00000000 PA:0x0000200c store:0x0 load:0xffffffff
+            ^^^  ^^ ^^^^^^^^ ^^^^ ^^^^^^  ^^^^^^^^^ ^^^^^^^^^^^^^ ^^^^^^^^^^^^^ ^^^^^^^^^^^^^ ^^^^^^^^^ ^^^^^^^^^^^^^^^
+            Time Cycle  PC   Instr Decoded Instr.   Register and memory contents
+        """
+        # Remove inline whitespace from string
+        decoded_instr = f"\"{' '.join([ word.strip() for word in decoded_instr.split() if word ])}\""
+
+        # Upcast Tokens to str
+        entry = list(map(str, [time, cycle, pc, instr]))
+        entry.append(decoded_instr)
+
+        if reg_and_mem:
+            entry.append(reg_and_mem)
+
+        return ','.join(entry)
+
+    @lark.v_args(inline=True)
+    def reg_and_mem(self, *reg_val_pairs: str) -> str:
+        """
+        Processes a **single** 'Register and memory contents' entry (if present in the trace line).
+
+        .. highlight:: python
+        .. code-block:: python
+
+            x2:0x00002000 x8:0x00000000 PA:0x0000200c store:0x0 load:0xffffffff
+            ^^^^^^^^^^^^^ ^^^^^^^^^^^^^ ^^^^^^^^^^^^^ ^^^^^^^^^ ^^^^^^^^^^^^^^^
+        """
+        reg_and_mem = f"\"{', '.join([ str(pair).strip() for pair in reg_val_pairs])}\""
+        return reg_and_mem
+
+
+if __name__ == "__main__":
+    A = lark.Lark(grammar = open('trace_cv32e40p.lark').read(),
+                  start="start",
+                  parser='lalr',
+                  transformer=TraceTransformerCV32E40P())
+
+    dummy_text = r"""Time          Cycle      PC       Instr    Decoded instruction Register and memory contents
+130         61 00000150 4481     c.li    x9,0        x9=0x00000000
+132         62 00000152 00008437 lui     x8,0x8      x8=0x00008000
+134         63 00000156 fff40413 addi    x8,x8,-1    x8:0x00008000  x8=0x00007fff
+136         64 0000015a 8c65     c.and   x8,x9       x8:0x00007fff  x9:0x00000000  x8=0x00000000
+142         67 0000015c c622     c.swsp  x8,12(x2)   x2:0x00002000  x8:0x00000000 PA:0x0000200c store:0x00000000  load:0xffffffff
+    """
+
+    #dummy_text = r"""Time	Cycle	PC	Instr	Decoded instruction	Register and memory contents
+    #905ns              86 00000e36 00a005b3 c.add            x11,  x0, x10       x11=00000e5c x10:00000e5c
+    #"""
+    #dummy_text = open("../../../sandbox/logfiles/trace.log",'r').read()
+    a = A.parse(dummy_text)
+    for el in a:
+
+        print(el)
