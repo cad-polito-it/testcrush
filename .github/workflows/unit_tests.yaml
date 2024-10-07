@@ -77,4 +77,14 @@ jobs:
     - name: (grammars/transformers.py) FaultListTransformer Tests Cases
       run: |
         cd src/unit_tests
+        python3 -m unittest test_transformers.FaultListTransformerTest
+
+    - name: (grammars/transformers.py) TraceTransformerCV32E40P Tests Cases
+      run: |
+        cd src/unit_tests
+        python3 -m unittest test_transformers.TraceTransformerCV32E40PTest
+    
+    - name: (grammars/transformers.py) All Tests Cases
+      run: |
+        cd src/unit_tests
         python3 -m unittest test_transformers
