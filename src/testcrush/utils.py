@@ -132,6 +132,55 @@ def zip_archive(archive_name: str, *files) -> str:
     return zip_filename
 
 
+def addr2line(elf_file: pathlib.Path, pc_address: str) -> tuple[int, str] | None:
+    """
+    Mimics the functionality of the addr2line binutil using pyelftools.
+    Takes an ELF file and an address, and returns the corresponding
+    file name and line number using the .debug_line section.
+
+    Args:
+        elf_file (pathlib.Path): The elf file.
+        pc_address (str): The address of the program counter to look for within the elf in hexadecimal format as str.
+
+    Returns:
+        tuple: A file-line pair. The file (index-0) is the source which contains the line number that corresponds to the
+        ``pc_address`` and the lien (index-1) is the 1-based indexing of the line number within the source file.
+    """
+
+    from elftools.elf.elffile import ELFFile
+
+    address = int(pc_address, 16)
+
+    with open(elf_file, 'rb') as f:
+        elf = ELFFile(f)
+
+        if not elf.has_dwarf_info():
+            log.debug(f"No DWARF info found in {elf_file}")
+            return None
+
+        dwarf_info = elf.get_dwarf_info()
+
+        # Find the .debug_line section and retrieve line program information
+        for CU in dwarf_info.iter_CUs():
+
+            line_program = dwarf_info.line_program_for_CU(CU)
+
+            if line_program:
+
+                # Iterate over all entries in the line program
+                for entry in line_program.get_entries():
+
+                    state = entry.state
+
+                    if state and state.address == address:
+
+                        file_name = line_program['file_entry'][state.file - 1].name
+
+                        return (pathlib.Path(file_name.decode('utf-8')).resolve(), {state.line})
+
+    return None
+
+
 class Timer():
     """
     Context manager style timer. To be used as: ``with Timer():``
