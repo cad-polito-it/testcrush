@@ -394,7 +394,7 @@ Exiting...")
             new_file = pathlib.Path(new_source.name)
             shutil.move(new_file, self.asm_file)
 
-    def save(self) -> str|None:
+    def save(self) -> str | None:
         """
         Saves the current version of assembly file. The filename will be the original stem plus all current changelog
         codelines' linenos seperated with a dash. If ``self.asm_file_changelog`` is empty, it does nothing.
