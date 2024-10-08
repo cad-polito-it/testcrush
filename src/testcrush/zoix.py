@@ -41,18 +41,35 @@ class FaultSimulation(enum.Enum):
 
 
 class Fault():
-    """Generic representation of a fault"""
+    """
+    Generic representation of a fault
+
+    Each fault has two standard attributes which are:
+    -``equivalent_faults`` (int): Corresponds to the total number of faults equivalent to this fault. Defaults to 1 i.e.
+    itself.
+    -``equivalent_to`` (Fault): A reference to the primary fault with which the current fault is equivalent. If the
+    current fault is prime. Defaults to ``None``.
+
+    When a fault is constructed it corresponds to a prime fault. It is up to the user to resolve any fault equivalence
+    by modifying the aforementioned attributes.
+    """
 
     def __init__(self, **fault_attributes: dict[str, Any]) -> 'Fault':
+
         for attribute, value in fault_attributes.items():
             setattr(self, attribute.replace(" ", "_"), value)
 
+        self.equivalent_faults: int = 1
+        self.equivalent_to: Fault = None
+
     def __repr__(self):
-        attrs = ', '.join(f'{key}={value!r}' for key, value in self.__dict__.items())
+        attrs = ', '.join(f'{key}={value!r}' for key, value in self.__dict__.items()
+                          if key not in ("equivalent_faults", "equivalent_to"))  # Avoid recursive reprs
         return f'{self.__class__.__name__}({attrs})'
 
     def __str__(self):
-        return ', '.join(f'{key}: {value}' for key, value in self.__dict__.items())
+        return ', '.join(f'{key}: {value}' for key, value in self.__dict__.items()
+                         if key not in ("equivalent_faults", "equivalent_to"))  # Avoid recursive reprs
 
     def __eq__(self, other):
 
@@ -60,6 +77,10 @@ class Fault():
             return self.__dict__ == other.__dict__
 
         return False
+
+    def set(self, attribute: str, value: Any) -> None:
+
+        setattr(self, attribute, value)
 
     def get(self, attribute: str, default: str | None = None) -> str | Any:
         """
@@ -104,6 +125,8 @@ class Fault():
             log.critical(f"Unable to cast to {repr(func)} of attribute {getattr(self, attribute)}")
             exit(1)
 
+    def is_prime(self):
+        return self.equivalent_to is None
 
 class CSVFaultReport():
     """
