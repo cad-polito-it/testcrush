@@ -22,7 +22,11 @@ class FaultListTransformer(lark.Transformer):
     - Fault_Sites (list[str]): A list of fault sites represented as strings
     - Fault_Attributes (dict[str, str]): A dictionary with all fault attributes (if present)
     """
+
     _prev_fstatus: str = ""
+    _prev_prime: Fault = None
+    _is_prime: bool = False
+
 
     @staticmethod
     def filter_out_discards(container: Iterable) -> filter:
@@ -73,14 +77,30 @@ class FaultListTransformer(lark.Transformer):
         Returns:
             Fault: A Fault object whose attributes are:
             - Fault_Status: str
-            - Fault Type: str
-            - Fault Sites: list[str]
-            - Fault Attributes: dict[str, str]
+            - Fault_Type: str
+            - Fault_Sites: list[str]
+            - Fault_Attributes: dict[str, str]
         """
         fault_parts = list(self.filter_out_discards(fault_parts))
 
+        # Resolve fault equivalences.
+        if not self._is_prime:
+
+            self._prev_prime.equivalent_faults += 1
+            fault = Fault(**dict(fault_parts))
+            fault.set("equivalent_to", self._prev_prime)
+
+        else:
+
+            fault = Fault(**dict(fault_parts))
+
+            # Reset the flag
+            self._is_prime = False
+            # Update the previous prime pointer
+            self._prev_prime = fault
+
         log.debug(repr(Fault(**dict(fault_parts))))
-        return Fault(**dict(fault_parts))
+        return fault
 
     def fault_info(self, args) -> lark.visitors._DiscardType:
         """
@@ -124,6 +144,7 @@ class FaultListTransformer(lark.Transformer):
         if fault_status == "--":
             fault_status = self._prev_fstatus
         else:
+            self._is_prime = True
             self._prev_fstatus = fault_status
 
         log.debug(f"Returning Fault Status: {fault_status}")
@@ -292,3 +313,40 @@ class TraceTransformerCV32E40P(lark.Transformer):
         """
         reg_and_mem = f"\"{', '.join([ str(pair).strip() for pair in reg_val_pairs])}\""
         return reg_and_mem
+
+if __name__ == "__main__":
+
+    # Get the original STL statistics
+    parser = lark.Lark(grammar=open("fault_list.lark").read(),
+                       start="start",
+                       parser="lalr",
+                       transformer=FaultListTransformer())
+    fault_list = parser.parse(open("../../../sandbox/logfiles/test_primes.rpt").read())
+    for fault in fault_list:
+        print(repr(fault), f"{'prime' if fault.is_prime() else 'equivalent'}")
+    exit(0)
+    pc_vals = []
+    time_stamps = []
+
+    for fault in fault_list:
+
+        if hasattr(fault, "Fault_Attributes"):
+
+            pc_vals.append(fault.Fault_Attributes["PC_ID"])
+            time_stamps.append(fault.Fault_Attributes["sim_time"])
+
+    from collections import Counter
+
+    ccs = Counter(pc_vals)
+    ccs_times = Counter(time_stamps)
+
+    parser = lark.Lark(grammar=open("trace_cv32e40p.lark").read(),
+                       start="start",
+                       parser="lalr",
+                       transformer=TraceTransformerCV32E40P())
+    # trace_core_00000000.log
+
+    tracetext = parser.parse(open("../../../sandbox/logfiles/trace_core_00000000.log").read())
+
+    print(ccs)
+    print(ccs_times)

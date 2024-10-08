@@ -20,7 +20,7 @@ import lark
 class FaultListTransformerTest(unittest.TestCase):
 
     grammar = open("../testcrush/grammars/fault_list.lark").read()
-
+    maxDiff = None
     def get_parser(self):
 
         return lark.Lark(grammar=self.grammar, start="start", parser="lalr", transformer=transformers.FaultListTransformer())
@@ -28,6 +28,7 @@ class FaultListTransformerTest(unittest.TestCase):
     def test_stuck_at_fault_list(self):
 
         parser = self.get_parser()
+
 
         fault_list_sample = r"""
             FaultList SAF {
@@ -45,6 +46,12 @@ class FaultListTransformerTest(unittest.TestCase):
         ]
 
         fault_list = parser.parse(fault_list_sample)
+
+        # Manually resolve the fault equivalences
+        expected_faults[0].equivalent_faults = 4
+        expected_faults[1].equivalent_to = expected_faults[0]
+        expected_faults[2].equivalent_to = expected_faults[0]
+        expected_faults[3].equivalent_to = expected_faults[0]
 
         self.assertEqual(fault_list, expected_faults)
 
@@ -76,6 +83,16 @@ class FaultListTransformerTest(unittest.TestCase):
             zoix.Fault(Fault_Status='ON', Fault_Type='F', Fault_Sites=['tb.dut.subunit_c.U1528.S'], Fault_Attributes={'PC_IF': '00000d1c', 'sim_time': '8905ns'}),
             zoix.Fault(Fault_Status='ON', Fault_Type='F', Fault_Sites=['tb.dut.subunit_c.U27.A'])
         ]
+
+        # Manually resolve the fault equivalences
+        expected_faults[1].equivalent_faults = 2
+        expected_faults[2].equivalent_to = expected_faults[1]
+        expected_faults[3].equivalent_faults = 2
+        expected_faults[4].equivalent_to = expected_faults[3]
+        expected_faults[5].equivalent_faults = 2
+        expected_faults[6].equivalent_to = expected_faults[5]
+        expected_faults[7].equivalent_faults = 2
+        expected_faults[8].equivalent_to = expected_faults[7]
 
         fault_list = parser.parse(fault_list_sample)
 
@@ -115,6 +132,17 @@ class FaultListTransformerTest(unittest.TestCase):
             zoix.Fault(Fault_Status='ON', Fault_Type='~', Timing_Info=['6', '4', '26'], Fault_Sites=['tb.dut.subunit_d.reg_q[0]'])
 
         ]
+
+        # Manually resolve the fault equivalences
+        expected_faults[1].equivalent_faults = 2
+        expected_faults[2].equivalent_to = expected_faults[1]
+        expected_faults[3].equivalent_faults = 2
+        expected_faults[4].equivalent_to = expected_faults[3]
+        expected_faults[5].equivalent_faults = 2
+        expected_faults[6].equivalent_to = expected_faults[5]
+        expected_faults[7].equivalent_faults = 3
+        expected_faults[8].equivalent_to = expected_faults[7]
+        expected_faults[9].equivalent_to = expected_faults[7]
 
         self.assertEqual(fault_list, expected_faults)
 
