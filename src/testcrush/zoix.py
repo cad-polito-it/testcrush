@@ -128,6 +128,7 @@ class Fault():
     def is_prime(self):
         return self.equivalent_to is None
 
+
 class CSVFaultReport():
     """
     Manipulates the VC-Z01X summary and report **CSV** files.

@@ -27,7 +27,6 @@ class FaultListTransformer(lark.Transformer):
     _prev_prime: Fault = None
     _is_prime: bool = False
 
-
     @staticmethod
     def filter_out_discards(container: Iterable) -> filter:
 
@@ -313,40 +312,3 @@ class TraceTransformerCV32E40P(lark.Transformer):
         """
         reg_and_mem = f"\"{', '.join([ str(pair).strip() for pair in reg_val_pairs])}\""
         return reg_and_mem
-
-if __name__ == "__main__":
-
-    # Get the original STL statistics
-    parser = lark.Lark(grammar=open("fault_list.lark").read(),
-                       start="start",
-                       parser="lalr",
-                       transformer=FaultListTransformer())
-    fault_list = parser.parse(open("../../../sandbox/logfiles/test_primes.rpt").read())
-    for fault in fault_list:
-        print(repr(fault), f"{'prime' if fault.is_prime() else 'equivalent'}")
-    exit(0)
-    pc_vals = []
-    time_stamps = []
-
-    for fault in fault_list:
-
-        if hasattr(fault, "Fault_Attributes"):
-
-            pc_vals.append(fault.Fault_Attributes["PC_ID"])
-            time_stamps.append(fault.Fault_Attributes["sim_time"])
-
-    from collections import Counter
-
-    ccs = Counter(pc_vals)
-    ccs_times = Counter(time_stamps)
-
-    parser = lark.Lark(grammar=open("trace_cv32e40p.lark").read(),
-                       start="start",
-                       parser="lalr",
-                       transformer=TraceTransformerCV32E40P())
-    # trace_core_00000000.log
-
-    tracetext = parser.parse(open("../../../sandbox/logfiles/trace_core_00000000.log").read())
-
-    print(ccs)
-    print(ccs_times)
