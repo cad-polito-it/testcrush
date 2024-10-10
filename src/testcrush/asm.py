@@ -172,10 +172,7 @@ class AssemblyHandler():
     It operates on the file by removing/restoring lines of code.
     """
 
-    def __init__(self,
-                 isa: ISA,
-                 assembly_source: pathlib.Path,
-                 chunksize: int = 1) -> 'AssemblyHandler':
+    def __init__(self, isa: ISA, assembly_source: pathlib.Path, chunksize: int = 1) -> 'AssemblyHandler':
 
         self.isa: ISA = isa
         self.asm_file: pathlib.Path = assembly_source.resolve()
@@ -208,8 +205,7 @@ class AssemblyHandler():
 
         except FileNotFoundError:
 
-            log.fatal(f"Assembly source file {assembly_source} not found! \
-Exiting...")
+            log.fatal(f"Assembly source file {assembly_source} not found! Exiting...")
             exit(1)
 
         self.candidates = [codeline for codeline in code if
