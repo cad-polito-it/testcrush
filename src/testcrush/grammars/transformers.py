@@ -319,7 +319,13 @@ class TraceTransformerFactory:
     """
     Factory pattern for trace transformers and the corresponding grammars.
 
-    To be used as ``transformer, grammar = TraceTransformerFactory("ProcessorString")``
+    To be used as:
+
+    .. code-block:: python
+
+        factory = TraceTransformerFactory()
+        transformer, grammar = TraceTransformerFactory("ProcessorString")
+
     """
     _current_directory = pathlib.Path(__file__).parent
     _transformers = {
