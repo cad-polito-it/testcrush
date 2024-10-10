@@ -20,7 +20,7 @@ import lark
 class FaultListTransformerTest(unittest.TestCase):
 
     grammar = open("../testcrush/grammars/fault_list.lark").read()
-    maxDiff = None
+
     def get_parser(self):
 
         return lark.Lark(grammar=self.grammar, start="start", parser="lalr", transformer=transformers.FaultListTransformer())
@@ -148,11 +148,11 @@ class FaultListTransformerTest(unittest.TestCase):
 
 class TraceTransformerCV32E40PTest(unittest.TestCase):
 
-    grammar = open("../testcrush/grammars/trace_cv32e40p.lark").read()
-
     def get_parser(self):
 
-        return lark.Lark(grammar=self.grammar, start="start", parser="lalr", transformer=transformers.TraceTransformerCV32E40P())
+        factory = transformers.TraceTransformerFactory()
+        transformer, grammar = factory("CV32E40P")
+        return lark.Lark(grammar=grammar, start="start", parser="lalr", transformer=transformer)
 
     def test_doc_example(self):
 

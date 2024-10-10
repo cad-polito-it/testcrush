@@ -2,8 +2,9 @@
 # SPDX-License-Identifier: MIT
 
 import lark
+import pathlib
 
-from typing import Literal, Any, Iterable
+from typing import Literal, Any, Iterable, Union
 from testcrush.zoix import Fault
 from testcrush.utils import get_logger
 
@@ -312,3 +313,27 @@ class TraceTransformerCV32E40P(lark.Transformer):
         """
         reg_and_mem = f"\"{', '.join([ str(pair).strip() for pair in reg_val_pairs])}\""
         return reg_and_mem
+
+
+class TraceTransformerFactory:
+    """
+    Factory pattern for trace transformers and the corresponding grammars.
+
+    To be used as ``transformer, grammar = TraceTransformerFactory("ProcessorString")``
+    """
+    _current_directory = pathlib.Path(__file__).parent
+    _transformers = {
+        "CV32E40P": (TraceTransformerCV32E40P, _current_directory / "trace_cv32e40p.lark")
+    }
+
+    def __call__(self, processor_type: str) -> Union[tuple[TraceTransformerCV32E40P, str]]:
+
+        transformer, grammar = self._transformers.get(processor_type, (None, None))
+
+        if not transformer:
+            raise KeyError(f"Transformer for {processor_type} not found")
+
+        with open(grammar) as src:
+            lark_grammar = src.read()
+
+        return transformer(), lark_grammar
