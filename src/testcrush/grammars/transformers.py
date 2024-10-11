@@ -11,7 +11,7 @@ from testcrush.utils import get_logger
 log = get_logger()
 
 
-class FaultListTransformer(lark.Transformer):
+class FaultReportFaultListTransformer(lark.Transformer):
     """
     This class is expected to act on the grammar defined for the ``FaultList`` segment of a Z01X txt fault report.
 
@@ -324,7 +324,7 @@ class TraceTransformerFactory:
     .. code-block:: python
 
         factory = TraceTransformerFactory()
-        transformer, grammar = TraceTransformerFactory("ProcessorString")
+        transformer, grammar = factory("ProcessorString")
 
     """
     _current_directory = pathlib.Path(__file__).parent
@@ -338,6 +338,36 @@ class TraceTransformerFactory:
 
         if not transformer:
             raise KeyError(f"Transformer for {processor_type} not found")
+
+        with open(grammar) as src:
+            lark_grammar = src.read()
+
+        return transformer(), lark_grammar
+
+
+class FaultReportTransformerFactory:
+    """
+    Factory pattern for Z01X txt fault report transformers and the corresponding grammars.
+
+    To be used as:
+
+    .. code-block:: python
+
+        factory = FaultReportTransformerFactory()
+        transformer, grammar = factory("FaultReportSectionString")
+
+    """
+    _current_directory = pathlib.Path(__file__).parent
+    _transformers = {
+        "FaultList": (FaultReportFaultListTransformer, _current_directory / "frpt_fault_list.lark")
+    }
+
+    def __call__(self, section_string: str) -> Union[tuple[FaultReportFaultListTransformer, str]]:
+
+        transformer, grammar = self._transformers.get(section_string, (None, None))
+
+        if not transformer:
+            raise KeyError(f"Transformer for {section_string} not found")
 
         with open(grammar) as src:
             lark_grammar = src.read()
