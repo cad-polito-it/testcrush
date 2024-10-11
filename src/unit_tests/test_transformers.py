@@ -19,11 +19,12 @@ import lark
 
 class FaultListTransformerTest(unittest.TestCase):
 
-    grammar = open("../testcrush/grammars/fault_list.lark").read()
-
     def get_parser(self):
 
-        return lark.Lark(grammar=self.grammar, start="start", parser="lalr", transformer=transformers.FaultListTransformer())
+        factory = transformers.FaultReportTransformerFactory()
+        transformer, grammar = factory("FaultList")
+        return lark.Lark(grammar=grammar, start="start", parser="lalr", transformer=transformer)
+
 
     def test_stuck_at_fault_list(self):
 

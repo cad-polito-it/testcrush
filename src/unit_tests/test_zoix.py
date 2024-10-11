@@ -54,6 +54,264 @@ class FaultTest(unittest.TestCase):
             new_test_obj = zoix.Fault(attr_a = "sa1", attr_b = "detected")
             new_test_obj.cast_attribute("attr_a", int)
 
+class TxtFaultReportTest(unittest.TestCase):
+    _fault_report_excerp = r"""
+Date("DDDD TTTTT")
+User("n.deligiannis")
+Tool("REPORT")
+Info("  Type:    Fault Coverage Report")
+Info(" Version: VERSIONSTR")
+Info(" FDB Storage Path: XXXX")
+Info(" FDB Server: XXXXX")
+Info(" FDB Project: default")
+Info(" FDB Campaign: XXXXX")
+Info(" Command: fcm::report  -report 'fsim_attr' -showattributes -overwrite -campaign xx -fdb_server XXXX -fdb_project default")
+
+TestList {
+    1 test1 {Results:16020 NC:547 NO:101 NN:772 ON:14600}
+}
+
+FaultInfo {
+    TestNum;
+}
+
+StatusDefinitions {
+    Redefine DD DX "Redefine DD";
+    Redefine PD PX "Redefine PD";
+    Redefine ND NX "Redefine ND";
+    NN "Not Observed Not Diagnosed";
+    NP "Not Observed Potentially Diagnosed";
+    PD "Potentially Observed Diagnosed";
+    ND "Not Observed Diagnosed";
+    PN "Potentially Observed Not Diagnosed";
+    PP "Potentially Observed Potentially Diagnosed";
+    ON "Observed Not Diagnosed";
+    OP "Observed Potentially Diagnosed";
+    OD "Observed Diagnosed";
+    AN "Assumed Dangerous Not Diagnosed";
+    AD "Assumed Dangerous Diagnosed";
+    AP "Assumed Dangerous Potentially Diagnosed";
+    IS "Invalid Status Promotion";
+
+    DefaultStatus(NN)
+
+    Selected(NA, NN, AN)
+
+    PromotionTable {
+        StatusLabels (NN,NP,ND,PD,PN,PP,ON,OP,OD,AP,AN,AD,IS)
+        [
+            NN NN ND PD PN PP ON OP OD IS IS IS IS ;
+            NN NP ND PD PN PP ON OP OD IS IS IS IS ;
+            ND ND ND PD PD PD OD OD OD IS IS IS IS ;
+            PD PD PD PD PD PD OD OD OD IS IS IS IS ;
+            PN PN PD PD PN PP ON ON OD IS IS IS IS ;
+            PP PP PD PD PN PP ON OP OD IS IS IS IS ;
+            ON ON OD OD ON ON ON ON OD IS IS IS IS ;
+            OP OP OD OD ON OP ON OP OD IS IS IS IS ;
+            OD OD OD OD OD OD OD OD OD IS IS IS IS ;
+            IS IS IS IS IS IS IS IS IS AP AN AD IS ;
+            IS IS IS IS IS IS IS IS IS AN AN AD IS ;
+            IS IS IS IS IS IS IS IS IS AD AD AD IS ;
+            IS IS IS IS IS IS IS IS IS IS IS IS IS ;
+        ]
+    }
+
+    StatusGroups {
+        SA "Safe" (UT, UB, UR, UU);
+        SU "Safe Unobserved" (NN, NC, NO, NT);
+        DA "Dangerous Assumed" (HA, HM, HT, OA, OZ, IA, IP, IF, IX);
+        DN "Dangerous Not Diagnosed" (PN, ON, PP, OP, NP, AN, AP);
+        DD "Dangerous Diagnosed" (PD, OD, ND, AD);
+    }
+}
+
+Coverage {
+    "Diagnostic Coverage" = "DD/(NA + DA + DN + DD)";
+    "Observational Coverage" = "(DD + DN)/(NA + DA + DN + DD + SU)";
+}
+
+FaultList {
+    <  1> ON 1 {PORT "tb_top.wrapper_i.top_i.core_i.ex_stage_i.mult_i.U10.A1"}(* "test1"->INSTR=3cb3079a; "test1"->INSTR_ADDR=000009bc; "test1"->PC_ID=000009b2; "test1"->PC_IF=000009b6; "test1"->sim_time="   2815ns"; *)
+          -- 1 {PORT "tb_top.wrapper_i.top_i.core_i.ex_stage_i.mult_i.U333.Z"}
+    <  1> ON 1 {PORT "tb_top.wrapper_i.top_i.core_i.ex_stage_i.mult_i.U10.A2"}(* "test1"->INSTR=3cb3079a; "test1"->INSTR_ADDR=000009fc; "test1"->PC_ID=000009f2; "test1"->PC_IF=000009f6; "test1"->sim_time="   6425ns"; *)
+    <  1> ON 0 {PORT "tb_top.wrapper_i.top_i.core_i.ex_stage_i.mult_i.U10.ZN"}(* "test1"->INSTR=3cb3079a; "test1"->INSTR_ADDR=000009bc; "test1"->PC_ID=000009b2; "test1"->PC_IF=000009b6; "test1"->sim_time="   2815ns"; *)
+    <  1> ON 1 {PORT "tb_top.wrapper_i.top_i.core_i.ex_stage_i.mult_i.U10.ZN"}(* "test1"->INSTR=3cb3079a; "test1"->INSTR_ADDR=000009fc; "test1"->PC_ID=000009f2; "test1"->PC_IF=000009f6; "test1"->sim_time="  18745ns"; *)
+          -- 0 {PORT "tb_top.wrapper_i.top_i.core_i.ex_stage_i.mult_i.U10.A1"}
+          -- 0 {PORT "tb_top.wrapper_i.top_i.core_i.ex_stage_i.mult_i.U10.A2"}
+          -- 0 {PORT "tb_top.wrapper_i.top_i.core_i.ex_stage_i.mult_i.U333.Z"}
+    <  1> ON 1 {PORT "tb_top.wrapper_i.top_i.core_i.ex_stage_i.mult_i.U100.A1"}(* "test1"->INSTR=3cb3079a; "test1"->INSTR_ADDR=000009bc; "test1"->PC_ID=000009b2; "test1"->PC_IF=000009b6; "test1"->sim_time="   7455ns"; *)
+    <  1> ON 1 {PORT "tb_top.wrapper_i.top_i.core_i.ex_stage_i.mult_i.U100.A2"}(* "test1"->INSTR=3cb3079a; "test1"->INSTR_ADDR=000009bc; "test1"->PC_ID=000009b2; "test1"->PC_IF=000009b6; "test1"->sim_time="   2815ns"; *)
+          -- 0 {PORT "tb_top.wrapper_i.top_i.core_i.ex_stage_i.mult_i.U681.A"}
+}
+#------------------------------------------------------------------------
+# Fault Coverage Summary for Default List
+#
+#                                                  Total
+#------------------------------------------------------------------------
+# Number of Faults:                                16242 100.00%
+#
+# Untestable Faults:                                 222   1.37%  100.00%
+#   Untestable Unused                        UU      222   1.37%  100.00%
+#
+# Testable Faults:                                 16020  98.63%  100.00%
+#   Not Observed                             NO      101   0.62%    0.63%
+#   Not Controlled                           NC      547   3.37%    3.41%
+#   Not Observed Not Diagnosed               NN      772   4.75%    4.82%
+#   Observed Not Diagnosed                   ON    14600  89.89%   91.14%
+#
+# Status Groups ---------------------------------------------------------
+#   Dangerous Not Diagnosed                  DN    14600  89.89%
+#   Safe                                     SA      222   1.37%
+#   Safe Unobserved                          SU     1420   8.74%
+#
+# Coverage --------------------------------------------------------------
+#   Diagnostic Coverage                                    0.00%
+#   Observational Coverage                                91.14%
+#------------------------------------------------------------------------
+#------------------------------------------------------------------------
+# Attribute Summary for Default List
+#
+# * Displaying all attributes in FaultList *
+#
+# Key                      Value                             Count
+#------------------------------------------------------------------------
+# INSTR                    00000000                           3740
+# INSTR                    00005117                              6
+# INSTR                    079aa423                             15
+# INSTR                    3cb3079a                           5418
+# INSTR                    4cb3079a                              9
+# INSTR                    4d818193                              8
+"""
+    def create_object(self):
+        with mock.patch("builtins.open", mock.mock_open(read_data=self._fault_report_excerp)) as mocked_open:
+            test_obj = zoix.TxtFaultReport(pathlib.Path("mock_fault_report"))
+
+        return test_obj
+
+    def test_constructor(self):
+
+        test_obj = self.create_object()
+        self.assertEqual(test_obj.fault_report, self._fault_report_excerp)
+
+    def test_extract(self):
+
+        test_obj = self.create_object()
+
+        test_list = test_obj.extract("TestList")
+        self.assertEqual(test_list, """\
+TestList {
+    1 test1 {Results:16020 NC:547 NO:101 NN:772 ON:14600}
+}""")
+
+        fault_info = test_obj.extract("FaultInfo")
+        self.assertEqual(fault_info, """\
+FaultInfo {
+    TestNum;
+}""")
+
+        status_definitions = test_obj.extract("StatusDefinitions")
+        self.assertEqual(status_definitions, """\
+StatusDefinitions {
+    Redefine DD DX "Redefine DD";
+    Redefine PD PX "Redefine PD";
+    Redefine ND NX "Redefine ND";
+    NN "Not Observed Not Diagnosed";
+    NP "Not Observed Potentially Diagnosed";
+    PD "Potentially Observed Diagnosed";
+    ND "Not Observed Diagnosed";
+    PN "Potentially Observed Not Diagnosed";
+    PP "Potentially Observed Potentially Diagnosed";
+    ON "Observed Not Diagnosed";
+    OP "Observed Potentially Diagnosed";
+    OD "Observed Diagnosed";
+    AN "Assumed Dangerous Not Diagnosed";
+    AD "Assumed Dangerous Diagnosed";
+    AP "Assumed Dangerous Potentially Diagnosed";
+    IS "Invalid Status Promotion";
+    DefaultStatus(NN)
+    Selected(NA, NN, AN)
+    PromotionTable {
+        StatusLabels (NN,NP,ND,PD,PN,PP,ON,OP,OD,AP,AN,AD,IS)
+        [
+            NN NN ND PD PN PP ON OP OD IS IS IS IS ;
+            NN NP ND PD PN PP ON OP OD IS IS IS IS ;
+            ND ND ND PD PD PD OD OD OD IS IS IS IS ;
+            PD PD PD PD PD PD OD OD OD IS IS IS IS ;
+            PN PN PD PD PN PP ON ON OD IS IS IS IS ;
+            PP PP PD PD PN PP ON OP OD IS IS IS IS ;
+            ON ON OD OD ON ON ON ON OD IS IS IS IS ;
+            OP OP OD OD ON OP ON OP OD IS IS IS IS ;
+            OD OD OD OD OD OD OD OD OD IS IS IS IS ;
+            IS IS IS IS IS IS IS IS IS AP AN AD IS ;
+            IS IS IS IS IS IS IS IS IS AN AN AD IS ;
+            IS IS IS IS IS IS IS IS IS AD AD AD IS ;
+            IS IS IS IS IS IS IS IS IS IS IS IS IS ;
+        ]
+    }
+    StatusGroups {
+        SA "Safe" (UT, UB, UR, UU);
+        SU "Safe Unobserved" (NN, NC, NO, NT);
+        DA "Dangerous Assumed" (HA, HM, HT, OA, OZ, IA, IP, IF, IX);
+        DN "Dangerous Not Diagnosed" (PN, ON, PP, OP, NP, AN, AP);
+        DD "Dangerous Diagnosed" (PD, OD, ND, AD);
+    }
+}""")
+
+        promotion_table = test_obj.extract("PromotionTable")
+        self.assertEqual(promotion_table, """\
+    PromotionTable {
+        StatusLabels (NN,NP,ND,PD,PN,PP,ON,OP,OD,AP,AN,AD,IS)
+        [
+            NN NN ND PD PN PP ON OP OD IS IS IS IS ;
+            NN NP ND PD PN PP ON OP OD IS IS IS IS ;
+            ND ND ND PD PD PD OD OD OD IS IS IS IS ;
+            PD PD PD PD PD PD OD OD OD IS IS IS IS ;
+            PN PN PD PD PN PP ON ON OD IS IS IS IS ;
+            PP PP PD PD PN PP ON OP OD IS IS IS IS ;
+            ON ON OD OD ON ON ON ON OD IS IS IS IS ;
+            OP OP OD OD ON OP ON OP OD IS IS IS IS ;
+            OD OD OD OD OD OD OD OD OD IS IS IS IS ;
+            IS IS IS IS IS IS IS IS IS AP AN AD IS ;
+            IS IS IS IS IS IS IS IS IS AN AN AD IS ;
+            IS IS IS IS IS IS IS IS IS AD AD AD IS ;
+            IS IS IS IS IS IS IS IS IS IS IS IS IS ;
+        ]
+    }""")
+
+        status_groups = test_obj.extract("StatusGroups")
+        self.assertEqual(status_groups, """\
+    StatusGroups {
+        SA "Safe" (UT, UB, UR, UU);
+        SU "Safe Unobserved" (NN, NC, NO, NT);
+        DA "Dangerous Assumed" (HA, HM, HT, OA, OZ, IA, IP, IF, IX);
+        DN "Dangerous Not Diagnosed" (PN, ON, PP, OP, NP, AN, AP);
+        DD "Dangerous Diagnosed" (PD, OD, ND, AD);
+    }""")
+
+        coverage = test_obj.extract("Coverage")
+        self.assertEqual(coverage, """\
+Coverage {
+    "Diagnostic Coverage" = "DD/(NA + DA + DN + DD)";
+    "Observational Coverage" = "(DD + DN)/(NA + DA + DN + DD + SU)";
+}""")
+
+        fault_list = test_obj.extract("FaultList")
+        self.assertEqual(fault_list, """\
+FaultList {
+    <  1> ON 1 {PORT "tb_top.wrapper_i.top_i.core_i.ex_stage_i.mult_i.U10.A1"}(* "test1"->INSTR=3cb3079a; "test1"->INSTR_ADDR=000009bc; "test1"->PC_ID=000009b2; "test1"->PC_IF=000009b6; "test1"->sim_time="   2815ns"; *)
+          -- 1 {PORT "tb_top.wrapper_i.top_i.core_i.ex_stage_i.mult_i.U333.Z"}
+    <  1> ON 1 {PORT "tb_top.wrapper_i.top_i.core_i.ex_stage_i.mult_i.U10.A2"}(* "test1"->INSTR=3cb3079a; "test1"->INSTR_ADDR=000009fc; "test1"->PC_ID=000009f2; "test1"->PC_IF=000009f6; "test1"->sim_time="   6425ns"; *)
+    <  1> ON 0 {PORT "tb_top.wrapper_i.top_i.core_i.ex_stage_i.mult_i.U10.ZN"}(* "test1"->INSTR=3cb3079a; "test1"->INSTR_ADDR=000009bc; "test1"->PC_ID=000009b2; "test1"->PC_IF=000009b6; "test1"->sim_time="   2815ns"; *)
+    <  1> ON 1 {PORT "tb_top.wrapper_i.top_i.core_i.ex_stage_i.mult_i.U10.ZN"}(* "test1"->INSTR=3cb3079a; "test1"->INSTR_ADDR=000009fc; "test1"->PC_ID=000009f2; "test1"->PC_IF=000009f6; "test1"->sim_time="  18745ns"; *)
+          -- 0 {PORT "tb_top.wrapper_i.top_i.core_i.ex_stage_i.mult_i.U10.A1"}
+          -- 0 {PORT "tb_top.wrapper_i.top_i.core_i.ex_stage_i.mult_i.U10.A2"}
+          -- 0 {PORT "tb_top.wrapper_i.top_i.core_i.ex_stage_i.mult_i.U333.Z"}
+    <  1> ON 1 {PORT "tb_top.wrapper_i.top_i.core_i.ex_stage_i.mult_i.U100.A1"}(* "test1"->INSTR=3cb3079a; "test1"->INSTR_ADDR=000009bc; "test1"->PC_ID=000009b2; "test1"->PC_IF=000009b6; "test1"->sim_time="   7455ns"; *)
+    <  1> ON 1 {PORT "tb_top.wrapper_i.top_i.core_i.ex_stage_i.mult_i.U100.A2"}(* "test1"->INSTR=3cb3079a; "test1"->INSTR_ADDR=000009bc; "test1"->PC_ID=000009b2; "test1"->PC_IF=000009b6; "test1"->sim_time="   2815ns"; *)
+          -- 0 {PORT "tb_top.wrapper_i.top_i.core_i.ex_stage_i.mult_i.U681.A"}
+}""")
+
+
 class CSVFaultReportTest(unittest.TestCase):
 
     def test_constructor(self):
