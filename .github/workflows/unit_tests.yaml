@@ -54,6 +54,11 @@ jobs:
         cd src/unit_tests
         python3 -m unittest test_zoix.FaultTest
 
+    - name: (zoix.py) TxtFaultReport Test Cases
+      run: |
+        cd src/unit_tests
+        python3 -m unittest test_zoix.TxtFaultReportTest
+
     - name: (zoix.py) CSVFaultReport Test Cases
       run: |
         cd src/unit_tests
