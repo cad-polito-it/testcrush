@@ -125,7 +125,13 @@ class Fault():
             log.critical(f"Unable to cast to {repr(func)} of attribute {getattr(self, attribute)}")
             exit(1)
 
-    def is_prime(self):
+    def is_prime(self) -> bool:
+        """
+        Checks whether the fault is a prime fault, i.e., is not equivalent to any other fault.
+
+        Returns:
+            bool: True if fault is prime. False otherwise.
+        """
         return self.equivalent_to is None
 
 
