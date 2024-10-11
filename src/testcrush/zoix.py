@@ -129,6 +129,63 @@ class Fault():
         return self.equivalent_to is None
 
 
+class TxtFaultReport():
+    """
+    Manages the VC-Z01X text report.
+    """
+
+    def __init__(self, fault_report: pathlib.Path) -> "TxtFaultReport":
+        with open(fault_report) as src:
+            self.fault_report: str = src.read()
+
+    def extract(self, section: str) -> str:
+        """
+        Extracts a section of the fault report.
+
+        Args:
+            section (str): The case-sensitive section name. E.g., ``Coverage``, ``FaultList``
+
+        Returns:
+            str: A newline-joined string of the extracted section (section name included).
+        """
+        extracted_lines = list()
+
+        # Loop control
+        section_found: bool = False
+        brackets_cc: int = 0
+
+        lines = self.fault_report.splitlines()
+
+        for line in lines:
+
+            if not line:
+                continue
+
+            if section in line and "{" in line:
+                log.debug(f"Found Section {section} - {line=}")
+                section_found = True
+
+            if not section_found:
+                continue
+
+            if section_found:
+
+                if '{' in line:
+                    brackets_cc += 1
+                if '}' in line:
+                    brackets_cc -= 1
+
+                extracted_lines.append(fr'{line}')
+
+                if brackets_cc == 0:
+                    break
+
+        if not section_found:
+            log.debug(f"Requested section \"{section}\" not found!")
+
+        return '\n'.join(extracted_lines)
+
+
 class CSVFaultReport():
     """
     Manipulates the VC-Z01X summary and report **CSV** files.
