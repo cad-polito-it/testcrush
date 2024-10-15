@@ -132,7 +132,7 @@ def zip_archive(archive_name: str, *files) -> str:
     return zip_filename
 
 
-def addr2line(elf_file: pathlib.Path, pc_address: str) -> tuple[int, str] | None:
+def addr2line(elf_file: pathlib.Path, pc_address: str) -> tuple[str, int] | None:
     """
     Mimics the functionality of the addr2line binutil using pyelftools.
     Takes an ELF file and an address, and returns the corresponding
@@ -176,7 +176,7 @@ def addr2line(elf_file: pathlib.Path, pc_address: str) -> tuple[int, str] | None
 
                         file_name = line_program['file_entry'][state.file - 1].name
 
-                        return (pathlib.Path(file_name.decode('utf-8')).resolve(), {state.line})
+                        return (file_name.decode('utf-8'), int(state.line))
 
     return None
 
