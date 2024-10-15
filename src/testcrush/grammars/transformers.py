@@ -297,6 +297,8 @@ class TraceTransformerCV32E40P(lark.Transformer):
 
         if reg_and_mem:
             entry.append(reg_and_mem)
+        else:
+            entry.append('""')
 
         return ','.join(entry)
 
