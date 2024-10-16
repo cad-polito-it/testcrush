@@ -5,19 +5,20 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>a0 module &#8212; TestCrush 0.5.0 documentation</title>
+    <title>A0 Algorithm &#8212; TestCrush 0.5.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
-    <link rel="stylesheet" type="text/css" href="_static/classic.css?v=def86cc0" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css?v=2bf1fcf8" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=7414fd2b" />
     
     <script src="_static/documentation_options.js?v=1dd76d02"></script>
-    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     
     <link rel="icon" href="_static/favicon.png"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="utils module" href="utils.html" />
-    <link rel="prev" title="zoix module" href="zoix.html" /> 
+    <link rel="next" title="Miscellanous Utilities" href="utils.html" />
+    <link rel="prev" title="Grammars and Parsing" href="grammar.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
@@ -29,13 +30,13 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="utils.html" title="utils module"
+          <a href="utils.html" title="Miscellanous Utilities"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="zoix.html" title="zoix module"
+          <a href="grammar.html" title="Grammars and Parsing"
              accesskey="P">previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">TestCrush 0.5.0 documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">a0 module</a></li> 
+        <li class="nav-item nav-item-this"><a href="">A0 Algorithm</a></li> 
       </ul>
     </div>  
 
@@ -44,9 +45,9 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <section id="a0-module">
-<h1>a0 module<a class="headerlink" href="#a0-module" title="Link to this heading">¶</a></h1>
-<p>This module implements the <a class="reference external" href="https://doi.org/10.1109/TC.2016.2643663">A0 compaction algorithm</a> . The only difference
+  <section id="a0-algorithm">
+<h1>A0 Algorithm<a class="headerlink" href="#a0-algorithm" title="Link to this heading">¶</a></h1>
+<p>Implementation of the <a class="reference external" href="https://doi.org/10.1109/TC.2016.2643663">A0 compaction algorithm</a> . The only difference
 with respect to the original A0 algorithm is that in order to validate a removal of an instruction from the STL, the
 evaluation happens on whether the new test application time is less or equal than the old test application time <strong>AND</strong>
 whether the new test coverage is <strong>greater or equal</strong> than the old test application time. However, with the provided
@@ -56,7 +57,7 @@ in the evaluation method of each iteration within the A0 class.</p>
 <h2>A0<a class="headerlink" href="#a0" title="Link to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="a0.A0">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">a0.</span></span><span class="sig-name descname"><span class="pre">A0</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">isa</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a0_asm_sources</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a0_settings</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/a0.html#A0"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#a0.A0" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">a0.</span></span><span class="sig-name descname"><span class="pre">A0</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/a0.html#A0"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#a0.A0" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Implements the A0 compaction algorithm of <a class="reference external" href="https://doi.org/10.1109/TC.2016.2643663">https://doi.org/10.1109/TC.2016.2643663</a></p>
 <dl class="py method">
@@ -174,6 +175,109 @@ STL</p></li>
 </dd></dl>
 
 </section>
+<section id="preprocessing">
+<h2>Preprocessing<a class="headerlink" href="#preprocessing" title="Link to this heading">¶</a></h2>
+<p>It is possible to perform preprocessing in the set of assembly candidates to reduce the runtime of the A0 algorithm. The runtime of
+the algorithm solely depends on the total number of candidates to be considered in each iteration. It is a brute-force approach to
+the compaction problem. So the idea is the following. What
+if, after we execute the <cite>pre_run()</cite> of the A0 algorithm to obtain the initial STL statistics, we are able to assess somehow
+the impact each Candidate has in terms of faults being detected?</p>
+<p>In order to obtain such information a couple of things are required. First, we need a fault report comming from Z01X with includes
+custom <strong>fault attributes</strong>. Secondly, we need a trace comming directly from the DUT after the execution of the original STL. The idea
+is to guide algorithm by leveraging useful state information stemming from the fault detection time of each fault. Assuming that the DUT is
+a pipelined processor, then this information must include (i) the simulation time and (ii) the program counter value. Then, by examining the
+contents of the trace, it is possible to map these program counter values and timestamps to instructions in the trace, and identify “hot-zones”
+of the STL. That is, codeline regions that contribute to the detection of the faults.</p>
+<section id="fault-attributes">
+<h3>Fault Attributes<a class="headerlink" href="#fault-attributes" title="Link to this heading">¶</a></h3>
+<p>After a Z01X fault simulation, it is possible to enable with <code class="docutils literal notranslate"><span class="pre">report</span></code> command the inclusion of the fault attributes by specifying the flag <code class="docutils literal notranslate"><span class="pre">-showallattributes</span></code>.
+VC Z01X provides the ability to define custom fault attributes using key, value pairs. The fault coverage is reported in the coverage report for each key, value pair.
+To add such attributes to each fault one has to modify the <code class="docutils literal notranslate"><span class="pre">strobe.sv</span></code> file accordingly. Here is an example of attaching the simulation time and the program counter
+to a fault by modifying the strobe file.</p>
+<div class="highlight-systemverilog notranslate"><div class="highlight"><pre><span></span><span class="n">cmp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">$</span><span class="n">fs_compare</span><span class="p">(</span><span class="no">`TOPLEVEL</span><span class="p">);</span><span class="w"> </span><span class="c1">// Check for differences between GM and FM</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="mi">1</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">cmp</span><span class="p">)</span><span class="w"> </span><span class="k">begin</span>
+<span class="w">   </span><span class="p">$</span><span class="n">fs_drop_status</span><span class="p">(</span><span class="s">&quot;ON&quot;</span><span class="p">,</span><span class="w"> </span><span class="no">`TOPLEVEL</span><span class="p">);</span>
+<span class="w">   </span><span class="p">$</span><span class="n">fs_add_attribute</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;PC&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;%h&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="no">`TOPLEVEL</span><span class="p">.</span><span class="n">pc_id</span><span class="p">[</span><span class="mi">31</span><span class="o">:</span><span class="mi">1</span><span class="p">],</span><span class="w"> </span><span class="mb">1&#39;b0</span><span class="p">});</span><span class="w"> </span><span class="c1">// Attach program counter</span>
+<span class="w">   </span><span class="p">$</span><span class="n">fs_add_attribute</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;sim_time&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;%t&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">$</span><span class="kt">time</span><span class="p">);</span><span class="w"> </span><span class="c1">// Attach simulation time</span>
+<span class="k">end</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="mi">2</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">cmp</span><span class="p">)</span><span class="w"> </span><span class="k">begin</span>
+<span class="w">   </span><span class="p">$</span><span class="n">fs_drop_status</span><span class="p">(</span><span class="s">&quot;PN&quot;</span><span class="p">,</span><span class="w"> </span><span class="no">`TOPLEVEL</span><span class="p">);</span>
+<span class="w">   </span><span class="p">$</span><span class="n">fs_add_attribute</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;PC&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;%h&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="no">`TOPLEVEL</span><span class="p">.</span><span class="n">pc_id</span><span class="p">[</span><span class="mi">31</span><span class="o">:</span><span class="mi">1</span><span class="p">],</span><span class="w"> </span><span class="mb">1&#39;b0</span><span class="p">});</span><span class="w"> </span><span class="c1">// Attach program counter</span>
+<span class="w">   </span><span class="p">$</span><span class="n">fs_add_attribute</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;sim_time&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;%t&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">$</span><span class="kt">time</span><span class="p">);</span><span class="w"> </span><span class="c1">// Attach simulation time</span>
+<span class="k">end</span>
+</pre></div>
+</div>
+<p>By utilizing the <code class="docutils literal notranslate"><span class="pre">$fs_add_attribute()</span></code> directive we can easily add the required attributes to
+each detected fault. When the final fault report is generated with the <code class="docutils literal notranslate"><span class="pre">-showallatributes</span></code> flag,
+then the attributes are attached to every prime fault like this:</p>
+<blockquote>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span>  <span class="mi">1</span><span class="o">&gt;</span> <span class="n">ON</span> <span class="mi">1</span> <span class="p">{</span><span class="n">PORT</span> <span class="s2">&quot;path.to.fault.site&quot;</span><span class="p">}(</span><span class="o">*</span> <span class="s2">&quot;testName&quot;</span><span class="o">-&gt;</span><span class="n">PC</span><span class="o">=</span><span class="s2">&quot;00000004&quot;</span><span class="p">;</span> <span class="s2">&quot;testName&quot;</span><span class="o">-&gt;</span><span class="n">sim_time</span><span class="o">=</span><span class="s2">&quot;   10ns&quot;</span><span class="p">;</span> <span class="o">*</span><span class="p">)</span>
+</pre></div>
+</div>
+</div></blockquote>
+</section>
+<section id="execution-trace">
+<h3>Execution Trace<a class="headerlink" href="#execution-trace" title="Link to this heading">¶</a></h3>
+<p>The execution trace is required in order to search for the hotzones with information stemming from the attributes reported in the fault reports.
+By attaching adequate information on each fault, and of course, <strong>relevant and acurate(!) to the one present in the trace</strong> we can search within
+the STL execution trace for instances. For instance, we can search for <code class="docutils literal notranslate"><span class="pre">&lt;PC,</span> <span class="pre">Time&gt;</span></code> attribute pairs stemming from the fault report to pinpoint
+spatially and temporally the sequence of codelines that were executed and led to the fault detectiong. The PC values and times reported in the
+attributes of the faults must comming from the exact same signals employed by the trace. Otherwise we may have off-by-one errors in our search
+in the trace when trying to associate simulation times and program counter values for example. The trace, during processing, is written into a database,
+which can be queried for retrieving rows with information comming from the fault attributes</p>
+</section>
+</section>
+<section id="preprocessor">
+<h2>Preprocessor<a class="headerlink" href="#preprocessor" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="a0.Preprocessor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">a0.</span></span><span class="sig-name descname"><span class="pre">Preprocessor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/a0.html#Preprocessor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#a0.Preprocessor" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Filters out candidate instructions</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="a0.Preprocessor.prune_candidates">
+<span class="sig-name descname"><span class="pre">prune_candidates</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/a0.html#Preprocessor.prune_candidates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#a0.Preprocessor.prune_candidates" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="a0.Preprocessor.query_trace_db">
+<span class="sig-name descname"><span class="pre">query_trace_db</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">select</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">where</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">history</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_multiple</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/a0.html#Preprocessor.query_trace_db"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#a0.Preprocessor.query_trace_db" title="Link to this definition">¶</a></dt>
+<dd><p>Perform a query with the specified parameters.</p>
+<p>Assuming that the DB looks like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Time</span> <span class="o">||</span> <span class="n">Cycle</span> <span class="o">||</span> <span class="n">PC</span>       <span class="o">||</span> <span class="n">Instruction</span>
+<span class="o">-----||-------||----------||------------</span>
+<span class="mi">10</span><span class="n">ns</span> <span class="o">||</span> <span class="mi">1</span>     <span class="o">||</span> <span class="mi">00000004</span> <span class="o">||</span> <span class="ow">and</span>
+<span class="mi">20</span><span class="n">ns</span> <span class="o">||</span> <span class="mi">2</span>     <span class="o">||</span> <span class="mi">00000008</span> <span class="o">||</span> <span class="ow">or</span>          <span class="o">&lt;-*</span>
+<span class="mi">30</span><span class="n">ns</span> <span class="o">||</span> <span class="mi">3</span>     <span class="o">||</span> <span class="mi">0000000</span><span class="n">c</span> <span class="o">||</span> <span class="n">xor</span>         <span class="o">&lt;-|</span>
+<span class="mi">40</span><span class="n">ns</span> <span class="o">||</span> <span class="mi">4</span>     <span class="o">||</span> <span class="mi">00000010</span> <span class="o">||</span> <span class="n">sll</span>         <span class="o">&lt;-|</span>
+<span class="mi">50</span><span class="n">ns</span> <span class="o">||</span> <span class="mi">5</span>     <span class="o">||</span> <span class="mi">00000014</span> <span class="o">||</span> <span class="n">j</span>           <span class="o">&lt;-|</span>
+<span class="mi">60</span><span class="n">ns</span> <span class="o">||</span> <span class="mi">6</span>     <span class="o">||</span> <span class="mi">0000004</span><span class="n">c</span> <span class="o">||</span> <span class="n">addi</span>        <span class="o">&lt;-*</span>
+<span class="mi">70</span><span class="n">ns</span> <span class="o">||</span> <span class="mi">7</span>     <span class="o">||</span> <span class="mi">00000050</span> <span class="o">||</span> <span class="n">wfi</span>
+</pre></div>
+</div>
+<p>And you perform a query for the <code class="docutils literal notranslate"><span class="pre">select=&quot;PC&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">where={&quot;PC&quot;:</span> <span class="pre">&quot;0000004c&quot;,</span> <span class="pre">&quot;Time&quot;:</span> <span class="pre">&quot;60ns&quot;}</span></code> then the search
+would result in a window of 1+4 <code class="docutils literal notranslate"><span class="pre">PC</span></code> values, indicated by <code class="docutils literal notranslate"><span class="pre">&lt;-</span></code> in the snapshot above. The size of the window
+defaults to 5 but can be freely selected by the user.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>select</strong> (<em>str</em>) – The field to select in the query.</p></li>
+<li><p><strong>where</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>str</em><em>]</em>) – A dictionary specifying conditions to filter the query.</p></li>
+<li><p><strong>history</strong> (<em>int</em><em>, </em><em>optional</em>) – The number of past queries to include. Defaults to 5.</p></li>
+<li><p><strong>allow_multiple</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to allow multiple results. Defaults to False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of query results (tuples of strings) matching the criteria.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[tuple[str, …]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
 </section>
 
 
@@ -186,14 +290,17 @@ STL</p></li>
 <h3><a href="index.html">Table of Contents</a></h3>
 <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="asm.html">asm module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="zoix.html">zoix module</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">a0 module</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="asm.html">Assembly File Handling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="zoix.html">Z01X Related</a></li>
+<li class="toctree-l1"><a class="reference internal" href="grammar.html">Grammars and Parsing</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">A0 Algorithm</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#a0">A0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#preprocessing">Preprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#preprocessor">Preprocessor</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="utils.html">utils module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="config.html">config module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utils.html">Miscellanous Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">TestCrush Configuration</a></li>
 </ul>
 
   <div role="note" aria-label="source link">
@@ -227,18 +334,18 @@ STL</p></li>
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="utils.html" title="utils module"
+          <a href="utils.html" title="Miscellanous Utilities"
              >next</a> |</li>
         <li class="right" >
-          <a href="zoix.html" title="zoix module"
+          <a href="grammar.html" title="Grammars and Parsing"
              >previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">TestCrush 0.5.0 documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">a0 module</a></li> 
+        <li class="nav-item nav-item-this"><a href="">A0 Algorithm</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
     &#169; Copyright 2024, Nikolaos I. Deligiannis.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
     </div>
   </body>
 </html>

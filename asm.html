@@ -5,18 +5,19 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>asm module &#8212; TestCrush 0.5.0 documentation</title>
+    <title>Assembly File Handling &#8212; TestCrush 0.5.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
-    <link rel="stylesheet" type="text/css" href="_static/classic.css?v=def86cc0" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css?v=2bf1fcf8" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=7414fd2b" />
     
     <script src="_static/documentation_options.js?v=1dd76d02"></script>
-    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     
     <link rel="icon" href="_static/favicon.png"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="zoix module" href="zoix.html" />
+    <link rel="next" title="Z01X Related" href="zoix.html" />
     <link rel="prev" title="TestCrush documentation" href="index.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="Related">
@@ -29,13 +30,13 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="zoix.html" title="zoix module"
+          <a href="zoix.html" title="Z01X Related"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="index.html" title="TestCrush documentation"
              accesskey="P">previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">TestCrush 0.5.0 documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">asm module</a></li> 
+        <li class="nav-item nav-item-this"><a href="">Assembly File Handling</a></li> 
       </ul>
     </div>  
 
@@ -44,8 +45,8 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <section id="asm-module">
-<h1>asm module<a class="headerlink" href="#asm-module" title="Link to this heading">¶</a></h1>
+  <section id="assembly-file-handling">
+<h1>Assembly File Handling<a class="headerlink" href="#assembly-file-handling" title="Link to this heading">¶</a></h1>
 <p>The <code class="docutils literal notranslate"><span class="pre">asm.py</span></code> module contains utilities to handle file I/O operations on arbitrary assembly files.
 The purpose is to remove and to restore lines from the associated assembly file accurately.</p>
 <div class="toctree-wrapper compound">
@@ -233,12 +234,15 @@ if &gt;= than the entry which is being restored.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="asm.AssemblyHandler.save">
-<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/asm.html#AssemblyHandler.save"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#asm.AssemblyHandler.save" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="_modules/asm.html#AssemblyHandler.save"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#asm.AssemblyHandler.save" title="Link to this definition">¶</a></dt>
 <dd><p>Saves the current version of assembly file. The filename will be the original stem plus all current changelog
 codelines’ linenos seperated with a dash. If <code class="docutils literal notranslate"><span class="pre">self.asm_file_changelog</span></code> is empty, it does nothing.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>None</p>
+<dd class="field-odd"><p>The filename (path) of the saved file.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
 </dd>
 </dl>
 </dd></dl>
@@ -258,16 +262,17 @@ codelines’ linenos seperated with a dash. If <code class="docutils literal not
 <h3><a href="index.html">Table of Contents</a></h3>
 <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">asm module</a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Assembly File Handling</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#isa">ISA</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#codeline">Codeline</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#assemblyhandler">AssemblyHandler</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="zoix.html">zoix module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="a0.html">a0 module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="utils.html">utils module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="config.html">config module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="zoix.html">Z01X Related</a></li>
+<li class="toctree-l1"><a class="reference internal" href="grammar.html">Grammars and Parsing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="a0.html">A0 Algorithm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utils.html">Miscellanous Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">TestCrush Configuration</a></li>
 </ul>
 
   <div role="note" aria-label="source link">
@@ -301,18 +306,18 @@ codelines’ linenos seperated with a dash. If <code class="docutils literal not
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="zoix.html" title="zoix module"
+          <a href="zoix.html" title="Z01X Related"
              >next</a> |</li>
         <li class="right" >
           <a href="index.html" title="TestCrush documentation"
              >previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">TestCrush 0.5.0 documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">asm module</a></li> 
+        <li class="nav-item nav-item-this"><a href="">Assembly File Handling</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
     &#169; Copyright 2024, Nikolaos I. Deligiannis.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
     </div>
   </body>
 </html>

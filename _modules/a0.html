@@ -6,10 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>a0 &#8212; TestCrush 0.5.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
-    <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=def86cc0" />
+    <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=2bf1fcf8" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=7414fd2b" />
     
     <script src="../_static/documentation_options.js?v=1dd76d02"></script>
-    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     
     <link rel="icon" href="../_static/favicon.png"/>
@@ -45,13 +46,19 @@
 <span class="kn">import</span> <span class="nn">random</span>
 <span class="kn">import</span> <span class="nn">csv</span>
 <span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">lark</span>
+<span class="kn">import</span> <span class="nn">sqlite3</span>
+<span class="kn">import</span> <span class="nn">io</span>
 
-<span class="kn">from</span> <span class="nn">testcrush.utils</span> <span class="kn">import</span> <span class="n">log</span><span class="p">,</span> <span class="n">compile_assembly</span><span class="p">,</span> <span class="n">zip_archive</span>
+<span class="kn">import</span> <span class="nn">testcrush.grammars.transformers</span> <span class="k">as</span> <span class="nn">transformers</span>
+<span class="kn">from</span> <span class="nn">testcrush.utils</span> <span class="kn">import</span> <span class="n">get_logger</span><span class="p">,</span> <span class="n">compile_assembly</span><span class="p">,</span> <span class="n">zip_archive</span><span class="p">,</span> <span class="n">Singleton</span>
 <span class="kn">from</span> <span class="nn">testcrush</span> <span class="kn">import</span> <span class="n">asm</span><span class="p">,</span> <span class="n">zoix</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span>
 
+<span class="n">log</span> <span class="o">=</span> <span class="n">get_logger</span><span class="p">()</span>
 
-<span class="k">class</span> <span class="nc">CSVCompactionStatistics</span><span class="p">():</span>
+
+<span class="k">class</span> <span class="nc">CSVCompactionStatistics</span><span class="p">(</span><span class="n">metaclass</span><span class="o">=</span><span class="n">Singleton</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Manages I/O operations on the CSV file which logs the statistics of the A0.&quot;&quot;&quot;</span>
     <span class="n">_header</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;asm_source&quot;</span><span class="p">,</span> <span class="s2">&quot;removed_codeline&quot;</span><span class="p">,</span> <span class="s2">&quot;compiles&quot;</span><span class="p">,</span> <span class="s2">&quot;lsim_ok&quot;</span><span class="p">,</span>
                <span class="s2">&quot;tat&quot;</span><span class="p">,</span> <span class="s2">&quot;fsim_ok&quot;</span><span class="p">,</span> <span class="s2">&quot;coverage&quot;</span><span class="p">,</span> <span class="s2">&quot;verdict&quot;</span><span class="p">]</span>
@@ -69,9 +76,155 @@
         <span class="k">return</span> <span class="bp">self</span>
 
 
+<div class="viewcode-block" id="Preprocessor">
+<a class="viewcode-back" href="../a0.html#a0.Preprocessor">[docs]</a>
+<span class="k">class</span> <span class="nc">Preprocessor</span><span class="p">(</span><span class="n">metaclass</span><span class="o">=</span><span class="n">Singleton</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Filters out candidate instructions&quot;&quot;&quot;</span>
+
+    <span class="n">_trace_db</span> <span class="o">=</span> <span class="s2">&quot;.trace.db&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">txt_fault_report</span><span class="p">:</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">,</span> <span class="n">processor_trace</span><span class="p">:</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">,</span> <span class="o">**</span><span class="n">mappings</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Preprocessor&#39;</span><span class="p">:</span>
+
+        <span class="n">factory</span> <span class="o">=</span> <span class="n">transformers</span><span class="o">.</span><span class="n">TraceTransformerFactory</span><span class="p">()</span>
+        <span class="n">transformer</span><span class="p">,</span> <span class="n">grammar</span> <span class="o">=</span> <span class="n">factory</span><span class="p">(</span><span class="n">mappings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;processor_name&quot;</span><span class="p">))</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">processor_trace</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+            <span class="n">trace_raw</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+
+        <span class="n">parser</span> <span class="o">=</span> <span class="n">lark</span><span class="o">.</span><span class="n">Lark</span><span class="p">(</span><span class="n">grammar</span><span class="o">=</span><span class="n">grammar</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="s2">&quot;start&quot;</span><span class="p">,</span> <span class="n">parser</span><span class="o">=</span><span class="s2">&quot;lalr&quot;</span><span class="p">,</span> <span class="n">transformer</span><span class="o">=</span><span class="n">transformer</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">trace</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">trace_raw</span><span class="p">)</span>
+
+        <span class="n">factory</span> <span class="o">=</span> <span class="n">transformers</span><span class="o">.</span><span class="n">FaultReportTransformerFactory</span><span class="p">()</span>
+        <span class="n">transformer</span><span class="p">,</span> <span class="n">grammar</span> <span class="o">=</span> <span class="n">factory</span><span class="p">(</span><span class="s2">&quot;FaultList&quot;</span><span class="p">)</span>
+
+        <span class="n">fault_report</span> <span class="o">=</span> <span class="n">zoix</span><span class="o">.</span><span class="n">TxtFaultReport</span><span class="p">(</span><span class="n">txt_fault_report</span><span class="p">)</span>
+        <span class="n">parser</span> <span class="o">=</span> <span class="n">lark</span><span class="o">.</span><span class="n">Lark</span><span class="p">(</span><span class="n">grammar</span><span class="o">=</span><span class="n">grammar</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="s2">&quot;start&quot;</span><span class="p">,</span> <span class="n">parser</span><span class="o">=</span><span class="s2">&quot;lalr&quot;</span><span class="p">,</span> <span class="n">transformer</span><span class="o">=</span><span class="n">transformer</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fault_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">zoix</span><span class="o">.</span><span class="n">Fault</span><span class="p">]</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">fault_report</span><span class="o">.</span><span class="n">extract</span><span class="p">(</span><span class="s2">&quot;FaultList&quot;</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_create_trace_db</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_create_trace_db</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Transforms the trace of the DUT to a SQLite database of a single table. The header of the CSV is mapped to the</span>
+<span class="sd">        DB column names and then the CSV body is transformed into DB row entries.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># If pre-existent db is found, delete it.</span>
+        <span class="n">db</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_trace_db</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">db</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="n">db</span><span class="o">.</span><span class="n">unlink</span><span class="p">()</span>
+
+        <span class="n">con</span> <span class="o">=</span> <span class="n">sqlite3</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_trace_db</span><span class="p">)</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+
+        <span class="n">header</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">trace</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span>
+        <span class="n">header</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">column_name</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\&quot;</span><span class="si">{</span><span class="n">column_name</span><span class="si">}</span><span class="se">\&quot;</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">header</span><span class="p">))</span>
+        <span class="n">header</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
+
+        <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;CREATE TABLE trace(</span><span class="si">{</span><span class="n">header</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+
+        <span class="n">body</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">trace</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+
+        <span class="k">with</span> <span class="n">io</span><span class="o">.</span><span class="n">StringIO</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">body</span><span class="p">))</span> <span class="k">as</span> <span class="n">source</span><span class="p">:</span>
+
+            <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">csv</span><span class="o">.</span><span class="n">reader</span><span class="p">(</span><span class="n">source</span><span class="p">):</span>
+
+                <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;INSERT INTO trace VALUES (</span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s1">&#39;?&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="n">row</span><span class="p">))</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">,</span> <span class="n">row</span><span class="p">)</span>
+
+        <span class="n">con</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+        <span class="n">con</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Preprocessor.query_trace_db">
+<a class="viewcode-back" href="../a0.html#a0.Preprocessor.query_trace_db">[docs]</a>
+    <span class="k">def</span> <span class="nf">query_trace_db</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">select</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">where</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+                       <span class="n">history</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span> <span class="n">allow_multiple</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Perform a query with the specified parameters.</span>
+
+<span class="sd">        Assuming that the DB looks like this:</span>
+
+<span class="sd">        ::</span>
+
+<span class="sd">            Time || Cycle || PC       || Instruction</span>
+<span class="sd">            -----||-------||----------||------------</span>
+<span class="sd">            10ns || 1     || 00000004 || and</span>
+<span class="sd">            20ns || 2     || 00000008 || or          &lt;-*</span>
+<span class="sd">            30ns || 3     || 0000000c || xor         &lt;-|</span>
+<span class="sd">            40ns || 4     || 00000010 || sll         &lt;-|</span>
+<span class="sd">            50ns || 5     || 00000014 || j           &lt;-|</span>
+<span class="sd">            60ns || 6     || 0000004c || addi        &lt;-*</span>
+<span class="sd">            70ns || 7     || 00000050 || wfi</span>
+
+<span class="sd">        And you perform a query for the ``select=&quot;PC&quot;`` and ``where={&quot;PC&quot;: &quot;0000004c&quot;, &quot;Time&quot;: &quot;60ns&quot;}`` then the search</span>
+<span class="sd">        would result in a window of 1+4 ``PC`` values, indicated by ``&lt;-`` in the snapshot above. The size of the window</span>
+<span class="sd">        defaults to 5 but can be freely selected by the user.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            select (str): The field to select in the query.</span>
+<span class="sd">            where (dict[str, str]): A dictionary specifying conditions to filter the query.</span>
+<span class="sd">            history (int, optional): The number of past queries to include. Defaults to 5.</span>
+<span class="sd">            allow_multiple (bool, optional): Whether to allow multiple results. Defaults to False.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            list[tuple[str, ...]: A list of query results (tuples of strings) matching the criteria.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">db</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_trace_db</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">db</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="s2">&quot;Trace DB not found&quot;</span><span class="p">)</span>
+
+        <span class="n">columns</span> <span class="o">=</span> <span class="n">where</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+
+        <span class="n">query</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            SELECT ROWID</span>
+<span class="s2">            FROM trace</span>
+<span class="s2">            WHERE </span><span class="si">{</span><span class="s1">&#39; AND &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">x</span><span class="si">}</span><span class="s1"> = ?&#39;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">columns</span><span class="p">])</span><span class="si">}</span>
+<span class="s2">        &quot;&quot;&quot;</span>
+
+        <span class="n">values</span> <span class="o">=</span> <span class="n">where</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+        <span class="k">with</span> <span class="n">sqlite3</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">db</span><span class="p">)</span> <span class="k">as</span> <span class="n">con</span><span class="p">:</span>
+
+            <span class="n">cursor</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+
+            <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">values</span><span class="p">))</span>
+            <span class="n">rowids</span> <span class="o">=</span> <span class="n">cursor</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">rowids</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No row found for </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s1">=</span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s1">&#39;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">where</span><span class="o">.</span><span class="n">items</span><span class="p">()])</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">rowids</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">allow_multiple</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Query resulted in multiple ROWIDs for </span><span class="se">\</span>
+<span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s1">=</span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s1">&#39;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">k</span><span class="p">,</span><span class="w"> </span><span class="n">v</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">where</span><span class="o">.</span><span class="n">items</span><span class="p">()])</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+            <span class="n">result</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">rowid</span><span class="p">,</span> <span class="ow">in</span> <span class="n">rowids</span><span class="p">:</span>
+
+                <span class="n">query_with_history</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                    SELECT </span><span class="si">{</span><span class="n">select</span><span class="si">}</span><span class="s2"> FROM trace</span>
+<span class="s2">                    WHERE ROWID &lt;= ?</span>
+<span class="s2">                    ORDER BY ROWID DESC</span>
+<span class="s2">                    LIMIT ?</span>
+<span class="s2">                &quot;&quot;&quot;</span>
+
+            <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">query_with_history</span><span class="p">,</span> <span class="p">(</span><span class="n">rowid</span><span class="p">,</span> <span class="n">history</span><span class="p">))</span>
+            <span class="n">result</span> <span class="o">+=</span> <span class="n">cursor</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+            <span class="k">return</span> <span class="n">result</span></div>
+
+
+<div class="viewcode-block" id="Preprocessor.prune_candidates">
+<a class="viewcode-back" href="../a0.html#a0.Preprocessor.prune_candidates">[docs]</a>
+    <span class="k">def</span> <span class="nf">prune_candidates</span><span class="p">(</span><span class="n">candidates</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">asm</span><span class="o">.</span><span class="n">Codeline</span><span class="p">]):</span>
+        <span class="c1"># TODO:</span>
+        <span class="o">...</span></div>
+</div>
+
+
+
 <div class="viewcode-block" id="A0">
 <a class="viewcode-back" href="../a0.html#a0.A0">[docs]</a>
-<span class="k">class</span> <span class="nc">A0</span><span class="p">():</span>
+<span class="k">class</span> <span class="nc">A0</span><span class="p">(</span><span class="n">metaclass</span><span class="o">=</span><span class="n">Singleton</span><span class="p">):</span>
+
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Implements the A0 compaction algorithm of https://doi.org/10.1109/TC.2016.2643663&quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">isa</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">a0_asm_sources</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">a0_settings</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;A0&quot;</span><span class="p">:</span>
@@ -80,6 +233,11 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">assembly_sources</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">asm</span><span class="o">.</span><span class="n">AssemblyHandler</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">asm</span><span class="o">.</span><span class="n">AssemblyHandler</span><span class="p">(</span><span class="n">isa</span><span class="p">,</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">asm_file</span><span class="p">),</span>
                                                                                 <span class="n">chunksize</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
                                                             <span class="k">for</span> <span class="n">asm_file</span> <span class="ow">in</span> <span class="n">a0_asm_sources</span><span class="p">]</span>
+
+        <span class="c1"># Flatten candidates list</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">all_instructions</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">asm</span><span class="o">.</span><span class="n">Codeline</span><span class="p">]</span> <span class="o">=</span> <span class="p">[(</span><span class="n">asm_id</span><span class="p">,</span> <span class="n">codeline</span><span class="p">)</span> <span class="k">for</span> <span class="n">asm_id</span><span class="p">,</span> <span class="n">asm</span> <span class="ow">in</span>
+                                                     <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">assembly_sources</span><span class="p">)</span> <span class="k">for</span> <span class="n">codeline</span> <span class="ow">in</span> <span class="n">asm</span><span class="o">.</span><span class="n">get_code</span><span class="p">()]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path_to_id</span> <span class="o">=</span> <span class="p">{</span><span class="n">v</span><span class="p">:</span> <span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">a0_asm_sources</span><span class="p">)}</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">assembly_compilation_instructions</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">a0_settings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;assembly_compilation_instructions&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">fsim_report</span><span class="p">:</span> <span class="n">zoix</span><span class="o">.</span><span class="n">CSVFaultReport</span> <span class="o">=</span> <span class="n">zoix</span><span class="o">.</span><span class="n">CSVFaultReport</span><span class="p">(</span>
@@ -285,28 +443,24 @@
         <span class="c1"># they will be modified in-place.</span>
         <span class="n">zip_archive</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;../backup_</span><span class="si">{</span><span class="n">unique_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="o">*</span><span class="p">[</span><span class="n">asm</span><span class="o">.</span><span class="n">get_asm_source</span><span class="p">()</span> <span class="k">for</span> <span class="n">asm</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">assembly_sources</span><span class="p">])</span>
 
-        <span class="c1"># Flatten candidates list</span>
-        <span class="n">all_instructions</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">asm</span><span class="o">.</span><span class="n">Codeline</span><span class="p">]</span> <span class="o">=</span> <span class="p">[(</span><span class="n">asm_id</span><span class="p">,</span> <span class="n">codeline</span><span class="p">)</span> <span class="k">for</span> <span class="n">asm_id</span><span class="p">,</span> <span class="n">asm</span> <span class="ow">in</span>
-                                                <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">assembly_sources</span><span class="p">)</span> <span class="k">for</span> <span class="n">codeline</span> <span class="ow">in</span> <span class="n">asm</span><span class="o">.</span><span class="n">get_code</span><span class="p">()]</span>
-
         <span class="c1"># Randomize order for Step 2</span>
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">times_to_shuffle</span><span class="p">):</span>
-            <span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">all_instructions</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">times_to_shuffle</span><span class="p">):</span>
+            <span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">all_instructions</span><span class="p">)</span>
 
         <span class="n">iteration_stats</span> <span class="o">=</span> <span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">CSVCompactionStatistics</span><span class="o">.</span><span class="n">_header</span><span class="p">)</span>
 
         <span class="n">iteration_stats</span><span class="p">[</span><span class="s2">&quot;tat&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">initial_tat</span>
         <span class="n">iteration_stats</span><span class="p">[</span><span class="s2">&quot;coverage&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">initial_coverage</span>
 
-        <span class="n">total_iterations</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">all_instructions</span><span class="p">)</span>
+        <span class="n">total_iterations</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">all_instructions</span><span class="p">)</span>
 
         <span class="c1"># Step 2: Select instructions in a random order</span>
         <span class="n">old_stl_stats</span> <span class="o">=</span> <span class="p">(</span><span class="n">initial_tat</span><span class="p">,</span> <span class="n">initial_coverage</span><span class="p">)</span>
-        <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">all_instructions</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">all_instructions</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
 
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">#############</span>
-<span class="s2"># ITERATION </span><span class="si">{</span><span class="n">total_iterations</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="n">all_instructions</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2"> / </span><span class="si">{</span><span class="n">total_iterations</span><span class="si">}</span>
+<span class="s2"># ITERATION </span><span class="si">{</span><span class="n">total_iterations</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">all_instructions</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2"> / </span><span class="si">{</span><span class="n">total_iterations</span><span class="si">}</span>
 <span class="s2">#############</span>
 <span class="s2">&quot;&quot;&quot;</span><span class="p">)</span>
 
@@ -315,7 +469,7 @@
                 <span class="n">stats</span> <span class="o">+=</span> <span class="n">iteration_stats</span>
                 <span class="n">iteration_stats</span> <span class="o">=</span> <span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">CSVCompactionStatistics</span><span class="o">.</span><span class="n">_header</span><span class="p">)</span>
 
-            <span class="n">asm_id</span><span class="p">,</span> <span class="n">codeline</span> <span class="o">=</span> <span class="n">all_instructions</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">asm_id</span><span class="p">,</span> <span class="n">codeline</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_instructions</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
             <span class="n">asm_source_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">assembly_sources</span><span class="p">[</span><span class="n">asm_id</span><span class="p">]</span><span class="o">.</span><span class="n">get_asm_source</span><span class="p">()</span><span class="o">.</span><span class="n">name</span>
 
             <span class="n">iteration_stats</span><span class="p">[</span><span class="s2">&quot;asm_source&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">asm_source_file</span>
@@ -441,11 +595,12 @@
 <h3><a href="../index.html">Table of Contents</a></h3>
 <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../asm.html">asm module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../zoix.html">zoix module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../a0.html">a0 module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../utils.html">utils module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../config.html">config module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../asm.html">Assembly File Handling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../zoix.html">Z01X Related</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../grammar.html">Grammars and Parsing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../a0.html">A0 Algorithm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../utils.html">Miscellanous Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../config.html">TestCrush Configuration</a></li>
 </ul>
 
 <search id="searchbox" style="display: none" role="search">
@@ -478,7 +633,7 @@
     </div>
     <div class="footer" role="contentinfo">
     &#169; Copyright 2024, Nikolaos I. Deligiannis.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
     </div>
   </body>
 </html>

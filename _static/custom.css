@@ -1,0 +1,10 @@
+.table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+}
+
+.docutils .csv-table {
+    table-layout: auto; /* Let the table resize based on its content */
+    width: 100%; /* Ensure the table takes the full width */
+}

@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>grammars.transformers &#8212; TestCrush 0.5.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/classic.css?v=2bf1fcf8" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=7414fd2b" />
+    
+    <script src="../../_static/documentation_options.js?v=1dd76d02"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    
+    <link rel="icon" href="../../_static/favicon.png"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">TestCrush 0.5.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">grammars.transformers</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for grammars.transformers</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/python3</span>
+<span class="c1"># SPDX-License-Identifier: MIT</span>
+
+<span class="kn">import</span> <span class="nn">lark</span>
+<span class="kn">import</span> <span class="nn">pathlib</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">testcrush.zoix</span> <span class="kn">import</span> <span class="n">Fault</span>
+<span class="kn">from</span> <span class="nn">testcrush.utils</span> <span class="kn">import</span> <span class="n">get_logger</span>
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">get_logger</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="FaultReportFaultListTransformer">
+<a class="viewcode-back" href="../../grammar.html#grammars.transformers.FaultReportFaultListTransformer">[docs]</a>
+<span class="k">class</span> <span class="nc">FaultReportFaultListTransformer</span><span class="p">(</span><span class="n">lark</span><span class="o">.</span><span class="n">Transformer</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This class is expected to act on the grammar defined for the ``FaultList`` segment of a Z01X txt fault report.</span>
+
+<span class="sd">    After parsing the segment is returning a list of ``zoix.Fault`` objects with the following attributes:</span>
+
+<span class="sd">    - Fault_Status (str): 2-uppercase-letter status</span>
+<span class="sd">    - Fault_Type (str): 0|1|R|F|~</span>
+<span class="sd">    - Timing_Info (list[str]): A list with all timing info (if present) e.g., [&#39;6.532ns&#39;]</span>
+<span class="sd">    - Fault_Sites (list[str]): A list of fault sites represented as strings</span>
+<span class="sd">    - Fault_Attributes (dict[str, str]): A dictionary with all fault attributes (if present)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_prev_fstatus</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">_prev_prime</span><span class="p">:</span> <span class="n">Fault</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">_is_prime</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+
+<div class="viewcode-block" id="FaultReportFaultListTransformer.filter_out_discards">
+<a class="viewcode-back" href="../../grammar.html#grammars.transformers.FaultReportFaultListTransformer.filter_out_discards">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">filter_out_discards</span><span class="p">(</span><span class="n">container</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">filter</span><span class="p">:</span>
+
+        <span class="k">return</span> <span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">lark</span><span class="o">.</span><span class="n">Discard</span><span class="p">,</span> <span class="n">container</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="FaultReportFaultListTransformer.start">
+<a class="viewcode-back" href="../../grammar.html#grammars.transformers.FaultReportFaultListTransformer.start">[docs]</a>
+    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">faults</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Fault</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Fault</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parsing is finished. The fault list has been generated.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">faults</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filter_out_discards</span><span class="p">(</span><span class="n">faults</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">faults</span></div>
+
+
+<div class="viewcode-block" id="FaultReportFaultListTransformer.optional_name">
+<a class="viewcode-back" href="../../grammar.html#grammars.transformers.FaultReportFaultListTransformer.optional_name">[docs]</a>
+    <span class="k">def</span> <span class="nf">optional_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fault_list_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">lark</span><span class="o">.</span><span class="n">visitors</span><span class="o">.</span><span class="n">_DiscardType</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Discard the name of the fault list.</span>
+
+<span class="sd">        .. highlight:: python</span>
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            FaultList SomeCNAMEfaultListName {</span>
+<span class="sd">                      ^^^^^^^^^^^^^^^^^^^^^^</span>
+<span class="sd">                           discarded</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Discarding Fault List Name: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">fault_list_name</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">lark</span><span class="o">.</span><span class="n">Discard</span></div>
+
+
+<div class="viewcode-block" id="FaultReportFaultListTransformer.fault">
+<a class="viewcode-back" href="../../grammar.html#grammars.transformers.FaultReportFaultListTransformer.fault">[docs]</a>
+    <span class="k">def</span> <span class="nf">fault</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fault_parts</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">Fault</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns a ``Fault`` object for each line in the FaultList section.</span>
+
+<span class="sd">        In this part of the AST all fault information has been parsed and</span>
+<span class="sd">        all information needed to represent a fault is available.</span>
+
+<span class="sd">        .. highlight:: python</span>
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            &lt; 1 1 1&gt; ON 1 { PORT &quot;tb_top.dut.subunit_a.cell.port&quot; } (* &quot;test&quot;-&gt;attr=val; *)</span>
+<span class="sd">                     |   \\       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^               ^^^^^^^^</span>
+<span class="sd">            Fault Status  \\      Fault Sites (list)               Fault Attributes (dict)</span>
+<span class="sd">                         Fault Type</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            fault_parts (list): A list of tuples which hold all information needed to represent a fault.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Fault: A Fault object whose attributes are:</span>
+<span class="sd">            - Fault_Status: str</span>
+<span class="sd">            - Fault_Type: str</span>
+<span class="sd">            - Fault_Sites: list[str]</span>
+<span class="sd">            - Fault_Attributes: dict[str, str]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">fault_parts</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filter_out_discards</span><span class="p">(</span><span class="n">fault_parts</span><span class="p">))</span>
+
+        <span class="c1"># Resolve fault equivalences.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_prime</span><span class="p">:</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_prev_prime</span><span class="o">.</span><span class="n">equivalent_faults</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">fault</span> <span class="o">=</span> <span class="n">Fault</span><span class="p">(</span><span class="o">**</span><span class="nb">dict</span><span class="p">(</span><span class="n">fault_parts</span><span class="p">))</span>
+            <span class="n">fault</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;equivalent_to&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prev_prime</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+
+            <span class="n">fault</span> <span class="o">=</span> <span class="n">Fault</span><span class="p">(</span><span class="o">**</span><span class="nb">dict</span><span class="p">(</span><span class="n">fault_parts</span><span class="p">))</span>
+
+            <span class="c1"># Reset the flag</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_is_prime</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="c1"># Update the previous prime pointer</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_prev_prime</span> <span class="o">=</span> <span class="n">fault</span>
+
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">Fault</span><span class="p">(</span><span class="o">**</span><span class="nb">dict</span><span class="p">(</span><span class="n">fault_parts</span><span class="p">))))</span>
+        <span class="k">return</span> <span class="n">fault</span></div>
+
+
+<div class="viewcode-block" id="FaultReportFaultListTransformer.fault_info">
+<a class="viewcode-back" href="../../grammar.html#grammars.transformers.FaultReportFaultListTransformer.fault_info">[docs]</a>
+    <span class="k">def</span> <span class="nf">fault_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">lark</span><span class="o">.</span><span class="n">visitors</span><span class="o">.</span><span class="n">_DiscardType</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Consumes the fault info segment of a line (if present) and discards it.</span>
+
+<span class="sd">        .. highlight:: python</span>
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            &lt; 1 1 1&gt; ON 1 { PORT &quot;tb_top.dut.subunit_a.cell.port&quot; }</span>
+<span class="sd">             ^^^^^^</span>
+<span class="sd">            discarded</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Discarding Fault Info Segment: &lt; </span><span class="si">{</span><span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">args</span><span class="p">])</span><span class="si">}</span><span class="s2"> &gt;&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">lark</span><span class="o">.</span><span class="n">Discard</span></div>
+
+
+<div class="viewcode-block" id="FaultReportFaultListTransformer.fault_status">
+<a class="viewcode-back" href="../../grammar.html#grammars.transformers.FaultReportFaultListTransformer.fault_status">[docs]</a>
+    <span class="nd">@lark</span><span class="o">.</span><span class="n">v_args</span><span class="p">(</span><span class="n">inline</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">fault_status</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fault_status</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;Fault Status&quot;</span><span class="p">],</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Consumes the 2-letter fault status attribute of a line.</span>
+
+<span class="sd">        .. highlight:: python</span>
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            &lt; 1 1 1&gt; ON 1 { PORT &quot;tb_top.dut.subunit_a.cell.port&quot; }</span>
+<span class="sd">                     ^^</span>
+<span class="sd">                  consumed</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># The -- status is used  to mark  a</span>
+        <span class="c1"># fault as functionally  equivalent</span>
+        <span class="c1"># to a prime fault which was listed</span>
+        <span class="c1"># somewhere above. This means  that</span>
+        <span class="c1"># it has been already parsed. Hence</span>
+        <span class="c1"># we use a class variable to always</span>
+        <span class="c1"># point to the current prime fault.</span>
+        <span class="c1"># This variable is updated  when  a</span>
+        <span class="c1"># new prime fault is encountered.</span>
+
+        <span class="n">fault_status</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">fault_status</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">fault_status</span> <span class="o">==</span> <span class="s2">&quot;--&quot;</span><span class="p">:</span>
+            <span class="n">fault_status</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prev_fstatus</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_is_prime</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_prev_fstatus</span> <span class="o">=</span> <span class="n">fault_status</span>
+
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Returning Fault Status: </span><span class="si">{</span><span class="n">fault_status</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="s2">&quot;Fault Status&quot;</span><span class="p">,</span> <span class="n">fault_status</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="FaultReportFaultListTransformer.fault_type">
+<a class="viewcode-back" href="../../grammar.html#grammars.transformers.FaultReportFaultListTransformer.fault_type">[docs]</a>
+    <span class="nd">@lark</span><span class="o">.</span><span class="n">v_args</span><span class="p">(</span><span class="n">inline</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">fault_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fault_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Provides the fault type attribute of a line.</span>
+
+<span class="sd">        .. highlight:: python</span>
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            &lt; 1 1 1&gt; ON 1 { PORT &quot;tb_top.dut.subunit_a.cell.port&quot; }</span>
+<span class="sd">                        ^</span>
+<span class="sd">                     consumed</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Returning Fault Type: </span><span class="si">{</span><span class="n">fault_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="s2">&quot;Fault Type&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">fault_type</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="FaultReportFaultListTransformer.timing_info">
+<a class="viewcode-back" href="../../grammar.html#grammars.transformers.FaultReportFaultListTransformer.timing_info">[docs]</a>
+    <span class="k">def</span> <span class="nf">timing_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timings</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;Timing Info&quot;</span><span class="p">],</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Takes all timing info (if present) and returns it as a list of the string-ified tokens.</span>
+
+<span class="sd">        .. highlight:: python</span>
+<span class="sd">        .. code-block:: python</span>
+<span class="sd">            &lt;  1&gt; NN R (7.52ns) {FLOP &quot;tb_top.dut.subunit_a.cell.port1&quot;}</span>
+<span class="sd">                        ^^^^^^</span>
+<span class="sd">                        consumed</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Passing Received Timing Info </span><span class="si">{</span><span class="n">timings</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="s2">&quot;Timing Info&quot;</span><span class="p">,</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">timings</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="FaultReportFaultListTransformer.location_info">
+<a class="viewcode-back" href="../../grammar.html#grammars.transformers.FaultReportFaultListTransformer.location_info">[docs]</a>
+    <span class="k">def</span> <span class="nf">location_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sites</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;Fault Sites&#39;</span><span class="p">],</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Provides the fault site&#39;s hierarhical path from each parsed line as a list of strings.</span>
+
+<span class="sd">        .. highlight:: python</span>
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            &lt; 1 1 1&gt; ON 1 { PORT &quot;tb_top.dut.subunit_a.cell.port1&quot; } + { PORT &quot;tb_top.dut.subunit_a.cell.port2&quot; }</span>
+<span class="sd">                            ^^^^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^        ^^^^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</span>
+<span class="sd">                           ignored       consumed                      ignored       consumed</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Passing Received Fault Sites in a List </span><span class="si">{</span><span class="n">sites</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="s2">&quot;Fault Sites&quot;</span><span class="p">,</span> <span class="n">sites</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="FaultReportFaultListTransformer.loc_and_site">
+<a class="viewcode-back" href="../../grammar.html#grammars.transformers.FaultReportFaultListTransformer.loc_and_site">[docs]</a>
+    <span class="nd">@lark</span><span class="o">.</span><span class="n">v_args</span><span class="p">(</span><span class="n">inline</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">loc_and_site</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fault_site</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Provides the fault site&#39;s hierarhical path from each parsed line.</span>
+
+<span class="sd">        .. highlight:: python</span>
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            &lt; 1 1 1&gt; ON 1 { PORT &quot;tb_top.dut.subunit_a.cell.port&quot; }</span>
+<span class="sd">                            ^^^^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</span>
+<span class="sd">                           ignored       consumed</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">fault_site</span> <span class="o">=</span> <span class="n">fault_site</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39;&quot;&#39;</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Returning Fault Site: </span><span class="si">{</span><span class="n">fault_site</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">fault_site</span></div>
+
+
+<div class="viewcode-block" id="FaultReportFaultListTransformer.attributes">
+<a class="viewcode-back" href="../../grammar.html#grammars.transformers.FaultReportFaultListTransformer.attributes">[docs]</a>
+    <span class="k">def</span> <span class="nf">attributes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attributes</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;Fault Attributes&quot;</span><span class="p">],</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Provides attributes (if present) of a prime fault as a list of tuples.</span>
+<span class="sd">        Each tuple holds the attribute name and the corresponding attribute value.</span>
+
+<span class="sd">        .. highlight:: python</span>
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            &lt; 1 1 1&gt; ON 1 { PORT &quot;tb_top.dut.subunit_a.cell.port&quot; } (* &quot;testname&quot;-&gt;attr_a=12345; &quot;testname&quot;-&gt;attr_b=0xA)</span>
+<span class="sd">                                                                        ^^^^^^^^   ^^^^^^ ^^^^^   ^^^^^^^^  ^^^^^^^ ^^^</span>
+<span class="sd">                                                                        ignored      consumed      ignored    consumed</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Passing Received Fault Attributes in a List </span><span class="si">{</span><span class="n">attributes</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="s2">&quot;Fault Attributes&quot;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span><span class="n">attributes</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="FaultReportFaultListTransformer.attribute_and_value">
+<a class="viewcode-back" href="../../grammar.html#grammars.transformers.FaultReportFaultListTransformer.attribute_and_value">[docs]</a>
+    <span class="nd">@lark</span><span class="o">.</span><span class="n">v_args</span><span class="p">(</span><span class="n">inline</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">attribute_and_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">attribute_value</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Provides a single attribute (if present) of a prime fault as a tuple.</span>
+<span class="sd">        The tuple holds the attribute name and the corresponding attribute value.</span>
+
+<span class="sd">        .. highlight:: python</span>
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            &lt; 1 1 1&gt; ON 1 { PORT &quot;tb_top.dut.subunit_a.cell.port&quot; } (* &quot;testname&quot;-&gt;attr_a=12345; &quot;testname&quot;-&gt;attr_b=0xA)</span>
+<span class="sd">                                                                        ^^^^^^^^   ^^^^^^ ^^^^^</span>
+<span class="sd">                                                                        ignored      consumed</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Returning (</span><span class="si">{</span><span class="n">attribute_name</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">attribute_value</span><span class="si">}</span><span class="s2">) pair.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">attribute_name</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">attribute_value</span><span class="p">))</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="TraceTransformerCV32E40P">
+<a class="viewcode-back" href="../../grammar.html#grammars.transformers.TraceTransformerCV32E40P">[docs]</a>
+<span class="k">class</span> <span class="nc">TraceTransformerCV32E40P</span><span class="p">(</span><span class="n">lark</span><span class="o">.</span><span class="n">Transformer</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Transformer for the grammar of the tracer of CV32E40P.</span>
+
+<span class="sd">    When applied, returns the trace as a list of strings. The string at index 0</span>
+<span class="sd">    is the header and the rest the trace entries. Intended for converting the</span>
+<span class="sd">    textual trace format to CSV.</span>
+
+<span class="sd">    More information about the CV32E40P tracer format `here. &lt;https://cv32e40p.readthedocs.io/en/latest/tracer.html&gt;`_</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TraceTransformerCV32E40P.start">
+<a class="viewcode-back" href="../../grammar.html#grammars.transformers.TraceTransformerCV32E40P.start">[docs]</a>
+    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">header_and_entries</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parsing is finished. Accepts the trace as a list of strings and returns it as-is.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">header_and_entries</span></div>
+
+
+<div class="viewcode-block" id="TraceTransformerCV32E40P.header">
+<a class="viewcode-back" href="../../grammar.html#grammars.transformers.TraceTransformerCV32E40P.header">[docs]</a>
+    <span class="nd">@lark</span><span class="o">.</span><span class="n">v_args</span><span class="p">(</span><span class="n">inline</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">header</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">fields</span><span class="p">:</span> <span class="n">lark</span><span class="o">.</span><span class="n">lexer</span><span class="o">.</span><span class="n">Token</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Handles the header line of the trace.</span>
+
+<span class="sd">        .. highlight:: python</span>
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            Time          Cycle      PC       Instr    Decoded instruction Register and memory contents</span>
+<span class="sd">            ^^^^          ^^^^^      ^^       ^^^^^    ^^^^^^^^^^^^^^^^^^^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^</span>
+<span class="sd">            captured     captured  captured  captured  captured            captured</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">field</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">fields</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="TraceTransformerCV32E40P.entries">
+<a class="viewcode-back" href="../../grammar.html#grammars.transformers.TraceTransformerCV32E40P.entries">[docs]</a>
+    <span class="nd">@lark</span><span class="o">.</span><span class="n">v_args</span><span class="p">(</span><span class="n">inline</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">entries</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="p">:</span> <span class="n">lark</span><span class="o">.</span><span class="n">lexer</span><span class="o">.</span><span class="n">Token</span><span class="p">,</span> <span class="n">cycle</span><span class="p">:</span> <span class="n">lark</span><span class="o">.</span><span class="n">lexer</span><span class="o">.</span><span class="n">Token</span><span class="p">,</span> <span class="n">pc</span><span class="p">:</span> <span class="n">lark</span><span class="o">.</span><span class="n">lexer</span><span class="o">.</span><span class="n">Token</span><span class="p">,</span> <span class="n">instr</span><span class="p">:</span> <span class="n">lark</span><span class="o">.</span><span class="n">lexer</span><span class="o">.</span><span class="n">Token</span><span class="p">,</span>
+                <span class="n">decoded_instr</span><span class="p">:</span> <span class="n">lark</span><span class="o">.</span><span class="n">lexer</span><span class="o">.</span><span class="n">Token</span><span class="p">,</span> <span class="n">reg_and_mem</span><span class="p">:</span> <span class="n">lark</span><span class="o">.</span><span class="n">lexer</span><span class="o">.</span><span class="n">Token</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Processes a single entry line and returns it as a csv-ready string.</span>
+
+<span class="sd">        .. highlight:: python</span>
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            142  67 0000015c c622 c.swsp  x8,12(x2) x2:0x00002000 x8:0x00000000 PA:0x0000200c store:0x0 load:0xffffffff</span>
+<span class="sd">            ^^^  ^^ ^^^^^^^^ ^^^^ ^^^^^^  ^^^^^^^^^ ^^^^^^^^^^^^^ ^^^^^^^^^^^^^ ^^^^^^^^^^^^^ ^^^^^^^^^ ^^^^^^^^^^^^^^^</span>
+<span class="sd">            Time Cycle  PC   Instr Decoded Instr.   Register and memory contents</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Remove inline whitespace from string</span>
+        <span class="n">decoded_instr</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\&quot;</span><span class="si">{</span><span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="w"> </span><span class="n">word</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">word</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">decoded_instr</span><span class="o">.</span><span class="n">split</span><span class="p">()</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">word</span><span class="w"> </span><span class="p">])</span><span class="si">}</span><span class="se">\&quot;</span><span class="s2">&quot;</span>
+
+        <span class="c1"># Upcast Tokens to str</span>
+        <span class="n">entry</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="p">[</span><span class="n">time</span><span class="p">,</span> <span class="n">cycle</span><span class="p">,</span> <span class="n">pc</span><span class="p">,</span> <span class="n">instr</span><span class="p">]))</span>
+        <span class="n">entry</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">decoded_instr</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">reg_and_mem</span><span class="p">:</span>
+            <span class="n">entry</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">reg_and_mem</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">entry</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;&quot;&quot;&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">entry</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="TraceTransformerCV32E40P.reg_and_mem">
+<a class="viewcode-back" href="../../grammar.html#grammars.transformers.TraceTransformerCV32E40P.reg_and_mem">[docs]</a>
+    <span class="nd">@lark</span><span class="o">.</span><span class="n">v_args</span><span class="p">(</span><span class="n">inline</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">reg_and_mem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">reg_val_pairs</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Processes a **single** &#39;Register and memory contents&#39; entry (if present in the trace line).</span>
+
+<span class="sd">        .. highlight:: python</span>
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            x2:0x00002000 x8:0x00000000 PA:0x0000200c store:0x0 load:0xffffffff</span>
+<span class="sd">            ^^^^^^^^^^^^^ ^^^^^^^^^^^^^ ^^^^^^^^^^^^^ ^^^^^^^^^ ^^^^^^^^^^^^^^^</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">reg_and_mem</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\&quot;</span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="w"> </span><span class="nb">str</span><span class="p">(</span><span class="n">pair</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">pair</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">reg_val_pairs</span><span class="p">])</span><span class="si">}</span><span class="se">\&quot;</span><span class="s2">&quot;</span>
+        <span class="k">return</span> <span class="n">reg_and_mem</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="TraceTransformerFactory">
+<a class="viewcode-back" href="../../grammar.html#grammars.transformers.TraceTransformerFactory">[docs]</a>
+<span class="k">class</span> <span class="nc">TraceTransformerFactory</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Factory pattern for trace transformers and the corresponding grammars.</span>
+
+<span class="sd">    To be used as:</span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        factory = TraceTransformerFactory()</span>
+<span class="sd">        transformer, grammar = factory(&quot;ProcessorString&quot;)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_current_directory</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span>
+    <span class="n">_transformers</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;CV32E40P&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">TraceTransformerCV32E40P</span><span class="p">,</span> <span class="n">_current_directory</span> <span class="o">/</span> <span class="s2">&quot;trace_cv32e40p.lark&quot;</span><span class="p">)</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">processor_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">TraceTransformerCV32E40P</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
+
+        <span class="n">transformer</span><span class="p">,</span> <span class="n">grammar</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transformers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">processor_type</span><span class="p">,</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">transformer</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Transformer for </span><span class="si">{</span><span class="n">processor_type</span><span class="si">}</span><span class="s2"> not found&quot;</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">grammar</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+            <span class="n">lark_grammar</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">transformer</span><span class="p">(),</span> <span class="n">lark_grammar</span></div>
+
+
+
+<div class="viewcode-block" id="FaultReportTransformerFactory">
+<a class="viewcode-back" href="../../grammar.html#grammars.transformers.FaultReportTransformerFactory">[docs]</a>
+<span class="k">class</span> <span class="nc">FaultReportTransformerFactory</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Factory pattern for Z01X txt fault report transformers and the corresponding grammars.</span>
+
+<span class="sd">    To be used as:</span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        factory = FaultReportTransformerFactory()</span>
+<span class="sd">        transformer, grammar = factory(&quot;FaultReportSectionString&quot;)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_current_directory</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span>
+    <span class="n">_transformers</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;FaultList&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">FaultReportFaultListTransformer</span><span class="p">,</span> <span class="n">_current_directory</span> <span class="o">/</span> <span class="s2">&quot;frpt_fault_list.lark&quot;</span><span class="p">)</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">section_string</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">FaultReportFaultListTransformer</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
+
+        <span class="n">transformer</span><span class="p">,</span> <span class="n">grammar</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transformers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">section_string</span><span class="p">,</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">transformer</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Transformer for </span><span class="si">{</span><span class="n">section_string</span><span class="si">}</span><span class="s2"> not found&quot;</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">grammar</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+            <span class="n">lark_grammar</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">transformer</span><span class="p">(),</span> <span class="n">lark_grammar</span></div>
+
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../../index.html">Table of Contents</a></h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../asm.html">Assembly File Handling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../zoix.html">Z01X Related</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../grammar.html">Grammars and Parsing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../a0.html">A0 Algorithm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../utils.html">Miscellanous Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../config.html">TestCrush Configuration</a></li>
+</ul>
+
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">TestCrush 0.5.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">grammars.transformers</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2024, Nikolaos I. Deligiannis.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    </div>
+  </body>
+</html>

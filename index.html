@@ -7,16 +7,17 @@
 
     <title>TestCrush documentation &#8212; TestCrush 0.5.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
-    <link rel="stylesheet" type="text/css" href="_static/classic.css?v=def86cc0" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css?v=2bf1fcf8" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=7414fd2b" />
     
     <script src="_static/documentation_options.js?v=1dd76d02"></script>
-    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     
     <link rel="icon" href="_static/favicon.png"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="asm module" href="asm.html" /> 
+    <link rel="next" title="Assembly File Handling" href="asm.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
@@ -28,7 +29,7 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="asm.html" title="asm module"
+          <a href="asm.html" title="Assembly File Handling"
              accesskey="N">next</a> |</li>
         <li class="nav-item nav-item-0"><a href="#">TestCrush 0.5.0 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">TestCrush documentation</a></li> 
@@ -57,32 +58,43 @@ Transactions on Computers, vol. 66, no. 7, pp. 1268-1273, doi: 10.1109/TC.2016.2
 <div class="toctree-wrapper compound">
 <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="asm.html">asm module</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="asm.html">Assembly File Handling</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="asm.html#isa">ISA</a></li>
 <li class="toctree-l2"><a class="reference internal" href="asm.html#codeline">Codeline</a></li>
 <li class="toctree-l2"><a class="reference internal" href="asm.html#assemblyhandler">AssemblyHandler</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="zoix.html">zoix module</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="zoix.html">Z01X Related</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="zoix.html#zoixinvoker">ZoixInvoker</a></li>
-<li class="toctree-l2"><a class="reference internal" href="zoix.html#csvfaultreport">CSVFaultReport</a></li>
+<li class="toctree-l2"><a class="reference internal" href="zoix.html#fault-reports">Fault Reports</a></li>
 <li class="toctree-l2"><a class="reference internal" href="zoix.html#fault">Fault</a></li>
 <li class="toctree-l2"><a class="reference internal" href="zoix.html#vc-z01x-status-enumerators">VC-Z01X Status Enumerators</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="a0.html">a0 module</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="a0.html#a0">A0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="grammar.html">Grammars and Parsing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="grammar.html#grammars.transformers.FaultReportFaultListTransformer"><code class="docutils literal notranslate"><span class="pre">FaultReportFaultListTransformer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="grammar.html#grammars.transformers.FaultReportTransformerFactory"><code class="docutils literal notranslate"><span class="pre">FaultReportTransformerFactory</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="grammar.html#grammars.transformers.TraceTransformerCV32E40P"><code class="docutils literal notranslate"><span class="pre">TraceTransformerCV32E40P</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="grammar.html#grammars.transformers.TraceTransformerFactory"><code class="docutils literal notranslate"><span class="pre">TraceTransformerFactory</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="utils.html">utils module</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="a0.html">A0 Algorithm</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="a0.html#a0">A0</a></li>
+<li class="toctree-l2"><a class="reference internal" href="a0.html#preprocessing">Preprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="a0.html#preprocessor">Preprocessor</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="utils.html">Miscellanous Utilities</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="utils.html#utils.Singleton"><code class="docutils literal notranslate"><span class="pre">Singleton</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="utils.html#utils.Timer"><code class="docutils literal notranslate"><span class="pre">Timer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="utils.html#utils.addr2line"><code class="docutils literal notranslate"><span class="pre">addr2line()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="utils.html#utils.compile_assembly"><code class="docutils literal notranslate"><span class="pre">compile_assembly()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="utils.html#utils.get_logger"><code class="docutils literal notranslate"><span class="pre">get_logger()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="utils.html#utils.setup_logger"><code class="docutils literal notranslate"><span class="pre">setup_logger()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="utils.html#utils.zip_archive"><code class="docutils literal notranslate"><span class="pre">zip_archive()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="config.html">config module</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="config.html">TestCrush Configuration</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="config.html#module-config">TOML Parsing Utilities</a></li>
 </ul>
 </li>
@@ -100,11 +112,12 @@ Transactions on Computers, vol. 66, no. 7, pp. 1268-1273, doi: 10.1109/TC.2016.2
 <h3><a href="#">Table of Contents</a></h3>
 <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="asm.html">asm module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="zoix.html">zoix module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="a0.html">a0 module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="utils.html">utils module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="config.html">config module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="asm.html">Assembly File Handling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="zoix.html">Z01X Related</a></li>
+<li class="toctree-l1"><a class="reference internal" href="grammar.html">Grammars and Parsing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="a0.html">A0 Algorithm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utils.html">Miscellanous Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">TestCrush Configuration</a></li>
 </ul>
 
   <div role="note" aria-label="source link">
@@ -138,7 +151,7 @@ Transactions on Computers, vol. 66, no. 7, pp. 1268-1273, doi: 10.1109/TC.2016.2
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="asm.html" title="asm module"
+          <a href="asm.html" title="Assembly File Handling"
              >next</a> |</li>
         <li class="nav-item nav-item-0"><a href="#">TestCrush 0.5.0 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">TestCrush documentation</a></li> 
@@ -146,7 +159,7 @@ Transactions on Computers, vol. 66, no. 7, pp. 1268-1273, doi: 10.1109/TC.2016.2
     </div>
     <div class="footer" role="contentinfo">
     &#169; Copyright 2024, Nikolaos I. Deligiannis.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
     </div>
   </body>
 </html>

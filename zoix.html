@@ -5,19 +5,20 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>zoix module &#8212; TestCrush 0.5.0 documentation</title>
+    <title>Z01X Related &#8212; TestCrush 0.5.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
-    <link rel="stylesheet" type="text/css" href="_static/classic.css?v=def86cc0" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css?v=2bf1fcf8" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=7414fd2b" />
     
     <script src="_static/documentation_options.js?v=1dd76d02"></script>
-    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     
     <link rel="icon" href="_static/favicon.png"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="a0 module" href="a0.html" />
-    <link rel="prev" title="asm module" href="asm.html" /> 
+    <link rel="next" title="Grammars and Parsing" href="grammar.html" />
+    <link rel="prev" title="Assembly File Handling" href="asm.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
@@ -29,13 +30,13 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="a0.html" title="a0 module"
+          <a href="grammar.html" title="Grammars and Parsing"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="asm.html" title="asm module"
+          <a href="asm.html" title="Assembly File Handling"
              accesskey="P">previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">TestCrush 0.5.0 documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">zoix module</a></li> 
+        <li class="nav-item nav-item-this"><a href="">Z01X Related</a></li> 
       </ul>
     </div>  
 
@@ -44,19 +45,19 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <section id="zoix-module">
-<h1>zoix module<a class="headerlink" href="#zoix-module" title="Link to this heading">¶</a></h1>
+  <section id="z01x-related">
+<h1>Z01X Related<a class="headerlink" href="#z01x-related" title="Link to this heading">¶</a></h1>
 <p>The <code class="docutils literal notranslate"><span class="pre">zoix.py</span></code> module contains utilities to perform calls to <a class="reference external" href="https://www.synopsys.com/verification/simulation/vc-z01x.html">VC-Z01X</a>
 It is based on the <a class="reference external" href="https://docs.python.org/3/library/subprocess.html">subprocess</a> package and depends heavily on user-defined parameters.</p>
 <section id="zoixinvoker">
 <h2>ZoixInvoker<a class="headerlink" href="#zoixinvoker" title="Link to this heading">¶</a></h2>
 <p>This class is the responsible for issuing calls to VC-Z01X. It offers utilities to compile HDL sources in VCS,
-logic simulate these sources, generate fault campaign manager sripts and finally, fault simulate the sources
-in Z01X. It assumes a pre-existing a tested and working VC-Z01X environment for a DUT and all function arguments
+logic simulate these sources, and finally, fault simulate the sources in Z01X. It assumes a pre-existing
+tested and working VC-Z01X environment for a DUT and all function arguments
 are passed as variadic args and keyword arguments. The reason for this design choice is to abstract as much as
 possible from any version-specific niece that VC-Z01X might have. Hence, we offer this layer of abstraction and
 leave it to the user to specify compilation and simulation isntructions to be executed in the methods of the
-<code class="docutils literal notranslate"><span class="pre">ZoixInvoker</span></code> e.g., by a .json configuration file.</p>
+<code class="docutils literal notranslate"><span class="pre">ZoixInvoker</span></code> e.g., by the TOML configuration file.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="zoix.ZoixInvoker">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">zoix.</span></span><span class="sig-name descname"><span class="pre">ZoixInvoker</span></span><a class="reference internal" href="_modules/zoix.html#ZoixInvoker"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoix.ZoixInvoker" title="Link to this definition">¶</a></dt>
@@ -203,8 +204,40 @@ expression for the TaT value. Default is 1, corresponding to the <code class="do
 </dd></dl>
 
 </section>
+<section id="fault-reports">
+<h2>Fault Reports<a class="headerlink" href="#fault-reports" title="Link to this heading">¶</a></h2>
+<p>We provide two classes for managing fault reports depending on their type.</p>
+<section id="txtfaultreport">
+<h3>TxtFaultReport<a class="headerlink" href="#txtfaultreport" title="Link to this heading">¶</a></h3>
+<p>This class provides a simple parsing utility based on bracket-counting to extract sections from the textual
+fault report of Z01X (rpt file).</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="zoix.TxtFaultReport">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">zoix.</span></span><span class="sig-name descname"><span class="pre">TxtFaultReport</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fault_report</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoix.html#TxtFaultReport"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoix.TxtFaultReport" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Manages the VC-Z01X text report.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="zoix.TxtFaultReport.extract">
+<span class="sig-name descname"><span class="pre">extract</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">section</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="_modules/zoix.html#TxtFaultReport.extract"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoix.TxtFaultReport.extract" title="Link to this definition">¶</a></dt>
+<dd><p>Extracts a section of the fault report.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>section</strong> (<em>str</em>) – The case-sensitive section name. E.g., <code class="docutils literal notranslate"><span class="pre">Coverage</span></code>, <code class="docutils literal notranslate"><span class="pre">FaultList</span></code></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A newline-joined string of the extracted section (section name included).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
 <section id="csvfaultreport">
-<h2>CSVFaultReport<a class="headerlink" href="#csvfaultreport" title="Link to this heading">¶</a></h2>
+<h3>CSVFaultReport<a class="headerlink" href="#csvfaultreport" title="Link to this heading">¶</a></h3>
 <p>This class manages the results of the fault simulation which are expected to be in a <strong>CSV</strong> format. Namelly,
 the fault summary and the fault list which are generated when the fcm (fault campaign manager) script contains
 the <code class="docutils literal notranslate"><span class="pre">report</span> <span class="pre">-csv</span></code> instruction. For instance, if this command is specified <code class="docutils literal notranslate"><span class="pre">report</span> <span class="pre">-csv</span> <span class="pre">-report</span> <span class="pre">fsim_out</span></code> then
@@ -351,27 +384,82 @@ any column if specified.</p>
 </dd></dl>
 
 </section>
+</section>
 <section id="fault">
 <h2>Fault<a class="headerlink" href="#fault" title="Link to this heading">¶</a></h2>
-<p>This class is used to represent a fault. However, once again in order to make it as general as possible, all
-attributes of the <code class="docutils literal notranslate"><span class="pre">Fault</span></code> class are passed as keyword arguments. Hence, they can be arbitrarily selected.
-For instance, the CSV fault report of VC-Z01X contains the faults like this:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt;</span>
-<span class="go">&quot;FID&quot;,&quot;Test Name&quot;,&quot;Prime&quot;,&quot;Status&quot;,&quot;Model&quot;,&quot;Timing&quot;,&quot;Cycle Injection&quot;,&quot;Cycle End&quot;,&quot;Class&quot;,&quot;Location&quot;</span>
-<span class="go">1,&quot;test1&quot;,&quot;yes&quot;,&quot;ON&quot;,&quot;0&quot;,&quot;&quot;,&quot;&quot;,&quot;&quot;,&quot;PORT&quot;,&quot;tb_top.wrapper_i.top_i.core_i.ex_stage_i.alu_i.U10.Z&quot;</span>
-<span class="go">2,&quot;test1&quot;,1,&quot;ON&quot;,&quot;0&quot;,&quot;&quot;,&quot;&quot;,&quot;&quot;,&quot;PORT&quot;,&quot;tb_top.wrapper_i.top_i.core_i.ex_stage_i.alu_i.U10.A&quot;</span>
-<span class="go">3,&quot;test1&quot;,&quot;yes&quot;,&quot;ON&quot;,&quot;1&quot;,&quot;&quot;,&quot;&quot;,&quot;&quot;,&quot;PORT&quot;,&quot;tb_top.wrapper_i.top_i.core_i.ex_stage_i.alu_i.U10.Z&quot;</span>
-</pre></div>
-</div>
+<p>This class is used to represent a <strong>prime</strong> fault. Once again, in order to abstract as musch as possible, all
+attributes of the <code class="docutils literal notranslate"><span class="pre">Fault</span></code> class are passed as keyword arguments. Hence, they can be arbitrarily set.
+For instance, assuming that we generate a fault list based on the the CSV fault report of VC-Z01X which contains
+entries of faults faults like:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>FID</p></th>
+<th class="head"><p>Test Name</p></th>
+<th class="head"><p>Prime</p></th>
+<th class="head"><p>Status</p></th>
+<th class="head"><p>Model</p></th>
+<th class="head"><p>Timing</p></th>
+<th class="head"><p>Cycle Injection</p></th>
+<th class="head"><p>Cycle End</p></th>
+<th class="head"><p>Class</p></th>
+<th class="head"><p>Location</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>1</p></td>
+<td><p>test1</p></td>
+<td><p>yes</p></td>
+<td><p>ON</p></td>
+<td><p>0</p></td>
+<td></td>
+<td></td>
+<td></td>
+<td><p>PORT</p></td>
+<td><p>top.unit.cell.portA</p></td>
+</tr>
+<tr class="row-odd"><td><p>2</p></td>
+<td><p>test1</p></td>
+<td><p>1</p></td>
+<td><p>ON</p></td>
+<td><p>0</p></td>
+<td></td>
+<td></td>
+<td></td>
+<td><p>PORT</p></td>
+<td><p>top.unit.cell.portB</p></td>
+</tr>
+<tr class="row-even"><td><p>3</p></td>
+<td><p>test1</p></td>
+<td><p>yes</p></td>
+<td><p>ON</p></td>
+<td><p>1</p></td>
+<td></td>
+<td></td>
+<td></td>
+<td><p>PORT</p></td>
+<td><p>top.unit.cell.portC</p></td>
+</tr>
+</tbody>
+</table>
 <p>The header row of this CSV snippet represents the attributes of the <code class="docutils literal notranslate"><span class="pre">Fault</span></code> objects, with all spaces
 substituted with underscores (_) (e.g., <code class="docutils literal notranslate"><span class="pre">&quot;Test</span> <span class="pre">Name&quot;</span> <span class="pre">-&gt;</span> <span class="pre">&quot;Test_Name&quot;</span></code>) and each subsequent row contains
-the corresponding values to those attributes. Its used by the <code class="docutils literal notranslate"><span class="pre">CSVFaultReport</span></code> for coverage computation
-and fault list parsing.</p>
+the corresponding values to those attributes.</p>
+<p>With that said, each fault has two default, static attributes set by the constructor. These two attributes are
+the <code class="docutils literal notranslate"><span class="pre">equivalent_to</span></code> which expects another <code class="docutils literal notranslate"><span class="pre">Fault</span></code> type and by default is set  to <code class="docutils literal notranslate"><span class="pre">None</span></code> and <code class="docutils literal notranslate"><span class="pre">equivalent_faults</span></code>
+which is an integer set to 1 counting the number of equivalent faults mapped to the current fault. These attributes can
+be accessed and modified in an ad-hoc manner.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="zoix.Fault">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">zoix.</span></span><span class="sig-name descname"><span class="pre">Fault</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">fault_attributes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoix.html#Fault"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoix.Fault" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">zoix.</span></span><span class="sig-name descname"><span class="pre">Fault</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">fault_attributes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/zoix.html#Fault"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoix.Fault" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Generic representation of a fault. All attributes are set as strings.</p>
+<p>Generic representation of a fault</p>
+<p>Each fault has two standard attributes which are:
+-<code class="docutils literal notranslate"><span class="pre">equivalent_faults</span></code> (int): Corresponds to the total number of faults equivalent to this fault. Defaults to 1 i.e.
+itself.
+-<code class="docutils literal notranslate"><span class="pre">equivalent_to</span></code> (Fault): A reference to the primary fault with which the current fault is equivalent. If the
+current fault is prime. Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+<p>When a fault is constructed it corresponds to a prime fault. It is up to the user to resolve any fault equivalence
+by modifying the aforementioned attributes.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="zoix.Fault.cast_attribute">
 <span class="sig-name descname"><span class="pre">cast_attribute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">attribute</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">callable</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/zoix.html#Fault.cast_attribute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoix.Fault.cast_attribute" title="Link to this definition">¶</a></dt>
@@ -416,6 +504,25 @@ the attribute then the default type is <code class="docutils literal notranslate
 </dd>
 </dl>
 </dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoix.Fault.is_prime">
+<span class="sig-name descname"><span class="pre">is_prime</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/zoix.html#Fault.is_prime"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoix.Fault.is_prime" title="Link to this definition">¶</a></dt>
+<dd><p>Checks whether the fault is a prime fault, i.e., is not equivalent to any other fault.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if fault is prime. False otherwise.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="zoix.Fault.set">
+<span class="sig-name descname"><span class="pre">set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">attribute</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/zoix.html#Fault.set"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#zoix.Fault.set" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 
@@ -496,17 +603,18 @@ the attribute then the default type is <code class="docutils literal notranslate
 <h3><a href="index.html">Table of Contents</a></h3>
 <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="asm.html">asm module</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">zoix module</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="asm.html">Assembly File Handling</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Z01X Related</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#zoixinvoker">ZoixInvoker</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#csvfaultreport">CSVFaultReport</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#fault-reports">Fault Reports</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#fault">Fault</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#vc-z01x-status-enumerators">VC-Z01X Status Enumerators</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="a0.html">a0 module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="utils.html">utils module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="config.html">config module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="grammar.html">Grammars and Parsing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="a0.html">A0 Algorithm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utils.html">Miscellanous Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">TestCrush Configuration</a></li>
 </ul>
 
   <div role="note" aria-label="source link">
@@ -540,18 +648,18 @@ the attribute then the default type is <code class="docutils literal notranslate
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="a0.html" title="a0 module"
+          <a href="grammar.html" title="Grammars and Parsing"
              >next</a> |</li>
         <li class="right" >
-          <a href="asm.html" title="asm module"
+          <a href="asm.html" title="Assembly File Handling"
              >previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">TestCrush 0.5.0 documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">zoix module</a></li> 
+        <li class="nav-item nav-item-this"><a href="">Z01X Related</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
     &#169; Copyright 2024, Nikolaos I. Deligiannis.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
     </div>
   </body>
 </html>

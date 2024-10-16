@@ -5,19 +5,20 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>utils module &#8212; TestCrush 0.5.0 documentation</title>
+    <title>Miscellanous Utilities &#8212; TestCrush 0.5.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
-    <link rel="stylesheet" type="text/css" href="_static/classic.css?v=def86cc0" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css?v=2bf1fcf8" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=7414fd2b" />
     
     <script src="_static/documentation_options.js?v=1dd76d02"></script>
-    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     
     <link rel="icon" href="_static/favicon.png"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="config module" href="config.html" />
-    <link rel="prev" title="a0 module" href="a0.html" /> 
+    <link rel="next" title="TestCrush Configuration" href="config.html" />
+    <link rel="prev" title="A0 Algorithm" href="a0.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
@@ -29,13 +30,13 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="config.html" title="config module"
+          <a href="config.html" title="TestCrush Configuration"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="a0.html" title="a0 module"
+          <a href="a0.html" title="A0 Algorithm"
              accesskey="P">previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">TestCrush 0.5.0 documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">utils module</a></li> 
+        <li class="nav-item nav-item-this"><a href="">Miscellanous Utilities</a></li> 
       </ul>
     </div>  
 
@@ -44,8 +45,8 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <section id="utils-module">
-<h1>utils module<a class="headerlink" href="#utils-module" title="Link to this heading">¶</a></h1>
+  <section id="miscellanous-utilities">
+<h1>Miscellanous Utilities<a class="headerlink" href="#miscellanous-utilities" title="Link to this heading">¶</a></h1>
 <p>The <code class="docutils literal notranslate"><span class="pre">utils.py</span></code> module contains utility classes and functions that are used by all of the other modules such as e.g, logging.</p>
 <dl class="py class" id="module-utils">
 <dt class="sig sig-object py" id="utils.Singleton">
@@ -64,6 +65,29 @@
 <span class="sig-name descname"><span class="pre">format_time</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seconds</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#Timer.format_time"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.Timer.format_time" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="utils.addr2line">
+<span class="sig-prename descclassname"><span class="pre">utils.</span></span><span class="sig-name descname"><span class="pre">addr2line</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">elf_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pc_address</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="_modules/utils.html#addr2line"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.addr2line" title="Link to this definition">¶</a></dt>
+<dd><p>Mimics the functionality of the addr2line binutil using pyelftools.
+Takes an ELF file and an address, and returns the corresponding
+file name and line number using the .debug_line section.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>elf_file</strong> (<em>pathlib.Path</em>) – The elf file.</p></li>
+<li><p><strong>pc_address</strong> (<em>str</em>) – The address of the program counter to look for within the elf in hexadecimal format as str.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A file-line pair. The file (index-0) is the source which contains the line number that corresponds to the
+<code class="docutils literal notranslate"><span class="pre">pc_address</span></code> and the lien (index-1) is the 1-based indexing of the line number within the source file.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
@@ -93,8 +117,14 @@ False otherwise.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="utils.get_logger">
+<span class="sig-prename descclassname"><span class="pre">utils.</span></span><span class="sig-name descname"><span class="pre">get_logger</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Logger</span></span></span><a class="reference internal" href="_modules/utils.html#get_logger"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.get_logger" title="Link to this definition">¶</a></dt>
+<dd><p>Return the pre-configured logger.</p>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="utils.setup_logger">
-<span class="sig-prename descclassname"><span class="pre">utils.</span></span><span class="sig-name descname"><span class="pre">setup_logger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'testcrush</span> <span class="pre">logger'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'testcrush_debug.log'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Logger</span></span></span><a class="reference internal" href="_modules/utils.html#setup_logger"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.setup_logger" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">utils.</span></span><span class="sig-name descname"><span class="pre">setup_logger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stream_logging_level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/utils.html#setup_logger"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#utils.setup_logger" title="Link to this definition">¶</a></dt>
 <dd><p>Set up a logger with stream and file handlers.</p>
 </dd></dl>
 
@@ -127,18 +157,21 @@ False otherwise.</p>
 <h3><a href="index.html">Table of Contents</a></h3>
 <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="asm.html">asm module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="zoix.html">zoix module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="a0.html">a0 module</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">utils module</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="asm.html">Assembly File Handling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="zoix.html">Z01X Related</a></li>
+<li class="toctree-l1"><a class="reference internal" href="grammar.html">Grammars and Parsing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="a0.html">A0 Algorithm</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Miscellanous Utilities</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#utils.Singleton"><code class="docutils literal notranslate"><span class="pre">Singleton</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#utils.Timer"><code class="docutils literal notranslate"><span class="pre">Timer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#utils.addr2line"><code class="docutils literal notranslate"><span class="pre">addr2line()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#utils.compile_assembly"><code class="docutils literal notranslate"><span class="pre">compile_assembly()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#utils.get_logger"><code class="docutils literal notranslate"><span class="pre">get_logger()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#utils.setup_logger"><code class="docutils literal notranslate"><span class="pre">setup_logger()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#utils.zip_archive"><code class="docutils literal notranslate"><span class="pre">zip_archive()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="config.html">config module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">TestCrush Configuration</a></li>
 </ul>
 
   <div role="note" aria-label="source link">
@@ -172,18 +205,18 @@ False otherwise.</p>
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="config.html" title="config module"
+          <a href="config.html" title="TestCrush Configuration"
              >next</a> |</li>
         <li class="right" >
-          <a href="a0.html" title="a0 module"
+          <a href="a0.html" title="A0 Algorithm"
              >previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">TestCrush 0.5.0 documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">utils module</a></li> 
+        <li class="nav-item nav-item-this"><a href="">Miscellanous Utilities</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
     &#169; Copyright 2024, Nikolaos I. Deligiannis.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
     </div>
   </body>
 </html>

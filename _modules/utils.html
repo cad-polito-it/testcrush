@@ -6,10 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>utils &#8212; TestCrush 0.5.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
-    <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=def86cc0" />
+    <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=2bf1fcf8" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=7414fd2b" />
     
     <script src="../_static/documentation_options.js?v=1dd76d02"></script>
-    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     
     <link rel="icon" href="../_static/favicon.png"/>
@@ -48,6 +49,52 @@
 <span class="kn">import</span> <span class="nn">pathlib</span>
 <span class="kn">import</span> <span class="nn">zipfile</span>
 <span class="kn">import</span> <span class="nn">os</span>
+
+
+<div class="viewcode-block" id="setup_logger">
+<a class="viewcode-back" href="../utils.html#utils.setup_logger">[docs]</a>
+<span class="k">def</span> <span class="nf">setup_logger</span><span class="p">(</span><span class="n">stream_logging_level</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">log_file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Set up a logger with stream and file handlers.&quot;&quot;&quot;</span>
+    <span class="k">class</span> <span class="nc">IndentedFormatter</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">Formatter</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Indents the record&#39;s body.&quot;&quot;&quot;</span>
+        <span class="k">def</span> <span class="nf">format</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">):</span>
+
+            <span class="n">original_message</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+
+            <span class="n">indented_message</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&gt;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">original_message</span><span class="o">.</span><span class="n">splitlines</span><span class="p">())</span>
+
+            <span class="k">return</span> <span class="n">indented_message</span>
+
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">stream_logging_level</span><span class="p">)</span>
+
+    <span class="c1"># Check if handlers already exist (to prevent adding them multiple times)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">logger</span><span class="o">.</span><span class="n">hasHandlers</span><span class="p">():</span>
+
+        <span class="n">log_stream</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">StreamHandler</span><span class="p">(</span><span class="n">stream</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="p">)</span>
+        <span class="n">log_stream</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">stream_logging_level</span><span class="p">)</span>
+        <span class="n">log_stream</span><span class="o">.</span><span class="n">setFormatter</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">Formatter</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%(levelname)s</span><span class="s1">: </span><span class="si">%(message)s</span><span class="s1">&#39;</span><span class="p">))</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">log_stream</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">log_file</span><span class="p">:</span>
+            <span class="n">log_file_handler</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">FileHandler</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">log_file</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;w&#39;</span><span class="p">)</span>
+            <span class="n">log_file_handler</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">stream_logging_level</span><span class="p">)</span>
+            <span class="n">log_file_handler</span><span class="o">.</span><span class="n">setFormatter</span><span class="p">(</span><span class="n">IndentedFormatter</span><span class="p">(</span>
+                <span class="s1">&#39;[</span><span class="si">%(levelname)s</span><span class="s1">] @ </span><span class="si">%(module)s</span><span class="s1">/</span><span class="si">%(funcName)s</span><span class="s1">/line</span><span class="si">%(lineno)d</span><span class="se">\n</span><span class="si">%(message)s</span><span class="s1">&#39;</span><span class="p">))</span>
+
+            <span class="n">logger</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">log_file_handler</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_logger">
+<a class="viewcode-back" href="../utils.html#utils.get_logger">[docs]</a>
+<span class="k">def</span> <span class="nf">get_logger</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">logging</span><span class="o">.</span><span class="n">Logger</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the pre-configured logger.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span></div>
+
+
+
+<span class="n">log</span> <span class="o">=</span> <span class="n">get_logger</span><span class="p">()</span>
 
 
 <div class="viewcode-block" id="compile_assembly">
@@ -137,34 +184,56 @@
 
 
 
-<div class="viewcode-block" id="setup_logger">
-<a class="viewcode-back" href="../utils.html#utils.setup_logger">[docs]</a>
-<span class="k">def</span> <span class="nf">setup_logger</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;testcrush logger&quot;</span><span class="p">,</span> <span class="n">log_file</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;testcrush_debug.log&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">logging</span><span class="o">.</span><span class="n">Logger</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Set up a logger with stream and file handlers.&quot;&quot;&quot;</span>
-    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
+<div class="viewcode-block" id="addr2line">
+<a class="viewcode-back" href="../utils.html#utils.addr2line">[docs]</a>
+<span class="k">def</span> <span class="nf">addr2line</span><span class="p">(</span><span class="n">elf_file</span><span class="p">:</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">,</span> <span class="n">pc_address</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Mimics the functionality of the addr2line binutil using pyelftools.</span>
+<span class="sd">    Takes an ELF file and an address, and returns the corresponding</span>
+<span class="sd">    file name and line number using the .debug_line section.</span>
 
-    <span class="c1"># Check if handlers already exist (to prevent adding them multiple times)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">logger</span><span class="o">.</span><span class="n">hasHandlers</span><span class="p">():</span>
-        <span class="c1"># Stream handler (INFO level)</span>
-        <span class="n">log_stream</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">StreamHandler</span><span class="p">(</span><span class="n">stream</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="p">)</span>
-        <span class="n">log_stream</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
-        <span class="n">log_stream</span><span class="o">.</span><span class="n">setFormatter</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">Formatter</span><span class="p">(</span><span class="s1">&#39;[</span><span class="si">%(levelname)s</span><span class="s1">]: </span><span class="si">%(message)s</span><span class="s1">&#39;</span><span class="p">))</span>
+<span class="sd">    Args:</span>
+<span class="sd">        elf_file (pathlib.Path): The elf file.</span>
+<span class="sd">        pc_address (str): The address of the program counter to look for within the elf in hexadecimal format as str.</span>
 
-        <span class="c1"># File handler (DEBUG level)</span>
-        <span class="n">log_file_handler</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">FileHandler</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">log_file</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;w&#39;</span><span class="p">)</span>
-        <span class="n">log_file_handler</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
-        <span class="n">log_file_handler</span><span class="o">.</span><span class="n">setFormatter</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">Formatter</span><span class="p">(</span>
-            <span class="s1">&#39;</span><span class="si">%(lineno)d</span><span class="s1">:[</span><span class="si">%(levelname)s</span><span class="s1">|</span><span class="si">%(module)s</span><span class="s1">|</span><span class="si">%(funcName)s</span><span class="s1">]: </span><span class="si">%(message)s</span><span class="s1">&#39;</span><span class="p">))</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        tuple: A file-line pair. The file (index-0) is the source which contains the line number that corresponds to the</span>
+<span class="sd">        ``pc_address`` and the lien (index-1) is the 1-based indexing of the line number within the source file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
-        <span class="n">logger</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">log_stream</span><span class="p">)</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">log_file_handler</span><span class="p">)</span>
+    <span class="kn">from</span> <span class="nn">elftools.elf.elffile</span> <span class="kn">import</span> <span class="n">ELFFile</span>
 
-    <span class="k">return</span> <span class="n">logger</span></div>
+    <span class="n">address</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">pc_address</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span>
 
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">elf_file</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">elf</span> <span class="o">=</span> <span class="n">ELFFile</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
 
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">elf</span><span class="o">.</span><span class="n">has_dwarf_info</span><span class="p">():</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No DWARF info found in </span><span class="si">{</span><span class="n">elf_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>
 
-<span class="n">log</span> <span class="o">=</span> <span class="n">setup_logger</span><span class="p">()</span>
+        <span class="n">dwarf_info</span> <span class="o">=</span> <span class="n">elf</span><span class="o">.</span><span class="n">get_dwarf_info</span><span class="p">()</span>
+
+        <span class="c1"># Find the .debug_line section and retrieve line program information</span>
+        <span class="k">for</span> <span class="n">CU</span> <span class="ow">in</span> <span class="n">dwarf_info</span><span class="o">.</span><span class="n">iter_CUs</span><span class="p">():</span>
+
+            <span class="n">line_program</span> <span class="o">=</span> <span class="n">dwarf_info</span><span class="o">.</span><span class="n">line_program_for_CU</span><span class="p">(</span><span class="n">CU</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">line_program</span><span class="p">:</span>
+
+                <span class="c1"># Iterate over all entries in the line program</span>
+                <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">line_program</span><span class="o">.</span><span class="n">get_entries</span><span class="p">():</span>
+
+                    <span class="n">state</span> <span class="o">=</span> <span class="n">entry</span><span class="o">.</span><span class="n">state</span>
+
+                    <span class="k">if</span> <span class="n">state</span> <span class="ow">and</span> <span class="n">state</span><span class="o">.</span><span class="n">address</span> <span class="o">==</span> <span class="n">address</span><span class="p">:</span>
+
+                        <span class="n">file_name</span> <span class="o">=</span> <span class="n">line_program</span><span class="p">[</span><span class="s1">&#39;file_entry&#39;</span><span class="p">][</span><span class="n">state</span><span class="o">.</span><span class="n">file</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">name</span>
+
+                        <span class="k">return</span> <span class="p">(</span><span class="n">file_name</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">line</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="kc">None</span></div>
+
 
 
 <div class="viewcode-block" id="Timer">
@@ -226,11 +295,12 @@
 <h3><a href="../index.html">Table of Contents</a></h3>
 <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../asm.html">asm module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../zoix.html">zoix module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../a0.html">a0 module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../utils.html">utils module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../config.html">config module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../asm.html">Assembly File Handling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../zoix.html">Z01X Related</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../grammar.html">Grammars and Parsing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../a0.html">A0 Algorithm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../utils.html">Miscellanous Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../config.html">TestCrush Configuration</a></li>
 </ul>
 
 <search id="searchbox" style="display: none" role="search">
@@ -263,7 +333,7 @@
     </div>
     <div class="footer" role="contentinfo">
     &#169; Copyright 2024, Nikolaos I. Deligiannis.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
     </div>
   </body>
 </html>

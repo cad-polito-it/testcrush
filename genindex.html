@@ -6,10 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Index &#8212; TestCrush 0.5.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
-    <link rel="stylesheet" type="text/css" href="_static/classic.css?v=def86cc0" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css?v=2bf1fcf8" />
+    <link rel="stylesheet" type="text/css" href="_static/custom.css?v=7414fd2b" />
     
     <script src="_static/documentation_options.js?v=1dd76d02"></script>
-    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     
     <link rel="icon" href="_static/favicon.png"/>
@@ -45,10 +46,13 @@
  | <a href="#E"><strong>E</strong></a>
  | <a href="#F"><strong>F</strong></a>
  | <a href="#G"><strong>G</strong></a>
+ | <a href="#H"><strong>H</strong></a>
  | <a href="#I"><strong>I</strong></a>
  | <a href="#L"><strong>L</strong></a>
  | <a href="#M"><strong>M</strong></a>
+ | <a href="#O"><strong>O</strong></a>
  | <a href="#P"><strong>P</strong></a>
+ | <a href="#Q"><strong>Q</strong></a>
  | <a href="#R"><strong>R</strong></a>
  | <a href="#S"><strong>S</strong></a>
  | <a href="#T"><strong>T</strong></a>
@@ -62,9 +66,15 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="a0.html#a0.A0">A0 (class in a0)</a>
 </li>
+      <li><a href="utils.html#utils.addr2line">addr2line() (in module utils)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="asm.html#asm.AssemblyHandler">AssemblyHandler (class in asm)</a>
+</li>
+      <li><a href="grammar.html#grammars.transformers.FaultReportFaultListTransformer.attribute_and_value">attribute_and_value() (grammars.transformers.FaultReportFaultListTransformer method)</a>
+</li>
+      <li><a href="grammar.html#grammars.transformers.FaultReportFaultListTransformer.attributes">attributes() (grammars.transformers.FaultReportFaultListTransformer method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -113,6 +123,8 @@
 <h2 id="E">E</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="grammar.html#grammars.transformers.TraceTransformerCV32E40P.entries">entries() (grammars.transformers.TraceTransformerCV32E40P method)</a>
+</li>
       <li><a href="zoix.html#zoix.Compilation.ERROR">ERROR (zoix.Compilation attribute)</a>
 </li>
       <li><a href="a0.html#a0.A0.evaluate">evaluate() (a0.A0 static method)</a>
@@ -120,6 +132,8 @@
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="zoix.html#zoix.ZoixInvoker.execute">execute() (zoix.ZoixInvoker static method)</a>
+</li>
+      <li><a href="zoix.html#zoix.TxtFaultReport.extract">extract() (zoix.TxtFaultReport method)</a>
 </li>
       <li><a href="zoix.html#zoix.CSVFaultReport.extract_summary_cells_from_row">extract_summary_cells_from_row() (zoix.CSVFaultReport method)</a>
 </li>
@@ -133,11 +147,25 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="zoix.html#zoix.Fault">Fault (class in zoix)</a>
 </li>
+      <li><a href="grammar.html#grammars.transformers.FaultReportFaultListTransformer.fault">fault() (grammars.transformers.FaultReportFaultListTransformer method)</a>
+</li>
+      <li><a href="grammar.html#grammars.transformers.FaultReportFaultListTransformer.fault_info">fault_info() (grammars.transformers.FaultReportFaultListTransformer method)</a>
+</li>
       <li><a href="zoix.html#zoix.ZoixInvoker.fault_simulate">fault_simulate() (zoix.ZoixInvoker method)</a>
+</li>
+      <li><a href="grammar.html#grammars.transformers.FaultReportFaultListTransformer.fault_status">fault_status() (grammars.transformers.FaultReportFaultListTransformer method)</a>
+</li>
+      <li><a href="grammar.html#grammars.transformers.FaultReportFaultListTransformer.fault_type">fault_type() (grammars.transformers.FaultReportFaultListTransformer method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="grammar.html#grammars.transformers.FaultReportFaultListTransformer">FaultReportFaultListTransformer (class in grammars.transformers)</a>
+</li>
+      <li><a href="grammar.html#grammars.transformers.FaultReportTransformerFactory">FaultReportTransformerFactory (class in grammars.transformers)</a>
+</li>
       <li><a href="zoix.html#zoix.FaultSimulation">FaultSimulation (class in zoix)</a>
+</li>
+      <li><a href="grammar.html#grammars.transformers.FaultReportFaultListTransformer.filter_out_discards">filter_out_discards() (grammars.transformers.FaultReportFaultListTransformer static method)</a>
 </li>
       <li><a href="utils.html#utils.Timer.format_time">format_time() (utils.Timer method)</a>
 </li>
@@ -155,13 +183,30 @@
 </li>
       <li><a href="asm.html#asm.AssemblyHandler.get_candidate">get_candidate() (asm.AssemblyHandler method)</a>
 </li>
+      <li><a href="asm.html#asm.AssemblyHandler.get_code">get_code() (asm.AssemblyHandler method)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="asm.html#asm.AssemblyHandler.get_code">get_code() (asm.AssemblyHandler method)</a>
+      <li><a href="utils.html#utils.get_logger">get_logger() (in module utils)</a>
 </li>
       <li><a href="asm.html#asm.ISA.get_mnemonics">get_mnemonics() (asm.ISA method)</a>
 </li>
       <li><a href="asm.html#asm.AssemblyHandler.get_random_candidate">get_random_candidate() (asm.AssemblyHandler method)</a>
+</li>
+      <li>
+    grammars.transformers
+
+      <ul>
+        <li><a href="grammar.html#module-grammars.transformers">module</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="H">H</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="grammar.html#grammars.transformers.TraceTransformerCV32E40P.header">header() (grammars.transformers.TraceTransformerCV32E40P method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -173,6 +218,8 @@
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="zoix.html#zoix.Fault.is_prime">is_prime() (zoix.Fault method)</a>
+</li>
       <li><a href="asm.html#asm.ISA">ISA (class in asm)</a>
 </li>
   </ul></td>
@@ -183,8 +230,12 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="asm.html#asm.Codeline.lineno">lineno (asm.Codeline attribute)</a>
 </li>
+      <li><a href="grammar.html#grammars.transformers.FaultReportFaultListTransformer.loc_and_site">loc_and_site() (grammars.transformers.FaultReportFaultListTransformer method)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="grammar.html#grammars.transformers.FaultReportFaultListTransformer.location_info">location_info() (grammars.transformers.FaultReportFaultListTransformer method)</a>
+</li>
       <li><a href="zoix.html#zoix.ZoixInvoker.logic_simulate">logic_simulate() (zoix.ZoixInvoker method)</a>
 </li>
       <li><a href="zoix.html#zoix.LogicSimulation">LogicSimulation (class in zoix)</a>
@@ -201,9 +252,19 @@
       <ul>
         <li><a href="config.html#module-config">config</a>
 </li>
+        <li><a href="grammar.html#module-grammars.transformers">grammars.transformers</a>
+</li>
         <li><a href="utils.html#module-utils">utils</a>
 </li>
       </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="O">O</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="grammar.html#grammars.transformers.FaultReportFaultListTransformer.optional_name">optional_name() (grammars.transformers.FaultReportFaultListTransformer method)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -212,11 +273,23 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="config.html#config.parse_a0_configuration">parse_a0_configuration() (in module config)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="zoix.html#zoix.CSVFaultReport.parse_fault_report">parse_fault_report() (zoix.CSVFaultReport method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="a0.html#a0.A0.pre_run">pre_run() (a0.A0 method)</a>
+</li>
+      <li><a href="a0.html#a0.Preprocessor">Preprocessor (class in a0)</a>
+</li>
+      <li><a href="a0.html#a0.Preprocessor.prune_candidates">prune_candidates() (a0.Preprocessor method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="Q">Q</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="a0.html#a0.Preprocessor.query_trace_db">query_trace_db() (a0.Preprocessor method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -224,6 +297,8 @@
 <h2 id="R">R</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="grammar.html#grammars.transformers.TraceTransformerCV32E40P.reg_and_mem">reg_and_mem() (grammars.transformers.TraceTransformerCV32E40P method)</a>
+</li>
       <li><a href="asm.html#asm.AssemblyHandler.remove">remove() (asm.AssemblyHandler method)</a>
 </li>
       <li><a href="config.html#config.replace_toml_placeholders">replace_toml_placeholders() (in module config)</a>
@@ -246,6 +321,8 @@
 </li>
       <li><a href="asm.html#asm.AssemblyHandler.save">save() (asm.AssemblyHandler method)</a>
 </li>
+      <li><a href="zoix.html#zoix.Fault.set">set() (zoix.Fault method)</a>
+</li>
       <li><a href="zoix.html#zoix.CSVFaultReport.set_fault_report">set_fault_report() (zoix.CSVFaultReport method)</a>
 </li>
       <li><a href="zoix.html#zoix.CSVFaultReport.set_fault_summary">set_fault_summary() (zoix.CSVFaultReport method)</a>
@@ -258,6 +335,12 @@
 </li>
       <li><a href="utils.html#utils.Singleton">Singleton (class in utils)</a>
 </li>
+      <li><a href="grammar.html#grammars.transformers.FaultReportFaultListTransformer.start">start() (grammars.transformers.FaultReportFaultListTransformer method)</a>
+
+      <ul>
+        <li><a href="grammar.html#grammars.transformers.TraceTransformerCV32E40P.start">(grammars.transformers.TraceTransformerCV32E40P method)</a>
+</li>
+      </ul></li>
       <li><a href="zoix.html#zoix.Compilation.SUCCESS">SUCCESS (zoix.Compilation attribute)</a>
 
       <ul>
@@ -278,9 +361,17 @@
         <li><a href="zoix.html#zoix.LogicSimulation.TIMEOUT">(zoix.LogicSimulation attribute)</a>
 </li>
       </ul></li>
+      <li><a href="utils.html#utils.Timer">Timer (class in utils)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="utils.html#utils.Timer">Timer (class in utils)</a>
+      <li><a href="grammar.html#grammars.transformers.FaultReportFaultListTransformer.timing_info">timing_info() (grammars.transformers.FaultReportFaultListTransformer method)</a>
+</li>
+      <li><a href="grammar.html#grammars.transformers.TraceTransformerCV32E40P">TraceTransformerCV32E40P (class in grammars.transformers)</a>
+</li>
+      <li><a href="grammar.html#grammars.transformers.TraceTransformerFactory">TraceTransformerFactory (class in grammars.transformers)</a>
+</li>
+      <li><a href="zoix.html#zoix.TxtFaultReport">TxtFaultReport (class in zoix)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -329,11 +420,12 @@
 <h3><a href="index.html">Table of Contents</a></h3>
 <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="asm.html">asm module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="zoix.html">zoix module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="a0.html">a0 module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="utils.html">utils module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="config.html">config module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="asm.html">Assembly File Handling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="zoix.html">Z01X Related</a></li>
+<li class="toctree-l1"><a class="reference internal" href="grammar.html">Grammars and Parsing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="a0.html">A0 Algorithm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utils.html">Miscellanous Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">TestCrush Configuration</a></li>
 </ul>
 
 <search id="searchbox" style="display: none" role="search">
@@ -365,7 +457,7 @@
     </div>
     <div class="footer" role="contentinfo">
     &#169; Copyright 2024, Nikolaos I. Deligiannis.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
     </div>
   </body>
 </html>
