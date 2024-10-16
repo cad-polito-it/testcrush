@@ -32,6 +32,9 @@ exclude_patterns = []
 
 html_theme = 'classic'
 html_static_path = ['_static']
+html_css_files = [
+    'custom.css',
+]
 html_sidebars = {
    '**': ['globaltoc.html', 'sourcelink.html', 'searchbox.html'],
    'using/windows': ['windows-sidebar.html', 'searchbox.html'],

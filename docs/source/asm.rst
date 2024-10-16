@@ -1,6 +1,6 @@
-===========
-asm module 
-===========
+======================
+Assembly File Handling
+======================
 
 The ``asm.py`` module contains utilities to handle file I/O operations on arbitrary assembly files.
 The purpose is to remove and to restore lines from the associated assembly file accurately.
