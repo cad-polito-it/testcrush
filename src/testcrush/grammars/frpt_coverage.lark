@@ -24,8 +24,6 @@ FORMULA: /[^"]+/
 // IMPORTS   //
 ///////////////
 
-%import common.UCASE_LETTER
-%import common.CNAME
 %import common.WS
 
 ///////////////
