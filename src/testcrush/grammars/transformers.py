@@ -469,7 +469,9 @@ class FaultReportTransformerFactory:
         "Coverage": (FaultReportCoverageTransformer, _current_directory / "frpt_coverage.lark")
     }
 
-    def __call__(self, section_string: str) -> Union[tuple[FaultReportFaultListTransformer, str]]:
+    def __call__(self, section_string: str) -> Union[tuple[FaultReportFaultListTransformer, str],
+                                                     tuple[FaultReportStatusGroupsTransformer, str],
+                                                     tuple[FaultReportCoverageTransformer, str]]:
 
         transformer, grammar = self._transformers.get(section_string, (None, None))
 
@@ -480,18 +482,3 @@ class FaultReportTransformerFactory:
             lark_grammar = src.read()
 
         return transformer(), lark_grammar
-
-
-if __name__ == "__main__":
-
-    parser = lark.Lark(grammar=open("frpt_coverage.lark").read(),
-                       start="start",
-                       parser="lalr",
-                       transformer=FaultReportCoverageTransformer())
-
-    dummy_text = r""" Coverage {
-        "Diagnostic Coverage" = "INT( AA + BB + CC )";
-        DEARF ASDF = "(DD + DN)/(NA + DA + DN + DD + SU)";
-    }
-    """
-    parser.parse(dummy_text)
