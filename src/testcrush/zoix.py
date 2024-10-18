@@ -40,11 +40,11 @@ class FaultSimulation(enum.Enum):
     SUCCESS = "SUCCESS"  # None of the above
 
 
-class Fault():
+class Fault:
     """
-    Generic representation of a fault
+    Generic representation of a **prime** fault
 
-    Each fault has two standard attributes which are:
+    Each prime fault has two static attributes which are:
     -``equivalent_faults`` (int): Corresponds to the total number of faults equivalent to this fault. Defaults to 1 i.e.
     itself.
     -``equivalent_to`` (Fault): A reference to the primary fault with which the current fault is equivalent. If the
@@ -135,7 +135,7 @@ class Fault():
         return self.equivalent_to is None
 
 
-class TxtFaultReport():
+class TxtFaultReport:
     """
     Manages the VC-Z01X text report.
     """
@@ -153,6 +153,9 @@ class TxtFaultReport():
 
         Returns:
             str: A newline-joined string of the extracted section (section name included).
+
+        Raises:
+            ValueError: If ``section`` does not exist in the fault report.
         """
         extracted_lines = list()
 
@@ -188,11 +191,12 @@ class TxtFaultReport():
 
         if not section_found:
             log.debug(f"Requested section \"{section}\" not found!")
+            raise ValueError(f"Requested section \"{section}\" not found!")
 
         return '\n'.join(extracted_lines)
 
 
-class CSVFaultReport():
+class CSVFaultReport:
     """
     Manipulates the VC-Z01X summary and report **CSV** files.
 
@@ -201,8 +205,7 @@ class CSVFaultReport():
     **MUST** be executed with the ``-csv`` option.
     """
 
-    def __init__(self, fault_summary: pathlib.Path,
-                 fault_report: pathlib.Path) -> "CSVFaultReport":
+    def __init__(self, fault_summary: pathlib.Path, fault_report: pathlib.Path) -> "CSVFaultReport":
 
         self.fault_summary: pathlib.Path = fault_summary.absolute()
         self.fault_report: pathlib.Path = fault_report.absolute()
@@ -237,7 +240,8 @@ class CSVFaultReport():
             None
 
         Raises:
-            FileNotFoundError: If the file does not exist."""
+            FileNotFoundError: If the file does not exist.
+        """
 
         if not pathlib.Path(fault_report).exists():
             raise FileNotFoundError(f"{fault_report=} does not exist!")
@@ -279,11 +283,10 @@ class CSVFaultReport():
 
     def parse_fault_report(self) -> list[Fault]:
         """
-        Parses the ``self.fault_report`` **CSV** file and returns  a dictionary with its contents, ommiting
-        any column if specified.
+        Parses the fault report and produces a fault list.
 
         Returns:
-            list[Fault]: A list with `Fault` entries.
+            list[Fault]: A list with ``Fault`` entries.
         """
 
         with open(self.fault_report) as csv_source:
@@ -298,8 +301,7 @@ class CSVFaultReport():
     @staticmethod
     def extract_summary_coverage(summary: pathlib.Path, regexp: re.Pattern, group_index: int) -> float:
         """
-        Extracts the coverage percentage from the summary text file
-        file via multilined regex matching.
+        Extracts the coverage percentage from the summary text file file via multilined regex matching.
 
         Args:
             summary (pathlib.Path): The location of the ``summary.txt`` report.
@@ -402,7 +404,7 @@ class CSVFaultReport():
         return round(eval(formula, {**fault_statuses, **status_groups, **non_present_statuses}), precision)
 
 
-class ZoixInvoker():
+class ZoixInvoker:
     """A wrapper class to be used in handling calls to VCS-Z01X."""
     def __init__(self) -> "ZoixInvoker":
         ...
