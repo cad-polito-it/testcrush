@@ -17,7 +17,7 @@ import unittest
 import lark
 
 
-class FaultListTransformerTest(unittest.TestCase):
+class FaultReportFaultListTransformerTest(unittest.TestCase):
 
     def get_parser(self):
 
@@ -146,6 +146,117 @@ class FaultListTransformerTest(unittest.TestCase):
         expected_faults[9].equivalent_to = expected_faults[7]
 
         self.assertEqual(fault_list, expected_faults)
+
+
+class FaultReportStatusGroupsTransformerTest(unittest.TestCase):
+
+    def get_parser(self):
+
+        factory = transformers.FaultReportTransformerFactory()
+        transformer, grammar = factory("StatusGroups")
+        return lark.Lark(grammar=grammar, start="start", parser="lalr", transformer=transformer)
+
+    def test_no_leq_group_section(self):
+
+        parser = self.get_parser()
+
+        status_groups_sample = r"""
+        StatusGroups {
+            SA "Safe" (UT, UB, UR, UU);
+            SU "Safe Unobserved" (NN, NC, NO, NT);
+            DA "Dangerous Assumed" (HA, HM, HT, OA, OZ, IA, IP, IF, IX);
+            DN "Dangerous Not Diagnosed" (PN, ON, PP, OP, NP, AN, AP);
+            DD "Dangerous Diagnosed" (PD, OD, ND, AD);
+        }
+        """
+
+        groups = parser.parse(status_groups_sample)
+        expected_groups = {'SA': ['UT', 'UB', 'UR', 'UU'],
+                           'SU': ['NN', 'NC', 'NO', 'NT'],
+                           'DA': ['HA', 'HM', 'HT', 'OA', 'OZ', 'IA', 'IP', 'IF', 'IX'],
+                           'DN': ['PN', 'ON', 'PP', 'OP', 'NP', 'AN', 'AP'],
+                           'DD': ['PD', 'OD', 'ND', 'AD']}
+
+        self.assertEqual(groups, expected_groups)
+
+    def test_leq_group_section(self):
+
+        parser = self.get_parser()
+
+        status_groups_sample = r"""
+        StatusGroups {
+            SA "Safe" (UT < UB < UR UU);
+            SU "Safe Unobserved" (NN < NC < NO < NT);
+            DA "Dangerous Assumed" (HA < HM < HT < OA < OZ < IA < IP < IF < IX);
+            DN "Dangerous Not Diagnosed" (PN < ON < PP < OP < NP < AN < AP);
+            DD "Dangerous Diagnosed" (PD < OD < ND < AD);
+        }
+        """
+
+        groups = parser.parse(status_groups_sample)
+        expected_groups = {'SA': ['UT', 'UB', 'UR', 'UU'],
+                           'SU': ['NN', 'NC', 'NO', 'NT'],
+                           'DA': ['HA', 'HM', 'HT', 'OA', 'OZ', 'IA', 'IP', 'IF', 'IX'],
+                           'DN': ['PN', 'ON', 'PP', 'OP', 'NP', 'AN', 'AP'],
+                           'DD': ['PD', 'OD', 'ND', 'AD']}
+
+        self.assertEqual(groups, expected_groups)
+
+class FaultReportCoverageTransformerTest(unittest.TestCase):
+
+    def get_parser(self):
+
+        factory = transformers.FaultReportTransformerFactory()
+        transformer, grammar = factory("Coverage")
+        return lark.Lark(grammar=grammar, start="start", parser="lalr", transformer=transformer)
+
+    def test_coverage_str_no_quotes_lhs(self):
+
+        parser = self.get_parser()
+
+        coverage_sample = r"""
+        Coverage {
+            Coverage_1 = "AA + BB + CC";
+            Coverage_2 = "(DD + DN)/(NA + DA + DN + DD + SU)";
+         }
+        """
+
+        coverage = parser.parse(coverage_sample)
+        expected_coverage = {'Coverage_1': 'AA + BB + CC', 'Coverage_2': '(DD + DN)/(NA + DA + DN + DD + SU)'}
+        self.assertEqual(coverage, expected_coverage)
+
+    def test_coverage_str_with_quotes_lhs(self):
+
+        parser = self.get_parser()
+
+        coverage_sample = r"""
+        Coverage {
+            "Coverage_1" = "AA + BB + CC";
+            "Coverage_2" = "(DD + DN)/(NA + DA + DN + DD + SU)";
+         }
+        """
+
+        coverage = parser.parse(coverage_sample)
+        expected_coverage = {'Coverage_1': 'AA + BB + CC', 'Coverage_2': '(DD + DN)/(NA + DA + DN + DD + SU)'}
+        self.assertEqual(coverage, expected_coverage)
+
+    def test_coverage_with_format_specifiers_rhs(self):
+
+        parser = self.get_parser()
+
+        coverage_sample = r"""
+        Coverage {
+            "Coverage_1" = "FLT(AA + BB + CC)";
+            Coverage_2 = "PCT((DD + DN)/(NA + DA + DN + DD + SU))";
+            Coverage_3 = "INT(FF+CC*2)";
+         }
+        """
+
+        coverage = parser.parse(coverage_sample)
+        expected_coverage = {'Coverage_1': '(AA + BB + CC)',
+                             'Coverage_2': '((DD + DN)/(NA + DA + DN + DD + SU))',
+                             'Coverage_3': '(FF+CC*2)'}
+        self.assertEqual(coverage, expected_coverage)
 
 class TraceTransformerCV32E40PTest(unittest.TestCase):
 

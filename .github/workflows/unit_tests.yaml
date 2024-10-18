@@ -79,10 +79,20 @@ jobs:
         cd src/unit_tests
         python3 -m unittest test_config
 
-    - name: (grammars/transformers.py) FaultListTransformer Tests Cases
+    - name: (grammars/transformers.py) FaultReportFaultListTransformer Tests Cases
       run: |
         cd src/unit_tests
-        python3 -m unittest test_transformers.FaultListTransformerTest
+        python3 -m unittest test_transformers.FaultReportFaultListTransformerTest
+
+    - name: (grammars/transformers.py) FaultReportStatusGroupsTransformer Tests Cases
+      run: |
+        cd src/unit_tests
+        python3 -m unittest test_transformers.FaultReportStatusGroupsTransformerTest
+
+    - name: (grammars/transformers.py) FaultReportCoverageTransformer Tests Cases
+      run: |
+        cd src/unit_tests
+        python3 -m unittest test_transformers.FaultReportCoverageTransformerTest
 
     - name: (grammars/transformers.py) TraceTransformerCV32E40P Tests Cases
       run: |
