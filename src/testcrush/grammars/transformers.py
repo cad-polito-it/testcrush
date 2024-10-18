@@ -13,7 +13,7 @@ log = get_logger()
 
 class FaultReportFaultListTransformer(lark.Transformer):
     """
-    This class is expected to act on the grammar defined for the ``FaultList`` segment of a Z01X txt fault report.
+    This transformer is expected to act on the grammar of the ``FaultList`` segment of a Z01X txt fault report.
 
     After parsing the segment is returning a list of ``zoix.Fault`` objects with the following attributes:
 
@@ -22,6 +22,8 @@ class FaultReportFaultListTransformer(lark.Transformer):
     - Timing_Info (list[str]): A list with all timing info (if present) e.g., ['6.532ns']
     - Fault_Sites (list[str]): A list of fault sites represented as strings
     - Fault_Attributes (dict[str, str]): A dictionary with all fault attributes (if present)
+
+    Lastly, it resolves on-the-fly any fault equivalences on the generated fault list.
     """
 
     _prev_fstatus: str = ""
@@ -172,6 +174,7 @@ class FaultReportFaultListTransformer(lark.Transformer):
 
         .. highlight:: python
         .. code-block:: python
+
             <  1> NN R (7.52ns) {FLOP "tb_top.dut.subunit_a.cell.port1"}
                         ^^^^^^
                         consumed
@@ -242,6 +245,106 @@ class FaultReportFaultListTransformer(lark.Transformer):
 
         log.debug(f"Returning ({attribute_name}, {attribute_value}) pair.")
         return (str(attribute_name), str(attribute_value))
+
+
+class FaultReportStatusGroupsTransformer(lark.Transformer):
+    """
+    This transformer is expected to act on the grammar of the ``StatusGroups`` segment of a Z01X txt fault report.
+
+    It constructs and returns a dictionary with keys the group names and keys the statuses of each group.
+    """
+
+    def start(self, groups: list[tuple[str, list[str]]]) -> dict[str, list[str]]:
+        """
+        Receives all groups in the form of tuples where the index 0 is the group name and index 1 is a list of statuses.
+        Returns a dictionary where each key is a group and the corresponding value is the related statuses as list[str].
+        """
+        return {k: v for k, v in groups}
+
+    @lark.v_args(inline=True)
+    def group(self, name: str, statuses: list[str]) -> tuple[str, list[str]]:
+        """
+        Digests group name and extended group name and receives the transformed statuses.
+        Returns the group name and the statuses (as-is) in the form of a tuple
+
+        .. highlight:: python
+        .. code-block:: python
+
+            SA       "Safe" (UT, UB, UR, UU);
+            ^^        ^^^^
+            captured  discarded
+        """
+        return (str(name), statuses)
+
+    @lark.v_args(inline=True)
+    def fault_statuses(self, *statuses) -> list[str]:
+        """
+        Digests the fault statuses of a group and returns them as a list of strings
+
+        .. highlight:: python
+        .. code-block:: python
+
+            SA "Safe" (UT, UB, UR, UU);
+                       ^^  ^^  ^^  ^^
+                         captured
+        """
+        return [str(status.rstrip(", <")) for status in statuses]
+
+
+class FaultReportCoverageTransformer(lark.Transformer):
+    """
+    This transformer is expected to act on the grammar of the ``Coverage`` segment of a Z01X txt fault report.
+
+    It constructs and returns a dictionary with keys the formula names and keys the corresponding formulas as strings.
+    """
+
+    def start(self, formulas: list[tuple[str, str]]) -> dict[str, str]:
+        """
+        Accepts a series of formulas in the form of tuples and transforms them into a dictionary.
+        """
+        return {k: v for k, v in formulas}
+
+    @lark.v_args(inline=True)
+    def formula(self, formula_name: str, formula: str) -> tuple[str, str]:
+        """
+        Takes the lhs and rhs and returns them as a tuple
+        .. highlight:: python
+        .. code-block:: python
+
+            "Diagnostic Coverage" = "INT(DD/(NA + DA + DN + DD))";
+             ^^^^^^^^^^^^^^^^^^^        ^^^^^^^^^^^^^^^^^^^^^^^^
+                  consumed                  consumed
+        """
+        return (formula_name, formula)
+
+    @lark.v_args(inline=True)
+    def lhs(self, formula_name: str) -> str:
+        """
+        Digests the left hand side of a single formula and returns the formula name as string.
+
+        .. highlight:: python
+        .. code-block:: python
+
+            "Diagnostic Coverage" = "INT(DD/(NA + DA + DN + DD))";
+             ^^^^^^^^^^^^^^^^^^^
+                  consumed
+        """
+        return str(formula_name).strip('"').strip()
+
+    @lark.v_args(inline=True)
+    def rhs(self, formula: str) -> str:
+        """
+        Digests the right hand side of a single formula while skipping format specifiers (if any).
+        Returns the formula as string.
+
+        .. highlight:: python
+        .. code-block:: python
+
+            "Diagnostic Coverage" = "INT(DD/(NA + DA + DN + DD))";
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^
+                                            consumed
+        """
+        return str(formula)
 
 
 class TraceTransformerCV32E40P(lark.Transformer):
@@ -361,7 +464,9 @@ class FaultReportTransformerFactory:
     """
     _current_directory = pathlib.Path(__file__).parent
     _transformers = {
-        "FaultList": (FaultReportFaultListTransformer, _current_directory / "frpt_fault_list.lark")
+        "FaultList": (FaultReportFaultListTransformer, _current_directory / "frpt_fault_list.lark"),
+        "StatusGroups": (FaultReportStatusGroupsTransformer, _current_directory / "frpt_status_groups.lark"),
+        "Coverage": (FaultReportCoverageTransformer, _current_directory / "frpt_coverage.lark")
     }
 
     def __call__(self, section_string: str) -> Union[tuple[FaultReportFaultListTransformer, str]]:
@@ -375,3 +480,18 @@ class FaultReportTransformerFactory:
             lark_grammar = src.read()
 
         return transformer(), lark_grammar
+
+
+if __name__ == "__main__":
+
+    parser = lark.Lark(grammar=open("frpt_coverage.lark").read(),
+                       start="start",
+                       parser="lalr",
+                       transformer=FaultReportCoverageTransformer())
+
+    dummy_text = r""" Coverage {
+        "Diagnostic Coverage" = "INT( AA + BB + CC )";
+        DEARF ASDF = "(DD + DN)/(NA + DA + DN + DD + SU)";
+    }
+    """
+    parser.parse(dummy_text)

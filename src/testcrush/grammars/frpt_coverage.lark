@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: MIT
+
+start: "Coverage" "{" formula+ "}"
+formula: lhs "=" "\"" _TYPE? rhs "\";" 
+lhs: FORMULA_NAME
+rhs: FORMULA
+
+///////////////
+// TERMINALS //
+///////////////
+
+FORMULA_NAME: /
+     "[\w ]+" 
+    | [\w ]+
+/xi
+
+_TYPE.1: "INT"  # Assign weight to be matched before rhs
+       | "PCT"
+       | "FLT"
+
+FORMULA: /[^"]+/
+
+///////////////
+// IMPORTS   //
+///////////////
+
+%import common.UCASE_LETTER
+%import common.CNAME
+%import common.WS
+
+///////////////
+// IGNORE    //
+///////////////
+
+# Ignore Whitespace
+%ignore WS

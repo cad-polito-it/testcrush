@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: MIT
+
+start: "StatusGroups" "{" group+ "}"
+group: GROUP_NAME "\"" _EXTENDED_GROUP_NAME "\"" fault_statuses
+
+fault_statuses: "(" [STATUS "<"?]+ ");"
+
+///////////////
+// TERMINALS //
+///////////////
+
+GROUP_NAME: UCASE_LETTER UCASE_LETTER
+STATUS: UCASE_LETTER UCASE_LETTER [","|"<"]?
+
+_EXTENDED_GROUP_NAME: /[\w ]+/i
+
+///////////////
+// IMPORTS   //
+///////////////
+
+%import common.UCASE_LETTER
+%import common.CNAME
+%import common.WS
+
+///////////////
+// IGNORE    //
+///////////////
+
+# Ignore Whitespace
+%ignore WS
