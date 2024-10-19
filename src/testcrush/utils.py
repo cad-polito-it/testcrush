@@ -11,6 +11,17 @@ import zipfile
 import os
 
 
+def to_snake_case(name: str) -> str:
+    """
+    Args:
+        name (str): A camelCase-like string
+
+    Returns:
+        str: The ``name`` in snake_case format.
+    """
+    return ''.join(['_' + i.lower() if i.isupper() else i for i in name]).lstrip('_')
+
+
 def setup_logger(stream_logging_level: int, log_file: str | None = None) -> None:
     """Set up a logger with stream and file handlers."""
     class IndentedFormatter(logging.Formatter):
