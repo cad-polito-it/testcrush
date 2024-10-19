@@ -7,7 +7,7 @@ import enum
 import pathlib
 import csv
 
-from testcrush.utils import get_logger
+from testcrush.utils import get_logger, to_snake_case
 from typing import Any
 
 log = get_logger()
@@ -140,9 +140,29 @@ class TxtFaultReport:
     Manages the VC-Z01X text report.
     """
 
+    __slots__ = ["fault_report", "fault_list", "status_groups", "coverage"]
+
     def __init__(self, fault_report: pathlib.Path) -> "TxtFaultReport":
         with open(fault_report) as src:
             self.fault_report: str = src.read()
+
+        # Lazy import to resolve avoid circular import.
+        from testcrush.grammars.transformers import FaultReportTransformerFactory
+
+        factory = FaultReportTransformerFactory()
+        for section in ["StatusGroups", "Coverage", "FaultList"]:
+
+            parser = factory(section)
+
+            try:
+                raw_section = self.extract(section)
+
+            except ValueError:  # section doesn't exist
+                setattr(self, to_snake_case(section), None)
+                continue
+
+            log.debug(f"Parsing {section}")
+            setattr(self, to_snake_case(section), parser.parse(raw_section))
 
     def extract(self, section: str) -> str:
         """
@@ -194,6 +214,58 @@ class TxtFaultReport:
             raise ValueError(f"Requested section \"{section}\" not found!")
 
         return '\n'.join(extracted_lines)
+
+    def compute_coverage(self, requested_formula: str = None, precision: int = 4) -> dict[str, float] | float:
+        """
+
+        """
+        retval = list()
+
+        fault_statusses = dict()
+
+        for fault in self.fault_list:
+
+            status = fault.fault_status
+
+            if status in fault_statusses:
+                fault_statusses[status] += 1
+            else:
+                fault_statusses[status] = 1
+
+        status_groups = dict()
+        if self.status_groups:
+
+            for group, statuses in self.status_groups.items():
+
+                status_groups[group] = 0
+
+                for status in statuses:
+
+                    if status in fault_statusses:
+
+                        status_groups[group] += fault_statusses[status]
+
+        # We expect that if a coverage formula is specified
+        # i.e., Coverage{} exists, then there  may  be some
+        # variables there which may not  exist in  statuses
+        # or groups. Hence we must set them to 0.
+        non_present = dict()
+        if self.coverage:
+
+            for formula_name, formula in self.coverage.items():
+
+                for status_or_group in re.findall(r"[A-Z]{2}", formula):
+
+                    if status_or_group not in fault_statusses and status_or_group not in status_groups:
+
+                        non_present[status_or_group] = 0
+
+                retval.append((formula_name,
+                               round(eval(formula, {**fault_statusses, **status_groups, **non_present}),
+                                     precision)))
+
+        # Else: TODO: Implement default coverage computation according to manual
+        return dict(retval)[requested_formula] if requested_formula else dict(retval)
 
 
 class CSVFaultReport:
@@ -680,3 +752,9 @@ expression '{tat_regexp}' ?")
                 break
 
         return fault_simulation_status
+
+
+if __name__ == "__main__":
+
+    a = TxtFaultReport(pathlib.Path("../../sandbox/fsim_attr"))
+    print(a.compute_coverage())

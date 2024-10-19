@@ -183,7 +183,32 @@ FaultList {
 # INSTR                    4d818193                              8
 """
     def create_object(self):
+
+        real_open = open  # Keep an alias to real open
+
         with mock.patch("builtins.open", mock.mock_open(read_data=self._fault_report_excerp)) as mocked_open:
+
+            # Careful! the constructor invokes lark parsing which means it opens >1 files
+            # However, what we want to patch is just the fault report excerpt and not the
+            # rest, e.g., the grammars. Hence, we need to hack our way around this  issue
+            # and only patch the open when the fault report is read. Hence this elaborate
+            # side effect trick. Note that i am also capturing real_open above, since  at
+            # this point, it is already patched.
+
+            def open_side_effect(file, mode="r", *args, **kwargs):
+
+                if isinstance(file, pathlib.Path):
+                    file = str(file)
+
+                if file == "mock_fault_report":
+                    return mock.mock_open(read_data=self._fault_report_excerp)()
+                else:
+                    # Use the real open function for grammar parsing
+                    return real_open(file, mode, *args, **kwargs)
+
+            # Set the side_effect to handle multiple file paths
+            mocked_open.side_effect = open_side_effect
+
             test_obj = zoix.TxtFaultReport(pathlib.Path("mock_fault_report"))
 
         return test_obj
@@ -192,6 +217,36 @@ FaultList {
 
         test_obj = self.create_object()
         self.assertEqual(test_obj.fault_report, self._fault_report_excerp)
+        expected = [zoix.Fault(fault_status='ON', fault_type='1', fault_sites=['tb_top.wrapper_i.top_i.core_i.ex_stage_i.mult_i.U10.A1'], fault_attributes={'INSTR': '3cb3079a', 'INSTR_ADDR': '000009bc', 'PC_ID': '000009b2', 'PC_IF': '000009b6', 'sim_time': '2815ns'}),
+                   zoix.Fault(fault_status='ON', fault_type='1', fault_sites=['tb_top.wrapper_i.top_i.core_i.ex_stage_i.mult_i.U333.Z']),
+                   zoix.Fault(fault_status='ON', fault_type='1', fault_sites=['tb_top.wrapper_i.top_i.core_i.ex_stage_i.mult_i.U10.A2'], fault_attributes={'INSTR': '3cb3079a', 'INSTR_ADDR': '000009fc', 'PC_ID': '000009f2', 'PC_IF': '000009f6', 'sim_time': '6425ns'}),
+                   zoix.Fault(fault_status='ON', fault_type='0', fault_sites=['tb_top.wrapper_i.top_i.core_i.ex_stage_i.mult_i.U10.ZN'], fault_attributes={'INSTR': '3cb3079a', 'INSTR_ADDR': '000009bc', 'PC_ID': '000009b2', 'PC_IF': '000009b6', 'sim_time': '2815ns'}),
+                   zoix.Fault(fault_status='ON', fault_type='1', fault_sites=['tb_top.wrapper_i.top_i.core_i.ex_stage_i.mult_i.U10.ZN'], fault_attributes={'INSTR': '3cb3079a', 'INSTR_ADDR': '000009fc', 'PC_ID': '000009f2', 'PC_IF': '000009f6', 'sim_time': '18745ns'}),
+                   zoix.Fault(fault_status='ON', fault_type='0', fault_sites=['tb_top.wrapper_i.top_i.core_i.ex_stage_i.mult_i.U10.A1']),
+                   zoix.Fault(fault_status='ON', fault_type='0', fault_sites=['tb_top.wrapper_i.top_i.core_i.ex_stage_i.mult_i.U10.A2']),
+                   zoix.Fault(fault_status='ON', fault_type='0', fault_sites=['tb_top.wrapper_i.top_i.core_i.ex_stage_i.mult_i.U333.Z']),
+                   zoix.Fault(fault_status='ON', fault_type='1', fault_sites=['tb_top.wrapper_i.top_i.core_i.ex_stage_i.mult_i.U100.A1'], fault_attributes={'INSTR': '3cb3079a', 'INSTR_ADDR': '000009bc', 'PC_ID': '000009b2', 'PC_IF': '000009b6', 'sim_time': '7455ns'}),
+                   zoix.Fault(fault_status='ON', fault_type='1', fault_sites=['tb_top.wrapper_i.top_i.core_i.ex_stage_i.mult_i.U100.A2'], fault_attributes={'INSTR': '3cb3079a', 'INSTR_ADDR': '000009bc', 'PC_ID': '000009b2', 'PC_IF': '000009b6', 'sim_time': '2815ns'}),
+                   zoix.Fault(fault_status='ON', fault_type='0', fault_sites=['tb_top.wrapper_i.top_i.core_i.ex_stage_i.mult_i.U681.A'])]
+
+        expected[1].equivalent_to = expected[0]
+        expected[0].equivalent_faults = 2
+        expected[5].equivalent_to = expected[4]
+        expected[6].equivalent_to = expected[4]
+        expected[7].equivalent_to = expected[4]
+        expected[4].equivalent_faults = 4
+        expected[10].equivalent_to = expected[9]
+        expected[9].equivalent_faults = 2
+        self.assertEqual(test_obj.fault_list, expected)
+
+        self.assertEqual(test_obj.status_groups, {'SA': ['UT', 'UB', 'UR', 'UU'],
+                                                  'SU': ['NN', 'NC', 'NO', 'NT'],
+                                                  'DA': ['HA', 'HM', 'HT', 'OA', 'OZ', 'IA', 'IP', 'IF', 'IX'],
+                                                  'DN': ['PN', 'ON', 'PP', 'OP', 'NP', 'AN', 'AP'],
+                                                  'DD': ['PD', 'OD', 'ND', 'AD']})
+
+        self.assertEqual(test_obj.coverage, {"Diagnostic Coverage": "DD/(NA + DA + DN + DD)",
+                                             "Observational Coverage": "(DD + DN)/(NA + DA + DN + DD + SU)"})
 
     def test_extract(self):
 
@@ -311,6 +366,14 @@ FaultList {
           -- 0 {PORT "tb_top.wrapper_i.top_i.core_i.ex_stage_i.mult_i.U681.A"}
 }""")
 
+    def test_compute_coverage(self):
+        test_obj = self.create_object()
+
+        coverage = test_obj.compute_coverage()
+
+        self.assertEqual(coverage, {'Diagnostic Coverage': 0.0, 'Observational Coverage': 1.0})
+
+
 
 class CSVFaultReportTest(unittest.TestCase):
 
@@ -409,7 +472,6 @@ class CSVFaultReportTest(unittest.TestCase):
 3,"test1","yes","ON","1","","","","PORT","path_to_fault_3.portC"''')):
 
             report = test_obj.parse_fault_report()
-            #print(report)
             expected_report = [
                 zoix.Fault(**{"FID":"1", "Test Name":"test1", "Prime":"yes", "Status":"ON", "Model":"0", "Timing":"", "Cycle Injection":"", "Cycle End":"", "Class":"PORT", "Location":"path_to_fault_1.portA"}),
                 zoix.Fault(**{"FID":"2", "Test Name":"test1", "Prime":"1", "Status":"ON", "Model":"0", "Timing":"", "Cycle Injection":"", "Cycle End":"", "Class":"PORT", "Location":"path_to_fault_2.portB"}),
@@ -417,6 +479,7 @@ class CSVFaultReportTest(unittest.TestCase):
             ]
 
             self.assertEqual(report, expected_report)
+
 
 class ZoixInvokerTest(unittest.TestCase):
 
