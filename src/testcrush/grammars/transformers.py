@@ -4,7 +4,7 @@
 import lark
 import pathlib
 
-from typing import Literal, Any, Iterable, Union
+from typing import Literal, Any, Iterable
 from testcrush.zoix import Fault
 from testcrush.utils import get_logger
 
@@ -17,11 +17,11 @@ class FaultReportFaultListTransformer(lark.Transformer):
 
     After parsing the segment is returning a list of ``zoix.Fault`` objects with the following attributes:
 
-    - Fault_Status (str): 2-uppercase-letter status
-    - Fault_Type (str): 0|1|R|F|~
-    - Timing_Info (list[str]): A list with all timing info (if present) e.g., ['6.532ns']
-    - Fault_Sites (list[str]): A list of fault sites represented as strings
-    - Fault_Attributes (dict[str, str]): A dictionary with all fault attributes (if present)
+    - fault_status (str): 2-uppercase-letter status
+    - fault_type (str): 0|1|R|F|~
+    - timing_info (list[str]): A list with all timing info (if present) e.g., ['6.532ns']
+    - fault_sites (list[str]): A list of fault sites represented as strings
+    - fault_attributes (dict[str, str]): A dictionary with all fault attributes (if present)
 
     Lastly, it resolves on-the-fly any fault equivalences on the generated fault list.
     """
@@ -151,7 +151,7 @@ class FaultReportFaultListTransformer(lark.Transformer):
 
         log.debug(f"Returning Fault Status: {fault_status}")
 
-        return ("Fault Status", fault_status)
+        return ("fault_status", fault_status)
 
     @lark.v_args(inline=True)
     def fault_type(self, fault_type: str) -> str:
@@ -166,7 +166,7 @@ class FaultReportFaultListTransformer(lark.Transformer):
                      consumed
         """
         log.debug(f"Returning Fault Type: {fault_type}")
-        return ("Fault Type", str(fault_type))
+        return ("fault_type", str(fault_type))
 
     def timing_info(self, timings: list[str]) -> tuple[Literal["Timing Info"], list[str]]:
         """
@@ -180,7 +180,7 @@ class FaultReportFaultListTransformer(lark.Transformer):
                         consumed
         """
         log.debug(f"Passing Received Timing Info {timings}")
-        return ("Timing Info", [str(x) for x in timings])
+        return ("timing_info", [str(x) for x in timings])
 
     def location_info(self, sites: list[str]) -> tuple[Literal['Fault Sites'], list[str]]:
         """
@@ -195,7 +195,7 @@ class FaultReportFaultListTransformer(lark.Transformer):
         """
 
         log.debug(f"Passing Received Fault Sites in a List {sites}")
-        return ("Fault Sites", sites)
+        return ("fault_sites", sites)
 
     @lark.v_args(inline=True)
     def loc_and_site(self, fault_site: str) -> str:
@@ -227,7 +227,7 @@ class FaultReportFaultListTransformer(lark.Transformer):
         """
 
         log.debug(f"Passing Received Fault Attributes in a List {attributes}")
-        return ("Fault Attributes", dict(attributes))
+        return ("fault_attributes", dict(attributes))
 
     @lark.v_args(inline=True)
     def attribute_and_value(self, attribute_name: str, attribute_value: str) -> tuple[str, str]:
@@ -344,7 +344,7 @@ class FaultReportCoverageTransformer(lark.Transformer):
                                         ^^^^^^^^^^^^^^^^^^^^^^^^
                                             consumed
         """
-        return str(formula)
+        return str(formula).replace("^", "**")  # Pow in py is **
 
 
 class TraceTransformerCV32E40P(lark.Transformer):
@@ -429,7 +429,7 @@ class TraceTransformerFactory:
     .. code-block:: python
 
         factory = TraceTransformerFactory()
-        transformer, grammar = factory("ProcessorString")
+        parser = factory("ProcessorString")
 
     """
     _current_directory = pathlib.Path(__file__).parent
@@ -437,7 +437,7 @@ class TraceTransformerFactory:
         "CV32E40P": (TraceTransformerCV32E40P, _current_directory / "trace_cv32e40p.lark")
     }
 
-    def __call__(self, processor_type: str) -> Union[tuple[TraceTransformerCV32E40P, str]]:
+    def __call__(self, processor_type: str) -> lark.Lark:
 
         transformer, grammar = self._transformers.get(processor_type, (None, None))
 
@@ -447,7 +447,7 @@ class TraceTransformerFactory:
         with open(grammar) as src:
             lark_grammar = src.read()
 
-        return transformer(), lark_grammar
+        return lark.Lark(grammar=lark_grammar, start="start", parser="lalr", transformer=transformer())
 
 
 class FaultReportTransformerFactory:
@@ -459,7 +459,7 @@ class FaultReportTransformerFactory:
     .. code-block:: python
 
         factory = FaultReportTransformerFactory()
-        transformer, grammar = factory("FaultReportSectionString")
+        parser = factory("FaultReportSectionString")
 
     """
     _current_directory = pathlib.Path(__file__).parent
@@ -469,9 +469,7 @@ class FaultReportTransformerFactory:
         "Coverage": (FaultReportCoverageTransformer, _current_directory / "frpt_coverage.lark")
     }
 
-    def __call__(self, section_string: str) -> Union[tuple[FaultReportFaultListTransformer, str],
-                                                     tuple[FaultReportStatusGroupsTransformer, str],
-                                                     tuple[FaultReportCoverageTransformer, str]]:
+    def __call__(self, section_string: str) -> lark.Lark:
 
         transformer, grammar = self._transformers.get(section_string, (None, None))
 
@@ -481,4 +479,4 @@ class FaultReportTransformerFactory:
         with open(grammar) as src:
             lark_grammar = src.read()
 
-        return transformer(), lark_grammar
+        return lark.Lark(grammar=lark_grammar, start="start", parser="lalr", transformer=transformer())

@@ -22,9 +22,7 @@ class FaultReportFaultListTransformerTest(unittest.TestCase):
     def get_parser(self):
 
         factory = transformers.FaultReportTransformerFactory()
-        transformer, grammar = factory("FaultList")
-        return lark.Lark(grammar=grammar, start="start", parser="lalr", transformer=transformer)
-
+        return factory("FaultList")
 
     def test_stuck_at_fault_list(self):
 
@@ -40,10 +38,10 @@ class FaultReportFaultListTransformerTest(unittest.TestCase):
             }
         """
         expected_faults = [
-            zoix.Fault(Fault_Status='ON', Fault_Type='0', Fault_Sites=['tb.dut.subunit_a.subunit_b.cellA.ZN'], Fault_Attributes={'PC': '30551073', 'time': '45ns'}),
-            zoix.Fault(Fault_Status='ON', Fault_Type='1', Fault_Sites=['tb.dut.subunit_a.subunit_b.cellA.A1']),
-            zoix.Fault(Fault_Status='ON', Fault_Type='1', Fault_Sites=['tb.dut.subunit_a.subunit_b.cellA.A2']),
-            zoix.Fault(Fault_Status='ON', Fault_Type='0', Fault_Sites=['tb.dut.subunit_a.subunit_b.operand_b[27:3]'])
+            zoix.Fault(fault_status='ON', fault_type='0', fault_sites=['tb.dut.subunit_a.subunit_b.cellA.ZN'], fault_attributes={'PC': '30551073', 'time': '45ns'}),
+            zoix.Fault(fault_status='ON', fault_type='1', fault_sites=['tb.dut.subunit_a.subunit_b.cellA.A1']),
+            zoix.Fault(fault_status='ON', fault_type='1', fault_sites=['tb.dut.subunit_a.subunit_b.cellA.A2']),
+            zoix.Fault(fault_status='ON', fault_type='0', fault_sites=['tb.dut.subunit_a.subunit_b.operand_b[27:3]'])
         ]
 
         fault_list = parser.parse(fault_list_sample)
@@ -74,15 +72,15 @@ class FaultReportFaultListTransformerTest(unittest.TestCase):
             }
         """
         expected_faults = [
-            zoix.Fault(Fault_Status='NN', Fault_Type='F', Fault_Sites=['tb.dut.subunit_c.U1528.CI']),
-            zoix.Fault(Fault_Status='ON', Fault_Type='R', Fault_Sites=['tb.dut.subunit_c.U1528.CO'], Fault_Attributes={'PC_IF': '00000d1c', 'sim_time': '8905ns'}),
-            zoix.Fault(Fault_Status='ON', Fault_Type='R', Fault_Sites=['tb.dut.subunit_c.U28.A']),
-            zoix.Fault(Fault_Status='ON', Fault_Type='F', Fault_Sites=['tb.dut.subunit_c.U1528.CO'], Fault_Attributes={'PC_IF': '00000d1c', 'sim_time': '8905ns'}),
-            zoix.Fault(Fault_Status='ON', Fault_Type='F', Fault_Sites=['tb.dut.subunit_c.U28.A']),
-            zoix.Fault(Fault_Status='ON', Fault_Type='R', Fault_Sites=['tb.dut.subunit_c.U1528.S'], Fault_Attributes={'PC_IF': '00000d1c', 'sim_time': '8905ns'}),
-            zoix.Fault(Fault_Status='ON', Fault_Type='R', Fault_Sites=['tb.dut.subunit_c.U27.A']),
-            zoix.Fault(Fault_Status='ON', Fault_Type='F', Fault_Sites=['tb.dut.subunit_c.U1528.S'], Fault_Attributes={'PC_IF': '00000d1c', 'sim_time': '8905ns'}),
-            zoix.Fault(Fault_Status='ON', Fault_Type='F', Fault_Sites=['tb.dut.subunit_c.U27.A'])
+            zoix.Fault(fault_status='NN', fault_type='F', fault_sites=['tb.dut.subunit_c.U1528.CI']),
+            zoix.Fault(fault_status='ON', fault_type='R', fault_sites=['tb.dut.subunit_c.U1528.CO'], fault_attributes={'PC_IF': '00000d1c', 'sim_time': '8905ns'}),
+            zoix.Fault(fault_status='ON', fault_type='R', fault_sites=['tb.dut.subunit_c.U28.A']),
+            zoix.Fault(fault_status='ON', fault_type='F', fault_sites=['tb.dut.subunit_c.U1528.CO'], fault_attributes={'PC_IF': '00000d1c', 'sim_time': '8905ns'}),
+            zoix.Fault(fault_status='ON', fault_type='F', fault_sites=['tb.dut.subunit_c.U28.A']),
+            zoix.Fault(fault_status='ON', fault_type='R', fault_sites=['tb.dut.subunit_c.U1528.S'], fault_attributes={'PC_IF': '00000d1c', 'sim_time': '8905ns'}),
+            zoix.Fault(fault_status='ON', fault_type='R', fault_sites=['tb.dut.subunit_c.U27.A']),
+            zoix.Fault(fault_status='ON', fault_type='F', fault_sites=['tb.dut.subunit_c.U1528.S'], fault_attributes={'PC_IF': '00000d1c', 'sim_time': '8905ns'}),
+            zoix.Fault(fault_status='ON', fault_type='F', fault_sites=['tb.dut.subunit_c.U27.A'])
         ]
 
         # Manually resolve the fault equivalences
@@ -121,16 +119,16 @@ class FaultReportFaultListTransformerTest(unittest.TestCase):
         fault_list = parser.parse(fault_list_sample)
 
         expected_faults = [
-            zoix.Fault(Fault_Status='NN', Fault_Type='F', Timing_Info=['6.532ns'], Fault_Sites=['tb.dut.subunit_c.U1528.CI']),
-            zoix.Fault(Fault_Status='ON', Fault_Type='R', Timing_Info=['6.423ns'], Fault_Sites=['tb.dut.subunit_c.U1528.CO'], Fault_Attributes={'PC_IF': '00000d1c', 'sim_time': '8905ns'}),
-            zoix.Fault(Fault_Status='ON', Fault_Type='R', Timing_Info=['6.6123ns'], Fault_Sites=['tb.dut.subunit_c.U28.A']),
-            zoix.Fault(Fault_Status='ON', Fault_Type='F', Timing_Info=['5.532ns'], Fault_Sites=['tb.dut.subunit_c.U1528.CO'], Fault_Attributes={'PC_IF': '00000d1c', 'sim_time': '8905ns'}),
-            zoix.Fault(Fault_Status='ON', Fault_Type='F', Timing_Info=['6.532ns'], Fault_Sites=['tb.dut.subunit_c.U28.A']),
-            zoix.Fault(Fault_Status='ON', Fault_Type='R', Timing_Info=['2.232ns'], Fault_Sites=['tb.dut.subunit_c.U1528.S'], Fault_Attributes={'PC_IF': '00000d1c', 'sim_time': '8905ns'}),
-            zoix.Fault(Fault_Status='ON', Fault_Type='R', Timing_Info=['9.722ns'], Fault_Sites=['tb.dut.subunit_c.U27.A']),
-            zoix.Fault(Fault_Status='ON', Fault_Type='F', Timing_Info=['9.432ns'], Fault_Sites=['tb.dut.subunit_c.U1528.S'], Fault_Attributes={'PC_IF': '00000d1c', 'sim_time': '8905ns'}),
-            zoix.Fault(Fault_Status='ON', Fault_Type='F', Timing_Info=['1.532ns'], Fault_Sites=['tb.dut.subunit_c.U27.A']),
-            zoix.Fault(Fault_Status='ON', Fault_Type='~', Timing_Info=['6', '4', '26'], Fault_Sites=['tb.dut.subunit_d.reg_q[0]'])
+            zoix.Fault(fault_status='NN', fault_type='F', timing_info=['6.532ns'], fault_sites=['tb.dut.subunit_c.U1528.CI']),
+            zoix.Fault(fault_status='ON', fault_type='R', timing_info=['6.423ns'], fault_sites=['tb.dut.subunit_c.U1528.CO'], fault_attributes={'PC_IF': '00000d1c', 'sim_time': '8905ns'}),
+            zoix.Fault(fault_status='ON', fault_type='R', timing_info=['6.6123ns'], fault_sites=['tb.dut.subunit_c.U28.A']),
+            zoix.Fault(fault_status='ON', fault_type='F', timing_info=['5.532ns'], fault_sites=['tb.dut.subunit_c.U1528.CO'], fault_attributes={'PC_IF': '00000d1c', 'sim_time': '8905ns'}),
+            zoix.Fault(fault_status='ON', fault_type='F', timing_info=['6.532ns'], fault_sites=['tb.dut.subunit_c.U28.A']),
+            zoix.Fault(fault_status='ON', fault_type='R', timing_info=['2.232ns'], fault_sites=['tb.dut.subunit_c.U1528.S'], fault_attributes={'PC_IF': '00000d1c', 'sim_time': '8905ns'}),
+            zoix.Fault(fault_status='ON', fault_type='R', timing_info=['9.722ns'], fault_sites=['tb.dut.subunit_c.U27.A']),
+            zoix.Fault(fault_status='ON', fault_type='F', timing_info=['9.432ns'], fault_sites=['tb.dut.subunit_c.U1528.S'], fault_attributes={'PC_IF': '00000d1c', 'sim_time': '8905ns'}),
+            zoix.Fault(fault_status='ON', fault_type='F', timing_info=['1.532ns'], fault_sites=['tb.dut.subunit_c.U27.A']),
+            zoix.Fault(fault_status='ON', fault_type='~', timing_info=['6', '4', '26'], fault_sites=['tb.dut.subunit_d.reg_q[0]'])
 
         ]
 
@@ -153,8 +151,7 @@ class FaultReportStatusGroupsTransformerTest(unittest.TestCase):
     def get_parser(self):
 
         factory = transformers.FaultReportTransformerFactory()
-        transformer, grammar = factory("StatusGroups")
-        return lark.Lark(grammar=grammar, start="start", parser="lalr", transformer=transformer)
+        return factory("StatusGroups")
 
     def test_no_leq_group_section(self):
 
@@ -207,9 +204,8 @@ class FaultReportCoverageTransformerTest(unittest.TestCase):
     def get_parser(self):
 
         factory = transformers.FaultReportTransformerFactory()
-        transformer, grammar = factory("Coverage")
-        return lark.Lark(grammar=grammar, start="start", parser="lalr", transformer=transformer)
-
+        return factory("Coverage")
+    
     def test_coverage_str_no_quotes_lhs(self):
 
         parser = self.get_parser()
@@ -263,8 +259,7 @@ class TraceTransformerCV32E40PTest(unittest.TestCase):
     def get_parser(self):
 
         factory = transformers.TraceTransformerFactory()
-        transformer, grammar = factory("CV32E40P")
-        return lark.Lark(grammar=grammar, start="start", parser="lalr", transformer=transformer)
+        return factory("CV32E40P")
 
     def test_doc_example(self):
 
