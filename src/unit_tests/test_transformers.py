@@ -205,7 +205,7 @@ class FaultReportCoverageTransformerTest(unittest.TestCase):
 
         factory = transformers.FaultReportTransformerFactory()
         return factory("Coverage")
-    
+
     def test_coverage_str_no_quotes_lhs(self):
 
         parser = self.get_parser()
@@ -252,6 +252,19 @@ class FaultReportCoverageTransformerTest(unittest.TestCase):
         expected_coverage = {'Coverage_1': '(AA + BB + CC)',
                              'Coverage_2': '((DD + DN)/(NA + DA + DN + DD + SU))',
                              'Coverage_3': '(FF+CC*2)'}
+        self.assertEqual(coverage, expected_coverage)
+
+    def test_coverage_with_power_operator_rhs(self):
+
+        parser = self.get_parser()
+
+        coverage_sample = r"""
+        Coverage {
+            "Coverage_1" = "FLT(AA ^ BB ^ CC)";
+         }
+        """
+        coverage = parser.parse(coverage_sample)
+        expected_coverage = {'Coverage_1': '(AA ** BB ** CC)'}
         self.assertEqual(coverage, expected_coverage)
 
 class TraceTransformerCV32E40PTest(unittest.TestCase):
