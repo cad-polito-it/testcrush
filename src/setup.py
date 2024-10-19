@@ -5,7 +5,7 @@ setup(
     description="An assembly-STL compaction toolkit based on VCS-Z01X.",
     version="0.5.0",
     packages=find_packages(),
-    install_requires=['toml', 'lark'],
+    install_requires=['toml', 'lark', 'pyelftools'],
     url="https://github.com/cad-polito-it/testcrush",
     licence="MIT",
     author="Nick Deligiannis",
