@@ -11,7 +11,7 @@ run_dir = "../../cv32e40p/run/vc-z01x"
 ###########################
 # ISALANG Location        #
 ###########################
-isa_file = '../../langs/riscv.isa'
+isa_file = "../../langs/riscv.isa"
 
 [assembly_sources]
 ###########################
@@ -19,14 +19,6 @@ isa_file = '../../langs/riscv.isa'
 ###########################
 sources = [
   '%test_dir%/test1.S',
-  '%test_dir%/patterns_base.s',
-  '%test_dir%/patterns_enhanced_1.s',
-  '%test_dir%/patterns_enhanced_2.s',
-  '%test_dir%/patterns_enhanced_3.s',
-  '%test_dir%/patterns_enhanced_4.s',
-  '%test_dir%/patterns_enhanced_5.s',
-  '%test_dir%/patterns_enhanced_6.s',
-  '%test_dir%/patterns_enhanced_7.s'
 ]
 
 [cross_compilation]
@@ -78,20 +70,18 @@ instructions = [
 timeout = 360.0
 allow_regexs = ['Info: Connected to started server']
 
-[fault_simulation_csv_report]
+[fault_report]
 ###########################
-# CSV fsim files          #
+# Z01X Fsim Report        #
 ###########################
-fsim_fault_summary = '%run_dir%/fsim_out_csv_files/DEFAULT_summary.csv'
-fsim_fault_report = '%run_dir%/fsim_out_csv_files/DEFAULT_faultlist.csv'
+frpt_file = '%root_dir%/run/vc-z01x/fsim_attr'
+coverage_formula = 'Observational Coverage'
 
-[coverage]
+[preprocessing]
 ###########################
-# Coverage                #
+# Trace required          #
 ###########################
-sff_config = '%root_dir%/fsim/config.sff'
-coverage_formula = '(DD + DN)/(NA + DA + DN + DD + SU)'
-fault_status_attribute = 'Status'
-# Mutually Exclussive with the ones above #
-coverage_summary_col = ''
-coverage_summary_row = ''
+processor_name = 'CV32E40P'
+processor_trace = '%sbst_dir%/trace.log'
+elf_file = '%sbst_dir%/sbst.elf'
+zoix_to_trace = { 'PC_ID' = 'PC', 'sim_time' = 'Time'}

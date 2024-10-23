@@ -130,37 +130,37 @@ In this section, the user must define parameters to assist TestCrush evaluate an
 
 1. `timeout`: Similar to the timeout value used for the logic simulation. A float number in **SECONDS** to be used as a wall-clock. If the fault simulation exceeds this value then it is forcibly terminated.
 2. `allow_regexs`: A list of regular expressions to be used for matching in the `stderr` stream during fault simulation. The fault simulation is invoking Z01X via a `subprocess` call. To know if a simulation is successful we check whether something is written in the `stderr` stream during the `subprocess.Popen` call. If something is written there, then the fault simulation status is set to `ERROR`. However, it may be the case (as happens with the Z01X version I am working on) that something is written in the standard error which is not the result of an erroneous action. These regular expressions are used for this purpose. To allow specific messages on the `stderr` stream.
-> Hint: If you are unsure on whether something is written in `stderr` during faults simulation in your test environment, then you can leave this list empty.
+> Hint: If you are unsure on whether something is written in `stderr` during faults simulation in your test environment, then you can use a wildcard '*' (not advised however).
 
-## Fault Simulation (C) ##
+> 💡Q: But how am i supposed to know what exactly Z01X writes to `stderr`?
+
+> 💡A: Good point. We plan to implement a mechanism that during `pre_run`, if text is detected in `stderr` then the user will be asked ONCE whether its "Safe". If the user types yes then its kept as message and ignored for all subsequent fault simulations.
+
+## Fault Report ##
 ```
-[fault_simulation_csv_report]
-fsim_fault_summary = '%run_dir%/fsim_out_csv_files/DEFAULT_summary.csv'
-fsim_fault_report = '%run_dir%/fsim_out_csv_files/DEFAULT_faultlist.csv'
+[fault_report]
+###########################
+# Z01X Fsim Report        #
+###########################
+frpt_file = '%root_dir%/run/vc-z01x/fsim_attr'
+coverage_formula = 'Observational Coverage'
 ```
-This section contains the summary and faultlist CSV reports paths which are generated after the fault simulation. These files are used for the coverage computation.
+1. `frpt_file`: The canonical path in which the txt fault reports of Z01X will be stored.
+2. `coverage_formula`: The **name** of the formula in the `Coverage{}` section that you want to compute.
 
-## Coverage ##
+# Attribute-Trace-based Preprocessor Configuration #
+Preprocessing, is optionally available. In order to enable it you must specify the following settings:
 ```
-[coverage]
-sff_config = '%root_dir%/fsim/config.sff'
-coverage_formula = '(DD + DN)/(NA + DA + DN + DD + SU)'
-fault_status_attribute = 'Status'
-# Mutually Exclussive with the ones above #
-coverage_summary_col = ''
-coverage_summary_row = ''
+[preprocessing]
+###########################
+# Trace required          #
+###########################
+processor_trace = '%sbst_dir%/trace.log'
+processor_name = 'CV32E40P'
+elf_file = '%sbst_dir%/sbst.elf'
+zoix_to_trace = { 'PC_ID' = 'PC', 'sim_time' = 'Time'}
 ```
-Here we have a two sets of key-value pairs that are mutually exclusive. The first one is
-1. `sff_config`: The path to the sff configuration file used for fault simulation.
-2. `coverage_formula`: The coverage formula that you use in your sff file in the `Coverage{}` section to evaluate your STL.
-
-If you are using a safety-oriented flow and you have defined your own fault statuses, and coverage metrics then it is advised to specify these two values. However, if you are using the default statuses and coverage metrics then you should use the following two which are
-
-3. `coverage_summary_col`: The column of the summmary.csv file that holds the coverage
-4. `coverage_summary_row`: The row of the summary.csv on which TestCrush will look for the `coverage_summary_col`.
-
-Both of these values are **1-based** indexed! They practically tell which cell of the summary.csv file holds the coverage percentage in order to be extracted.
-
-**IF** 1. and 2. are specified, then the coverage is computed manually by parsing the `.sff` file and the `DEFAULT_faultlist.csv` file in order to finally `eval()` the formula that the user provided.
-
-**ELSE** The `DEFAULT_summary.csv` file is used instead and the coverage is extracted by the specified cell.
+1. `processor_trace`: The location of the txt execution trace of the STL.
+2. `processor_name`: The name of the processor. MUST be one of the supported processors [TraceTransformerFactory](../src/testcrush/grammars/transformers.py#L430)
+3. `elf_file`: The path to the `.elf` file of the original STL
+4. `zoix_to_trace`: A mapping of Z01X fault attributes to trace column names.
