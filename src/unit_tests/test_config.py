@@ -33,7 +33,7 @@ run_dir = "../../cv32e40p/run/vc-z01x"
 ###########################
 # ISALANG Location        #
 ###########################
-isa_file = '../../langs/riscv.isa'
+isa_file = "../../langs/riscv.isa"
 
 [assembly_sources]
 ###########################
@@ -41,7 +41,6 @@ isa_file = '../../langs/riscv.isa'
 ###########################
 sources = [
   '%test_dir%/test1.S',
-  '%test_dir%/patterns_base.s',
 ]
 
 [cross_compilation]
@@ -93,23 +92,21 @@ instructions = [
 timeout = 360.0
 allow_regexs = ['Info: Connected to started server']
 
-[fault_simulation_csv_report]
+[fault_report]
 ###########################
-# CSV fsim files          #
+# Z01X Fsim Report        #
 ###########################
-fsim_fault_summary = '%run_dir%/fsim_out_csv_files/DEFAULT_summary.csv'
-fsim_fault_report = '%run_dir%/fsim_out_csv_files/DEFAULT_faultlist.csv'
+frpt_file = '%root_dir%/run/vc-z01x/fsim_attr'
+coverage_formula = 'Observational Coverage'
 
-[coverage]
+[preprocessing]
 ###########################
-# Coverage                #
+# Trace required          #
 ###########################
-sff_config = '%root_dir%/fsim/config.sff'
-coverage_formula = '(DD + DN)/(NA + DA + DN + DD + SU)'
-fault_status_attribute = 'Status'
-# Mutually Exclussive with the ones above #
-coverage_summary_col = ''
-coverage_summary_row = ''
+processor_name = 'CV32E40P'
+processor_trace = '%sbst_dir%/trace.log'
+elf_file = '%sbst_dir%/sbst.elf'
+zoix_to_trace = { 'PC_ID' = 'PC', 'sim_time' = 'Time'}
 """
 
     def test_replace_toml_placeholders(self):
@@ -187,12 +184,11 @@ isa_ = '../../langs/riscv.isa'
 
         with mock.patch("io.open", mock.mock_open(read_data=self.TOML_RAW)) as mocked_open:
 
-            isa, asm, settings = config.parse_a0_configuration("some_mocked_file")
+            isa, asm, settings, preprocessor = config.parse_a0_configuration("some_mocked_file")
 
         self.assertEqual(isa, "../../langs/riscv.isa")
-        self.assertEqual(asm, ['../../cv32e40p/sbst/tests/test1.S',
-                                '../../cv32e40p/sbst/tests/patterns_base.s'])
-
+        self.assertEqual(asm, ['../../cv32e40p/sbst/tests/test1.S'])
+        self.maxDiff=None
         self.assertEqual(settings, {'assembly_compilation_instructions': ['make -C ../../cv32e40p/sbst clean',
                                                                            'make -C ../../cv32e40p/sbst all'],
                                      'vcs_compilation_instructions': None,
@@ -205,10 +201,11 @@ isa_ = '../../langs/riscv.isa'
                                                                             'make -C ../../cv32e40p vcs/fsim/gate/shell'],
                                      'zoix_fault_simulation_control': {'timeout': 360.0,
                                                                        'allow_regexs': [re.compile('Info: Connected to started server', re.DOTALL)]},
-                                     'csv_fault_summary': '../../cv32e40p/run/vc-z01x/fsim_out_csv_files/DEFAULT_summary.csv',
-                                     'csv_fault_report': '../../cv32e40p/run/vc-z01x/fsim_out_csv_files/DEFAULT_faultlist.csv',
-                                     'coverage_formula': '(DD + DN)/(NA + DA + DN + DD + SU)',
-                                     'sff_config': '../../cv32e40p/fsim/config.sff',
-                                     'fault_status_attribute': 'Status',
-                                     'coverage_summary_row': None,
-                                     'coverage_summary_col': None})
+                                     'coverage_formula': 'Observational Coverage',
+                                     'fsim_report': '../../cv32e40p/run/vc-z01x/fsim_attr',
+                                    })
+
+        self.assertEqual(preprocessor, {'elf_file': '../../cv32e40p/sbst/sbst.elf',
+                                        'processor_name': 'CV32E40P',
+                                        'processor_trace': '../../cv32e40p/sbst/trace.log',
+                                        'zoix_to_trace': {'PC_ID': 'PC', 'sim_time': 'Time'}})

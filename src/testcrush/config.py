@@ -13,13 +13,15 @@ A0_KEYS = {
     "vcs_logic_simulation_control": ["vcs_logic_simulation_control"],
     "zoix_fault_simulation_instructions": ["zoix_fault_simulation", "instructions"],
     "zoix_fault_simulation_control": ["zoix_fault_simulation_control"],
-    "csv_fault_summary": ["fault_simulation_csv_report", "fsim_fault_summary"],
-    "csv_fault_report": ["fault_simulation_csv_report", "fsim_fault_report"],
-    "coverage_formula": ["coverage", "coverage_formula"],
-    "sff_config": ["coverage", "sff_config"],
-    "fault_status_attribute": ["coverage", "fault_status_attribute"],
-    "coverage_summary_row": ["coverage", "coverage_summary_row"],
-    "coverage_summary_col": ["coverage", "coverage_summary_col"],
+    "fsim_report": ["fault_report", "frpt_file"],
+    "coverage_formula": ["fault_report", "coverage_formula"]
+}
+
+A0_PREPROCESSOR_KEYS = {
+    "processor_name": ["preprocessing", "processor_name"],
+    "processor_trace": ["preprocessing", "processor_trace"],
+    "zoix_to_trace": ["preprocessing", "zoix_to_trace"],
+    "elf_file": ["preprocessing", "elf_file"]
 }
 
 
@@ -59,7 +61,7 @@ def replace_toml_regex(item: Any, substitute: bool = False) -> dict[str, Any]:
     All generated patterns have a ``re.DOTALL`` flag set.
 
     Args:
-         item (Any): A string, list or dict to act upon and replace any regex string with re.Pattern.
+        item (Any): A string, list or dict to act upon and replace any regex string with re.Pattern.
         substitute (bool, optional): Flag to allow substitution of value. Defaults to False.
 
     Returns:
@@ -152,4 +154,6 @@ def parse_a0_configuration(config_file: pathlib.Path) -> tuple[str, list, dict]:
     # Dynamically build the a0_settings dictionary using the defined key mappings
     a0_settings = {setting: get_nested_value(config, path) for setting, path in A0_KEYS.items()}
 
-    return (isa, asm_sources, a0_settings)
+    a0_preprocessor_settings = {setting: get_nested_value(config, path)
+                                for setting, path in A0_PREPROCESSOR_KEYS.items()}
+    return (isa, asm_sources, a0_settings, a0_preprocessor_settings)
