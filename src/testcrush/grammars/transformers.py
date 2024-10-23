@@ -10,7 +10,6 @@ from testcrush.utils import get_logger
 
 log = get_logger()
 
-
 class FaultReportFaultListTransformer(lark.Transformer):
     """
     This transformer is expected to act on the grammar of the ``FaultList`` segment of a Z01X txt fault report.
@@ -55,7 +54,7 @@ class FaultReportFaultListTransformer(lark.Transformer):
                       ^^^^^^^^^^^^^^^^^^^^^^
                            discarded
         """
-        log.debug(f"Discarding Fault List Name: {str(fault_list_name)}")
+
         return lark.Discard
 
     def fault(self, fault_parts: list[tuple[str, Any]]) -> Fault:
@@ -101,7 +100,6 @@ class FaultReportFaultListTransformer(lark.Transformer):
             # Update the previous prime pointer
             self._prev_prime = fault
 
-        log.debug(repr(Fault(**dict(fault_parts))))
         return fault
 
     def fault_info(self, args) -> lark.visitors._DiscardType:
@@ -115,7 +113,7 @@ class FaultReportFaultListTransformer(lark.Transformer):
              ^^^^^^
             discarded
         """
-        log.debug(f"Discarding Fault Info Segment: < {' '.join([str(x) for x in args])} >")
+
         return lark.Discard
 
     @lark.v_args(inline=True)
@@ -149,8 +147,6 @@ class FaultReportFaultListTransformer(lark.Transformer):
             self._is_prime = True
             self._prev_fstatus = fault_status
 
-        log.debug(f"Returning Fault Status: {fault_status}")
-
         return ("fault_status", fault_status)
 
     @lark.v_args(inline=True)
@@ -165,7 +161,7 @@ class FaultReportFaultListTransformer(lark.Transformer):
                         ^
                      consumed
         """
-        log.debug(f"Returning Fault Type: {fault_type}")
+
         return ("fault_type", str(fault_type))
 
     def timing_info(self, timings: list[str]) -> tuple[Literal["Timing Info"], list[str]]:
@@ -179,7 +175,7 @@ class FaultReportFaultListTransformer(lark.Transformer):
                         ^^^^^^
                         consumed
         """
-        log.debug(f"Passing Received Timing Info {timings}")
+
         return ("timing_info", [str(x) for x in timings])
 
     def location_info(self, sites: list[str]) -> tuple[Literal['Fault Sites'], list[str]]:
@@ -194,7 +190,6 @@ class FaultReportFaultListTransformer(lark.Transformer):
                            ignored       consumed                      ignored       consumed
         """
 
-        log.debug(f"Passing Received Fault Sites in a List {sites}")
         return ("fault_sites", sites)
 
     @lark.v_args(inline=True)
@@ -210,7 +205,7 @@ class FaultReportFaultListTransformer(lark.Transformer):
                            ignored       consumed
         """
         fault_site = fault_site.strip('"')
-        log.debug(f"Returning Fault Site: {fault_site}")
+
         return fault_site
 
     def attributes(self, attributes: list[tuple[str, str]]) -> tuple[Literal["Fault Attributes"], dict[str, str]]:
@@ -226,7 +221,6 @@ class FaultReportFaultListTransformer(lark.Transformer):
                                                                         ignored      consumed      ignored    consumed
         """
 
-        log.debug(f"Passing Received Fault Attributes in a List {attributes}")
         return ("fault_attributes", dict(attributes))
 
     @lark.v_args(inline=True)
@@ -243,7 +237,6 @@ class FaultReportFaultListTransformer(lark.Transformer):
                                                                         ignored      consumed
         """
 
-        log.debug(f"Returning ({attribute_name}, {attribute_value}) pair.")
         return (str(attribute_name), str(attribute_value))
 
 
