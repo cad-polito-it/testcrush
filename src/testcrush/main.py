@@ -2,21 +2,48 @@
 # SPDX-License-Identifier: MIT
 
 import argparse
-import logging
 import pathlib
 
 from testcrush import config
 from testcrush import utils
 from testcrush import a0
 
+log = utils.get_logger()
+
 
 def execute_a0(configuration: pathlib.Path):
 
     config.sanitize_a0_configuration(configuration)
 
-    A0 = a0.A0(config.parse_a0_configuration(configuration))
+    ISA, asm_src, a0_settings, a0_preprocessor_settings = config.parse_a0_configuration(configuration)
 
-    A0.run(A0.pre_run())
+    A0 = a0.A0(pathlib.Path(ISA), asm_src, a0_settings)
+
+    # 1. Initial run for original STL for TaT and Coverage computation
+    init_tat, init_cov = A0.pre_run()
+    log.info(f"Initial STL stats are: TaT = {init_tat}, Coverage = {init_cov}.")
+
+    if any([val for val in a0_preprocessor_settings.values()]):
+
+        log.info("Attribute-Trace Preprocessing has been specified.")
+
+        # This is after pre_run, which means that the fault list
+        # has been computed for the golden run and is available.
+        preprocessor = a0.Preprocessor(A0.fsim_report.fault_list, **a0_preprocessor_settings)
+
+        before_preprocessing = len(A0.all_instructions)
+        preprocessor.prune_candidates(A0.all_instructions, A0.path_to_id)
+        after_preprocessing = len(A0.all_instructions)
+        percentage = round((after_preprocessing / before_preprocessing) * 100, 4)
+
+        log.info(f"Preprocessor finished. Search space reduced by {percentage}%.")
+
+    # 2. Execution of A0
+    with utils.Timer():
+        A0.run((init_tat, init_cov))
+
+    # 3. Cleanup. Reapping stopped processes.
+    A0.post_run()
 
 
 def main():
@@ -34,23 +61,7 @@ def main():
 
     args = parser.parse_args()
 
-    trace_level_num = 5
-    logging.addLevelName(trace_level_num, "TRACE")
-
-    def trace(self, message, *args, **kws):
-        if self.isEnabledFor(trace_level_num):
-            self._log(trace_level_num, message, args, **kws)
-
-    logging.Logger.trace = trace
-
-    _v_to_levels = {
-        0: logging.NOTSET,
-        1: logging.INFO,
-        2: logging.DEBUG,
-        3: trace_level_num
-    }
-
-    utils.setup_logger(_v_to_levels[args.verbose], args.logfile)
+    utils.setup_logger(args.verbose, args.logfile)
 
     if args.compaction_mode == "A0":
         execute_a0(args.configuration)
