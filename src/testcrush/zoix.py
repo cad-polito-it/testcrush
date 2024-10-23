@@ -251,7 +251,7 @@ class TxtFaultReport:
             their corresponding evaluated coverage values as floats. If a formula name is specified, returns only
             the evaluated value for that formula.
 
-        Todo:
+        .. todo::
             * Implement default Test/Fault coverage computation per-Z01X if no ``Coverage{}`` section exists.
         """
         log.info(f"Computing coverage {requested_formula}.")
