@@ -6,12 +6,12 @@ import re
 import random
 import csv
 import time
-import lark
 import sqlite3
 import io
+import os
 
 import testcrush.grammars.transformers as transformers
-from testcrush.utils import get_logger, compile_assembly, zip_archive, Singleton
+from testcrush.utils import get_logger, compile_assembly, zip_archive, Singleton, addr2line, reap_process_tree
 from testcrush import asm, zoix
 from typing import Any
 
@@ -41,23 +41,19 @@ class Preprocessor(metaclass=Singleton):
 
     _trace_db = ".trace.db"
 
-    def __init__(self, txt_fault_report: pathlib.Path, processor_trace: pathlib.Path, **mappings) -> 'Preprocessor':
+    def __init__(self, fault_list: list[zoix.Fault], **kwargs) -> 'Preprocessor':
 
         factory = transformers.TraceTransformerFactory()
-        transformer, grammar = factory(mappings.get("processor_name"))
+        parser = factory(kwargs.get("processor_name"))
+        processor_trace = kwargs.get("processor_trace")
 
         with open(processor_trace) as src:
             trace_raw = src.read()
 
-        parser = lark.Lark(grammar=grammar, start="start", parser="lalr", transformer=transformer)
         self.trace = parser.parse(trace_raw)
-
-        factory = transformers.FaultReportTransformerFactory()
-        transformer, grammar = factory("FaultList")
-
-        fault_report = zoix.TxtFaultReport(txt_fault_report)
-        parser = lark.Lark(grammar=grammar, start="start", parser="lalr", transformer=transformer)
-        self.fault_list: list[zoix.Fault] = parser.parse(fault_report.extract("FaultList"))
+        self.fault_list: list[zoix.Fault] = fault_list
+        self.elf = kwargs.get("elf_file")
+        self.zoix2trace = kwargs.get("zoix_to_trace")
 
         self._create_trace_db()
 
@@ -70,6 +66,7 @@ class Preprocessor(metaclass=Singleton):
         # If pre-existent db is found, delete it.
         db = pathlib.Path(self._trace_db)
         if db.exists():
+            log.debug(f"Database {self._trace_db} exists. Overwritting it.")
             db.unlink()
 
         con = sqlite3.connect(self._trace_db)
@@ -91,6 +88,8 @@ class Preprocessor(metaclass=Singleton):
 
         con.commit()
         con.close()
+
+        log.debug(f"Database {self._trace_db} created.")
 
     def query_trace_db(self, select: str, where: dict[str, str],
                        history: int = 5, allow_multiple: bool = False) -> list[tuple[str, ...]]:
@@ -156,7 +155,7 @@ class Preprocessor(metaclass=Singleton):
             for rowid, in rowids:
 
                 query_with_history = f"""
-                    SELECT {select} FROM trace
+                    SELECT {'"'+select+'"' if select != '*' else select} FROM trace
                     WHERE ROWID <= ?
                     ORDER BY ROWID DESC
                     LIMIT ?
@@ -167,49 +166,96 @@ class Preprocessor(metaclass=Singleton):
 
             return result
 
-    def prune_candidates(candidates: list[asm.Codeline]):
-        # TODO:
-        ...
+    def prune_candidates(self, candidates: list[asm.Codeline], mapping: dict[str, str]):
+
+        # 1. Gather attribute pairs and rank them
+        attributes = list()
+        for fault in self.fault_list:
+
+            if hasattr(fault, "fault_attributes"):
+
+                entry = {self.zoix2trace[k]: fault.fault_attributes[k] for k in self.zoix2trace.keys()}
+                if entry not in attributes:
+
+                    attributes.append(entry)
+
+        # 2. Query the database for PC windows
+        # TODO: How to specify the column name of the trace? ask explicitly for PC?
+        pcs = list()
+        for entry in attributes:
+            try:
+                window = [pc for (pc,) in self.query_trace_db(select="PC", where=entry, history=4)]
+            except ValueError:
+                continue
+
+            if window not in pcs:
+                pcs.append(window)
+
+        # Flatten the list
+        pcs = [pc for window in pcs for pc in window]
+
+        # 3. Find the asm source and line numbers and filter out the candidates
+        removed = list()
+        for pc in pcs:
+
+            asm_file, lineno = addr2line(self.elf, pc)
+
+            if lineno in removed:
+                log.warning(f"Line {lineno} has already been removed. Skipping.")
+
+            if not asm_file:
+                log.warning(f"Program counter {pc} not found in {self.elf}")
+
+            if asm_file not in mapping:
+                log.warning(f"PC value {pc} maps to line {lineno} of {asm_file} which isn't in asm sources. Skipping.")
+                continue
+
+            before = len(candidates)
+            candidates[:] = list(filter(lambda entry: not ((entry[0] == mapping[asm_file]) and
+                                                           (entry[1] == lineno - 1)),
+                                        candidates))
+            after = len(candidates)
+
+            if before != after:
+                removed.append(lineno)
 
 
 class A0(metaclass=Singleton):
 
-    """Implements the A0 compaction algorithm of https://doi.org/10.1109/TC.2016.2643663"""
+    """Implements the A0 compaction algorithm"""
 
-    def __init__(self, isa: str, a0_asm_sources: list[str], a0_settings: dict[str, Any]) -> "A0":
+    def __init__(self, isa: pathlib.Path, a0_asm_sources: list[str], a0_settings: dict[str, Any]) -> "A0":
 
         log.debug(f"Generating AssemblyHandlers for {a0_asm_sources}")
-        self.assembly_sources: list[asm.AssemblyHandler] = [asm.AssemblyHandler(isa, pathlib.Path(asm_file),
+        a0_asm_sources = list(map(pathlib.Path, a0_asm_sources))
+        self.assembly_sources: list[asm.AssemblyHandler] = [asm.AssemblyHandler(asm.ISA(isa), asm_file,
                                                                                 chunksize=1)
                                                             for asm_file in a0_asm_sources]
 
         # Flatten candidates list
         self.all_instructions: list[asm.Codeline] = [(asm_id, codeline) for asm_id, asm in
                                                      enumerate(self.assembly_sources) for codeline in asm.get_code()]
-        self.path_to_id = {v: k for k, v in enumerate(a0_asm_sources)}
+        self.path_to_id = {f"{v.stem}{v.suffix}": k for k, v in enumerate(a0_asm_sources)}
 
         self.assembly_compilation_instructions: list[str] = a0_settings.get("assembly_compilation_instructions")
-        self.fsim_report: zoix.CSVFaultReport = zoix.CSVFaultReport(
-            fault_summary=pathlib.Path(a0_settings.get("csv_fault_summary")),
-            fault_report=pathlib.Path(a0_settings.get("csv_fault_report")))
-
-        self.summary_coverage_row: int = a0_settings.get("coverage_summary_row", None)
-        self.summary_coverage_col: int = a0_settings.get("coverage_summary_col", None)
-
-        self.sff_config: pathlib.Path = pathlib.Path(a0_settings.get("sff_config"))
-        self.coverage_formula: str = a0_settings.get("coverage_formula")
-        log.debug(f"Fault reports set to {self.fsim_report=}")
 
         self.zoix_compilation_args: list[str] = a0_settings.get("vcs_compilation_instructions")
-        log.debug(f"VCS Compilation instructions for HDL sources set to {self.zoix_compilation_args}")
+        log.debug(f"VCS compilation instructions for HDL sources set to {self.zoix_compilation_args}")
 
         self.zoix_lsim_args: list[str] = a0_settings.get("vcs_logic_simulation_instructions")
+        log.debug(f"VCS logic simulation instructions are {self.zoix_lsim_args}")
         self.zoix_lsim_kwargs: dict[str, float | re.Pattern | int | list] = \
             {k: v for k, v in a0_settings.get("vcs_logic_simulation_control").items()}
+        log.debug(f"VCS logic simulation control parameters are: {self.zoix_lsim_kwargs}")
 
         self.zoix_fsim_args: list[str] = a0_settings.get("zoix_fault_simulation_instructions")
         self.zoix_fsim_kwargs: dict[str, float] = \
             {k: v for k, v in a0_settings.get("zoix_fault_simulation_control").items()}
+
+        self.fsim_report: zoix.TxtFaultReport = zoix.TxtFaultReport(pathlib.Path(a0_settings.get("fsim_report")))
+        log.debug(f"Z01X fault report is set to: {self.fsim_report}")
+        self.coverage_formula: str = a0_settings.get("coverage_formula")
+        log.debug(f"The coverage formula that will be used is: {self.coverage_formula}")
 
         self.vc_zoix: zoix.ZoixInvoker = zoix.ZoixInvoker()
 
@@ -234,17 +280,8 @@ class A0(metaclass=Singleton):
 
         return (new_tat <= old_tat) and (new_coverage >= old_coverage)
 
-    def deduce_coverage(self, precision: int = 4, fault_status_attr: str = "Status") -> float:
+    def _coverage(self, precision: int = 4) -> float:
         """
-        Returns the fault coverage value by selecting one of the two supported coverage extraction methods based on the
-        configuration.
-
-        The fault coverage can be computed -or- extracted. If the user has specified custom status group in his sff
-        file (safety flow) then its advised to specify the config && coverage formula at the configuration file in order
-        for the coverage to be computed. Otherwise, if the default statuses are used and no custom coverage formula
-        is specified (manufacturing flow) then its advised to specify a column and a row from the summary csv file to
-        extract the coverage value from the summary.csv file.
-
         Args:
             precision (int, optional): Specifies the precision of the coverage value when this is computed.
             fault_status_attr (str, optional): Indicates which column of the header row of the faultlist.csv file is
@@ -255,24 +292,8 @@ class A0(metaclass=Singleton):
         Returns:
             float: The fault coverage.
         """
-        coverage = None
-
-        if self.sff_config.exists() and self.coverage_formula != "":
-
-            fault_list = self.fsim_report.parse_fault_report()
-            coverage = self.fsim_report.compute_flist_coverage(fault_list,
-                                                               self.sff_config,
-                                                               self.coverage_formula,
-                                                               precision,
-                                                               fault_status_attr)
-
-        else:
-            coverage = self.fsim_report.extract_summary_cells_from_row(self.summary_coverage_row,
-                                                                       self.summary_coverage_col).pop()
-            if '%' in coverage:
-                coverage = float(coverage.replace('%', ''))
-
-        return coverage
+        coverage_formula = self.coverage_formula
+        return self.fsim_report.compute_coverage(requested_formula=coverage_formula, precision=precision)
 
     def pre_run(self) -> tuple[int, float]:
         """
@@ -331,7 +352,7 @@ class A0(metaclass=Singleton):
             log.critical("Error during initial fault simulation! Check the debug log!")
             exit(1)
 
-        coverage = self.deduce_coverage()
+        coverage = self._coverage()
 
         return (test_application_time.pop(), coverage)
 
@@ -489,7 +510,7 @@ class A0(metaclass=Singleton):
                 continue
 
             print("\t\tComputing coverage.")
-            coverage = self.deduce_coverage()
+            coverage = self._coverage()
 
             new_stl_stats = (test_application_time, coverage)
 
@@ -520,3 +541,7 @@ class A0(metaclass=Singleton):
 
                 iteration_stats["verdict"] = "Restore"
                 _restore(asm_id)
+
+    def post_run(self) -> None:
+        """ Cleanup any VC-Z01X stopped processes """
+        reap_process_tree(os.getpid())
