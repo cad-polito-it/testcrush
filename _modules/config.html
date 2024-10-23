@@ -53,13 +53,15 @@
     <span class="s2">&quot;vcs_logic_simulation_control&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;vcs_logic_simulation_control&quot;</span><span class="p">],</span>
     <span class="s2">&quot;zoix_fault_simulation_instructions&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;zoix_fault_simulation&quot;</span><span class="p">,</span> <span class="s2">&quot;instructions&quot;</span><span class="p">],</span>
     <span class="s2">&quot;zoix_fault_simulation_control&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;zoix_fault_simulation_control&quot;</span><span class="p">],</span>
-    <span class="s2">&quot;csv_fault_summary&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;fault_simulation_csv_report&quot;</span><span class="p">,</span> <span class="s2">&quot;fsim_fault_summary&quot;</span><span class="p">],</span>
-    <span class="s2">&quot;csv_fault_report&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;fault_simulation_csv_report&quot;</span><span class="p">,</span> <span class="s2">&quot;fsim_fault_report&quot;</span><span class="p">],</span>
-    <span class="s2">&quot;coverage_formula&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;coverage&quot;</span><span class="p">,</span> <span class="s2">&quot;coverage_formula&quot;</span><span class="p">],</span>
-    <span class="s2">&quot;sff_config&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;coverage&quot;</span><span class="p">,</span> <span class="s2">&quot;sff_config&quot;</span><span class="p">],</span>
-    <span class="s2">&quot;fault_status_attribute&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;coverage&quot;</span><span class="p">,</span> <span class="s2">&quot;fault_status_attribute&quot;</span><span class="p">],</span>
-    <span class="s2">&quot;coverage_summary_row&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;coverage&quot;</span><span class="p">,</span> <span class="s2">&quot;coverage_summary_row&quot;</span><span class="p">],</span>
-    <span class="s2">&quot;coverage_summary_col&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;coverage&quot;</span><span class="p">,</span> <span class="s2">&quot;coverage_summary_col&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;fsim_report&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;fault_report&quot;</span><span class="p">,</span> <span class="s2">&quot;frpt_file&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;coverage_formula&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;fault_report&quot;</span><span class="p">,</span> <span class="s2">&quot;coverage_formula&quot;</span><span class="p">]</span>
+<span class="p">}</span>
+
+<span class="n">A0_PREPROCESSOR_KEYS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;processor_name&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;preprocessing&quot;</span><span class="p">,</span> <span class="s2">&quot;processor_name&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;processor_trace&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;preprocessing&quot;</span><span class="p">,</span> <span class="s2">&quot;processor_trace&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;zoix_to_trace&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;preprocessing&quot;</span><span class="p">,</span> <span class="s2">&quot;zoix_to_trace&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;elf_file&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;preprocessing&quot;</span><span class="p">,</span> <span class="s2">&quot;elf_file&quot;</span><span class="p">]</span>
 <span class="p">}</span>
 
 
@@ -104,7 +106,7 @@
 <span class="sd">    All generated patterns have a ``re.DOTALL`` flag set.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">         item (Any): A string, list or dict to act upon and replace any regex string with re.Pattern.</span>
+<span class="sd">        item (Any): A string, list or dict to act upon and replace any regex string with re.Pattern.</span>
 <span class="sd">        substitute (bool, optional): Flag to allow substitution of value. Defaults to False.</span>
 
 <span class="sd">    Returns:</span>
@@ -203,7 +205,9 @@
     <span class="c1"># Dynamically build the a0_settings dictionary using the defined key mappings</span>
     <span class="n">a0_settings</span> <span class="o">=</span> <span class="p">{</span><span class="n">setting</span><span class="p">:</span> <span class="n">get_nested_value</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span> <span class="k">for</span> <span class="n">setting</span><span class="p">,</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">A0_KEYS</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
 
-    <span class="k">return</span> <span class="p">(</span><span class="n">isa</span><span class="p">,</span> <span class="n">asm_sources</span><span class="p">,</span> <span class="n">a0_settings</span><span class="p">)</span></div>
+    <span class="n">a0_preprocessor_settings</span> <span class="o">=</span> <span class="p">{</span><span class="n">setting</span><span class="p">:</span> <span class="n">get_nested_value</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+                                <span class="k">for</span> <span class="n">setting</span><span class="p">,</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">A0_PREPROCESSOR_KEYS</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">isa</span><span class="p">,</span> <span class="n">asm_sources</span><span class="p">,</span> <span class="n">a0_settings</span><span class="p">,</span> <span class="n">a0_preprocessor_settings</span><span class="p">)</span></div>
 
 </pre></div>
 

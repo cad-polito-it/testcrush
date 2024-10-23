@@ -94,7 +94,10 @@ values.</p></li>
 <p>All generated patterns have a <code class="docutils literal notranslate"><span class="pre">re.DOTALL</span></code> flag set.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>item</strong> – A string, list or dict to act upon and replace any regex string with re.Pattern.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>item</strong> (<em>Any</em>) – A string, list or dict to act upon and replace any regex string with re.Pattern.</p></li>
+<li><p><strong>substitute</strong> (<em>bool</em><em>, </em><em>optional</em>) – Flag to allow substitution of value. Defaults to False.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The parsed TOML dict where all substitutions have been performed on the regex strings.</p>

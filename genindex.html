@@ -94,7 +94,7 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="zoix.html#zoix.ZoixInvoker.compile_sources">compile_sources() (zoix.ZoixInvoker method)</a>
 </li>
-      <li><a href="zoix.html#zoix.CSVFaultReport.compute_flist_coverage">compute_flist_coverage() (zoix.CSVFaultReport static method)</a>
+      <li><a href="zoix.html#zoix.TxtFaultReport.compute_coverage">compute_coverage() (zoix.TxtFaultReport method)</a>
 </li>
       <li>
     config
@@ -103,8 +103,6 @@
         <li><a href="config.html#module-config">module</a>
 </li>
       </ul></li>
-      <li><a href="zoix.html#zoix.CSVFaultReport">CSVFaultReport (class in zoix)</a>
-</li>
   </ul></td>
 </tr></table>
 
@@ -112,10 +110,6 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="asm.html#asm.Codeline.data">data (asm.Codeline attribute)</a>
-</li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="a0.html#a0.A0.deduce_coverage">deduce_coverage() (a0.A0 method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -127,17 +121,13 @@
 </li>
       <li><a href="zoix.html#zoix.Compilation.ERROR">ERROR (zoix.Compilation attribute)</a>
 </li>
-      <li><a href="a0.html#a0.A0.evaluate">evaluate() (a0.A0 static method)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="a0.html#a0.A0.evaluate">evaluate() (a0.A0 static method)</a>
+</li>
       <li><a href="zoix.html#zoix.ZoixInvoker.execute">execute() (zoix.ZoixInvoker static method)</a>
 </li>
       <li><a href="zoix.html#zoix.TxtFaultReport.extract">extract() (zoix.TxtFaultReport method)</a>
-</li>
-      <li><a href="zoix.html#zoix.CSVFaultReport.extract_summary_cells_from_row">extract_summary_cells_from_row() (zoix.CSVFaultReport method)</a>
-</li>
-      <li><a href="zoix.html#zoix.CSVFaultReport.extract_summary_coverage">extract_summary_coverage() (zoix.CSVFaultReport static method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -155,11 +145,17 @@
 </li>
       <li><a href="grammar.html#grammars.transformers.FaultReportFaultListTransformer.fault_status">fault_status() (grammars.transformers.FaultReportFaultListTransformer method)</a>
 </li>
+      <li><a href="grammar.html#grammars.transformers.FaultReportStatusGroupsTransformer.fault_statuses">fault_statuses() (grammars.transformers.FaultReportStatusGroupsTransformer method)</a>
+</li>
       <li><a href="grammar.html#grammars.transformers.FaultReportFaultListTransformer.fault_type">fault_type() (grammars.transformers.FaultReportFaultListTransformer method)</a>
+</li>
+      <li><a href="grammar.html#grammars.transformers.FaultReportCoverageTransformer">FaultReportCoverageTransformer (class in grammars.transformers)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="grammar.html#grammars.transformers.FaultReportFaultListTransformer">FaultReportFaultListTransformer (class in grammars.transformers)</a>
+</li>
+      <li><a href="grammar.html#grammars.transformers.FaultReportStatusGroupsTransformer">FaultReportStatusGroupsTransformer (class in grammars.transformers)</a>
 </li>
       <li><a href="grammar.html#grammars.transformers.FaultReportTransformerFactory">FaultReportTransformerFactory (class in grammars.transformers)</a>
 </li>
@@ -168,6 +164,8 @@
       <li><a href="grammar.html#grammars.transformers.FaultReportFaultListTransformer.filter_out_discards">filter_out_discards() (grammars.transformers.FaultReportFaultListTransformer static method)</a>
 </li>
       <li><a href="utils.html#utils.Timer.format_time">format_time() (utils.Timer method)</a>
+</li>
+      <li><a href="grammar.html#grammars.transformers.FaultReportCoverageTransformer.formula">formula() (grammars.transformers.FaultReportCoverageTransformer method)</a>
 </li>
       <li><a href="zoix.html#zoix.FaultSimulation.FSIM_ERROR">FSIM_ERROR (zoix.FaultSimulation attribute)</a>
 </li>
@@ -185,10 +183,10 @@
 </li>
       <li><a href="asm.html#asm.AssemblyHandler.get_code">get_code() (asm.AssemblyHandler method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="utils.html#utils.get_logger">get_logger() (in module utils)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="asm.html#asm.ISA.get_mnemonics">get_mnemonics() (asm.ISA method)</a>
 </li>
       <li><a href="asm.html#asm.AssemblyHandler.get_random_candidate">get_random_candidate() (asm.AssemblyHandler method)</a>
@@ -200,6 +198,8 @@
         <li><a href="grammar.html#module-grammars.transformers">module</a>
 </li>
       </ul></li>
+      <li><a href="grammar.html#grammars.transformers.FaultReportStatusGroupsTransformer.group">group() (grammars.transformers.FaultReportStatusGroupsTransformer method)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -228,6 +228,8 @@
 <h2 id="L">L</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="grammar.html#grammars.transformers.FaultReportCoverageTransformer.lhs">lhs() (grammars.transformers.FaultReportCoverageTransformer method)</a>
+</li>
       <li><a href="asm.html#asm.Codeline.lineno">lineno (asm.Codeline attribute)</a>
 </li>
       <li><a href="grammar.html#grammars.transformers.FaultReportFaultListTransformer.loc_and_site">loc_and_site() (grammars.transformers.FaultReportFaultListTransformer method)</a>
@@ -273,7 +275,7 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="config.html#config.parse_a0_configuration">parse_a0_configuration() (in module config)</a>
 </li>
-      <li><a href="zoix.html#zoix.CSVFaultReport.parse_fault_report">parse_fault_report() (zoix.CSVFaultReport method)</a>
+      <li><a href="a0.html#a0.A0.post_run">post_run() (a0.A0 method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -297,6 +299,8 @@
 <h2 id="R">R</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="utils.html#utils.reap_process_tree">reap_process_tree() (in module utils)</a>
+</li>
       <li><a href="grammar.html#grammars.transformers.TraceTransformerCV32E40P.reg_and_mem">reg_and_mem() (grammars.transformers.TraceTransformerCV32E40P method)</a>
 </li>
       <li><a href="asm.html#asm.AssemblyHandler.remove">remove() (asm.AssemblyHandler method)</a>
@@ -308,6 +312,8 @@
       <li><a href="config.html#config.replace_toml_regex">replace_toml_regex() (in module config)</a>
 </li>
       <li><a href="asm.html#asm.AssemblyHandler.restore">restore() (asm.AssemblyHandler method)</a>
+</li>
+      <li><a href="grammar.html#grammars.transformers.FaultReportCoverageTransformer.rhs">rhs() (grammars.transformers.FaultReportCoverageTransformer method)</a>
 </li>
       <li><a href="a0.html#a0.A0.run">run() (a0.A0 method)</a>
 </li>
@@ -323,21 +329,21 @@
 </li>
       <li><a href="zoix.html#zoix.Fault.set">set() (zoix.Fault method)</a>
 </li>
-      <li><a href="zoix.html#zoix.CSVFaultReport.set_fault_report">set_fault_report() (zoix.CSVFaultReport method)</a>
-</li>
-      <li><a href="zoix.html#zoix.CSVFaultReport.set_fault_summary">set_fault_summary() (zoix.CSVFaultReport method)</a>
-</li>
       <li><a href="utils.html#utils.setup_logger">setup_logger() (in module utils)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="zoix.html#zoix.LogicSimulation.SIM_ERROR">SIM_ERROR (zoix.LogicSimulation attribute)</a>
 </li>
       <li><a href="utils.html#utils.Singleton">Singleton (class in utils)</a>
 </li>
-      <li><a href="grammar.html#grammars.transformers.FaultReportFaultListTransformer.start">start() (grammars.transformers.FaultReportFaultListTransformer method)</a>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="grammar.html#grammars.transformers.FaultReportCoverageTransformer.start">start() (grammars.transformers.FaultReportCoverageTransformer method)</a>
 
       <ul>
+        <li><a href="grammar.html#grammars.transformers.FaultReportFaultListTransformer.start">(grammars.transformers.FaultReportFaultListTransformer method)</a>
+</li>
+        <li><a href="grammar.html#grammars.transformers.FaultReportStatusGroupsTransformer.start">(grammars.transformers.FaultReportStatusGroupsTransformer method)</a>
+</li>
         <li><a href="grammar.html#grammars.transformers.TraceTransformerCV32E40P.start">(grammars.transformers.TraceTransformerCV32E40P method)</a>
 </li>
       </ul></li>
@@ -363,9 +369,13 @@
       </ul></li>
       <li><a href="utils.html#utils.Timer">Timer (class in utils)</a>
 </li>
+      <li><a href="grammar.html#grammars.transformers.FaultReportFaultListTransformer.timing_info">timing_info() (grammars.transformers.FaultReportFaultListTransformer method)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="grammar.html#grammars.transformers.FaultReportFaultListTransformer.timing_info">timing_info() (grammars.transformers.FaultReportFaultListTransformer method)</a>
+      <li><a href="utils.html#utils.to_snake_case">to_snake_case() (in module utils)</a>
+</li>
+      <li><a href="utils.html#utils.trace">trace() (in module utils)</a>
 </li>
       <li><a href="grammar.html#grammars.transformers.TraceTransformerCV32E40P">TraceTransformerCV32E40P (class in grammars.transformers)</a>
 </li>
@@ -378,6 +388,10 @@
 
 <h2 id="U">U</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="zoix.html#zoix.TxtFaultReport.update">update() (zoix.TxtFaultReport method)</a>
+</li>
+  </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     utils

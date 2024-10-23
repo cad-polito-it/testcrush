@@ -44,26 +44,27 @@
 <span class="kn">import</span> <span class="nn">lark</span>
 <span class="kn">import</span> <span class="nn">pathlib</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Iterable</span>
 <span class="kn">from</span> <span class="nn">testcrush.zoix</span> <span class="kn">import</span> <span class="n">Fault</span>
 <span class="kn">from</span> <span class="nn">testcrush.utils</span> <span class="kn">import</span> <span class="n">get_logger</span>
 
 <span class="n">log</span> <span class="o">=</span> <span class="n">get_logger</span><span class="p">()</span>
 
-
 <div class="viewcode-block" id="FaultReportFaultListTransformer">
 <a class="viewcode-back" href="../../grammar.html#grammars.transformers.FaultReportFaultListTransformer">[docs]</a>
 <span class="k">class</span> <span class="nc">FaultReportFaultListTransformer</span><span class="p">(</span><span class="n">lark</span><span class="o">.</span><span class="n">Transformer</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    This class is expected to act on the grammar defined for the ``FaultList`` segment of a Z01X txt fault report.</span>
+<span class="sd">    This transformer is expected to act on the grammar of the ``FaultList`` segment of a Z01X txt fault report.</span>
 
 <span class="sd">    After parsing the segment is returning a list of ``zoix.Fault`` objects with the following attributes:</span>
 
-<span class="sd">    - Fault_Status (str): 2-uppercase-letter status</span>
-<span class="sd">    - Fault_Type (str): 0|1|R|F|~</span>
-<span class="sd">    - Timing_Info (list[str]): A list with all timing info (if present) e.g., [&#39;6.532ns&#39;]</span>
-<span class="sd">    - Fault_Sites (list[str]): A list of fault sites represented as strings</span>
-<span class="sd">    - Fault_Attributes (dict[str, str]): A dictionary with all fault attributes (if present)</span>
+<span class="sd">    - fault_status (str): 2-uppercase-letter status</span>
+<span class="sd">    - fault_type (str): 0|1|R|F|~</span>
+<span class="sd">    - timing_info (list[str]): A list with all timing info (if present) e.g., [&#39;6.532ns&#39;]</span>
+<span class="sd">    - fault_sites (list[str]): A list of fault sites represented as strings</span>
+<span class="sd">    - fault_attributes (dict[str, str]): A dictionary with all fault attributes (if present)</span>
+
+<span class="sd">    Lastly, it resolves on-the-fly any fault equivalences on the generated fault list.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">_prev_fstatus</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
@@ -103,7 +104,7 @@
 <span class="sd">                      ^^^^^^^^^^^^^^^^^^^^^^</span>
 <span class="sd">                           discarded</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Discarding Fault List Name: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">fault_list_name</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
         <span class="k">return</span> <span class="n">lark</span><span class="o">.</span><span class="n">Discard</span></div>
 
 
@@ -152,7 +153,6 @@
             <span class="c1"># Update the previous prime pointer</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_prev_prime</span> <span class="o">=</span> <span class="n">fault</span>
 
-        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">Fault</span><span class="p">(</span><span class="o">**</span><span class="nb">dict</span><span class="p">(</span><span class="n">fault_parts</span><span class="p">))))</span>
         <span class="k">return</span> <span class="n">fault</span></div>
 
 
@@ -169,7 +169,7 @@
 <span class="sd">             ^^^^^^</span>
 <span class="sd">            discarded</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Discarding Fault Info Segment: &lt; </span><span class="si">{</span><span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">args</span><span class="p">])</span><span class="si">}</span><span class="s2"> &gt;&quot;</span><span class="p">)</span>
+
         <span class="k">return</span> <span class="n">lark</span><span class="o">.</span><span class="n">Discard</span></div>
 
 
@@ -206,9 +206,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_is_prime</span> <span class="o">=</span> <span class="kc">True</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_prev_fstatus</span> <span class="o">=</span> <span class="n">fault_status</span>
 
-        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Returning Fault Status: </span><span class="si">{</span><span class="n">fault_status</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="p">(</span><span class="s2">&quot;Fault Status&quot;</span><span class="p">,</span> <span class="n">fault_status</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="p">(</span><span class="s2">&quot;fault_status&quot;</span><span class="p">,</span> <span class="n">fault_status</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="FaultReportFaultListTransformer.fault_type">
@@ -225,8 +223,8 @@
 <span class="sd">                        ^</span>
 <span class="sd">                     consumed</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Returning Fault Type: </span><span class="si">{</span><span class="n">fault_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="p">(</span><span class="s2">&quot;Fault Type&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">fault_type</span><span class="p">))</span></div>
+
+        <span class="k">return</span> <span class="p">(</span><span class="s2">&quot;fault_type&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">fault_type</span><span class="p">))</span></div>
 
 
 <div class="viewcode-block" id="FaultReportFaultListTransformer.timing_info">
@@ -237,12 +235,13 @@
 
 <span class="sd">        .. highlight:: python</span>
 <span class="sd">        .. code-block:: python</span>
+
 <span class="sd">            &lt;  1&gt; NN R (7.52ns) {FLOP &quot;tb_top.dut.subunit_a.cell.port1&quot;}</span>
 <span class="sd">                        ^^^^^^</span>
 <span class="sd">                        consumed</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Passing Received Timing Info </span><span class="si">{</span><span class="n">timings</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="p">(</span><span class="s2">&quot;Timing Info&quot;</span><span class="p">,</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">timings</span><span class="p">])</span></div>
+
+        <span class="k">return</span> <span class="p">(</span><span class="s2">&quot;timing_info&quot;</span><span class="p">,</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">timings</span><span class="p">])</span></div>
 
 
 <div class="viewcode-block" id="FaultReportFaultListTransformer.location_info">
@@ -259,8 +258,7 @@
 <span class="sd">                           ignored       consumed                      ignored       consumed</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Passing Received Fault Sites in a List </span><span class="si">{</span><span class="n">sites</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="p">(</span><span class="s2">&quot;Fault Sites&quot;</span><span class="p">,</span> <span class="n">sites</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="p">(</span><span class="s2">&quot;fault_sites&quot;</span><span class="p">,</span> <span class="n">sites</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="FaultReportFaultListTransformer.loc_and_site">
@@ -278,7 +276,7 @@
 <span class="sd">                           ignored       consumed</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">fault_site</span> <span class="o">=</span> <span class="n">fault_site</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39;&quot;&#39;</span><span class="p">)</span>
-        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Returning Fault Site: </span><span class="si">{</span><span class="n">fault_site</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
         <span class="k">return</span> <span class="n">fault_site</span></div>
 
 
@@ -297,8 +295,7 @@
 <span class="sd">                                                                        ignored      consumed      ignored    consumed</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Passing Received Fault Attributes in a List </span><span class="si">{</span><span class="n">attributes</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="p">(</span><span class="s2">&quot;Fault Attributes&quot;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span><span class="n">attributes</span><span class="p">))</span></div>
+        <span class="k">return</span> <span class="p">(</span><span class="s2">&quot;fault_attributes&quot;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span><span class="n">attributes</span><span class="p">))</span></div>
 
 
 <div class="viewcode-block" id="FaultReportFaultListTransformer.attribute_and_value">
@@ -317,8 +314,134 @@
 <span class="sd">                                                                        ignored      consumed</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Returning (</span><span class="si">{</span><span class="n">attribute_name</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">attribute_value</span><span class="si">}</span><span class="s2">) pair.&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">attribute_name</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">attribute_value</span><span class="p">))</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="FaultReportStatusGroupsTransformer">
+<a class="viewcode-back" href="../../grammar.html#grammars.transformers.FaultReportStatusGroupsTransformer">[docs]</a>
+<span class="k">class</span> <span class="nc">FaultReportStatusGroupsTransformer</span><span class="p">(</span><span class="n">lark</span><span class="o">.</span><span class="n">Transformer</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This transformer is expected to act on the grammar of the ``StatusGroups`` segment of a Z01X txt fault report.</span>
+
+<span class="sd">    It constructs and returns a dictionary with keys the group names and keys the statuses of each group.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="FaultReportStatusGroupsTransformer.start">
+<a class="viewcode-back" href="../../grammar.html#grammars.transformers.FaultReportStatusGroupsTransformer.start">[docs]</a>
+    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">groups</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Receives all groups in the form of tuples where the index 0 is the group name and index 1 is a list of statuses.</span>
+<span class="sd">        Returns a dictionary where each key is a group and the corresponding value is the related statuses as list[str].</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">groups</span><span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="FaultReportStatusGroupsTransformer.group">
+<a class="viewcode-back" href="../../grammar.html#grammars.transformers.FaultReportStatusGroupsTransformer.group">[docs]</a>
+    <span class="nd">@lark</span><span class="o">.</span><span class="n">v_args</span><span class="p">(</span><span class="n">inline</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">group</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">statuses</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Digests group name and extended group name and receives the transformed statuses.</span>
+<span class="sd">        Returns the group name and the statuses (as-is) in the form of a tuple</span>
+
+<span class="sd">        .. highlight:: python</span>
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            SA       &quot;Safe&quot; (UT, UB, UR, UU);</span>
+<span class="sd">            ^^        ^^^^</span>
+<span class="sd">            captured  discarded</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">),</span> <span class="n">statuses</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="FaultReportStatusGroupsTransformer.fault_statuses">
+<a class="viewcode-back" href="../../grammar.html#grammars.transformers.FaultReportStatusGroupsTransformer.fault_statuses">[docs]</a>
+    <span class="nd">@lark</span><span class="o">.</span><span class="n">v_args</span><span class="p">(</span><span class="n">inline</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">fault_statuses</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">statuses</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Digests the fault statuses of a group and returns them as a list of strings</span>
+
+<span class="sd">        .. highlight:: python</span>
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            SA &quot;Safe&quot; (UT, UB, UR, UU);</span>
+<span class="sd">                       ^^  ^^  ^^  ^^</span>
+<span class="sd">                         captured</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">status</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;, &lt;&quot;</span><span class="p">))</span> <span class="k">for</span> <span class="n">status</span> <span class="ow">in</span> <span class="n">statuses</span><span class="p">]</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="FaultReportCoverageTransformer">
+<a class="viewcode-back" href="../../grammar.html#grammars.transformers.FaultReportCoverageTransformer">[docs]</a>
+<span class="k">class</span> <span class="nc">FaultReportCoverageTransformer</span><span class="p">(</span><span class="n">lark</span><span class="o">.</span><span class="n">Transformer</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This transformer is expected to act on the grammar of the ``Coverage`` segment of a Z01X txt fault report.</span>
+
+<span class="sd">    It constructs and returns a dictionary with keys the formula names and keys the corresponding formulas as strings.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="FaultReportCoverageTransformer.start">
+<a class="viewcode-back" href="../../grammar.html#grammars.transformers.FaultReportCoverageTransformer.start">[docs]</a>
+    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">formulas</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Accepts a series of formulas in the form of tuples and transforms them into a dictionary.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">formulas</span><span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="FaultReportCoverageTransformer.formula">
+<a class="viewcode-back" href="../../grammar.html#grammars.transformers.FaultReportCoverageTransformer.formula">[docs]</a>
+    <span class="nd">@lark</span><span class="o">.</span><span class="n">v_args</span><span class="p">(</span><span class="n">inline</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">formula</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">formula_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">formula</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Takes the lhs and rhs and returns them as a tuple</span>
+<span class="sd">        .. highlight:: python</span>
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            &quot;Diagnostic Coverage&quot; = &quot;INT(DD/(NA + DA + DN + DD))&quot;;</span>
+<span class="sd">             ^^^^^^^^^^^^^^^^^^^        ^^^^^^^^^^^^^^^^^^^^^^^^</span>
+<span class="sd">                  consumed                  consumed</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">formula_name</span><span class="p">,</span> <span class="n">formula</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="FaultReportCoverageTransformer.lhs">
+<a class="viewcode-back" href="../../grammar.html#grammars.transformers.FaultReportCoverageTransformer.lhs">[docs]</a>
+    <span class="nd">@lark</span><span class="o">.</span><span class="n">v_args</span><span class="p">(</span><span class="n">inline</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">lhs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">formula_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Digests the left hand side of a single formula and returns the formula name as string.</span>
+
+<span class="sd">        .. highlight:: python</span>
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            &quot;Diagnostic Coverage&quot; = &quot;INT(DD/(NA + DA + DN + DD))&quot;;</span>
+<span class="sd">             ^^^^^^^^^^^^^^^^^^^</span>
+<span class="sd">                  consumed</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">formula_name</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39;&quot;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="FaultReportCoverageTransformer.rhs">
+<a class="viewcode-back" href="../../grammar.html#grammars.transformers.FaultReportCoverageTransformer.rhs">[docs]</a>
+    <span class="nd">@lark</span><span class="o">.</span><span class="n">v_args</span><span class="p">(</span><span class="n">inline</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">rhs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">formula</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Digests the right hand side of a single formula while skipping format specifiers (if any).</span>
+<span class="sd">        Returns the formula as string.</span>
+
+<span class="sd">        .. highlight:: python</span>
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            &quot;Diagnostic Coverage&quot; = &quot;INT(DD/(NA + DA + DN + DD))&quot;;</span>
+<span class="sd">                                        ^^^^^^^^^^^^^^^^^^^^^^^^</span>
+<span class="sd">                                            consumed</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">formula</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;^&quot;</span><span class="p">,</span> <span class="s2">&quot;**&quot;</span><span class="p">)</span>  <span class="c1"># Pow in py is **</span></div>
 </div>
 
 
@@ -422,7 +545,7 @@
 <span class="sd">    .. code-block:: python</span>
 
 <span class="sd">        factory = TraceTransformerFactory()</span>
-<span class="sd">        transformer, grammar = factory(&quot;ProcessorString&quot;)</span>
+<span class="sd">        parser = factory(&quot;ProcessorString&quot;)</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">_current_directory</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span>
@@ -430,7 +553,7 @@
         <span class="s2">&quot;CV32E40P&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">TraceTransformerCV32E40P</span><span class="p">,</span> <span class="n">_current_directory</span> <span class="o">/</span> <span class="s2">&quot;trace_cv32e40p.lark&quot;</span><span class="p">)</span>
     <span class="p">}</span>
 
-    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">processor_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">TraceTransformerCV32E40P</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">processor_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">lark</span><span class="o">.</span><span class="n">Lark</span><span class="p">:</span>
 
         <span class="n">transformer</span><span class="p">,</span> <span class="n">grammar</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transformers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">processor_type</span><span class="p">,</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
 
@@ -440,7 +563,7 @@
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">grammar</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
             <span class="n">lark_grammar</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
 
-        <span class="k">return</span> <span class="n">transformer</span><span class="p">(),</span> <span class="n">lark_grammar</span></div>
+        <span class="k">return</span> <span class="n">lark</span><span class="o">.</span><span class="n">Lark</span><span class="p">(</span><span class="n">grammar</span><span class="o">=</span><span class="n">lark_grammar</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="s2">&quot;start&quot;</span><span class="p">,</span> <span class="n">parser</span><span class="o">=</span><span class="s2">&quot;lalr&quot;</span><span class="p">,</span> <span class="n">transformer</span><span class="o">=</span><span class="n">transformer</span><span class="p">())</span></div>
 
 
 
@@ -455,15 +578,17 @@
 <span class="sd">    .. code-block:: python</span>
 
 <span class="sd">        factory = FaultReportTransformerFactory()</span>
-<span class="sd">        transformer, grammar = factory(&quot;FaultReportSectionString&quot;)</span>
+<span class="sd">        parser = factory(&quot;FaultReportSectionString&quot;)</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">_current_directory</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span>
     <span class="n">_transformers</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">&quot;FaultList&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">FaultReportFaultListTransformer</span><span class="p">,</span> <span class="n">_current_directory</span> <span class="o">/</span> <span class="s2">&quot;frpt_fault_list.lark&quot;</span><span class="p">)</span>
+        <span class="s2">&quot;FaultList&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">FaultReportFaultListTransformer</span><span class="p">,</span> <span class="n">_current_directory</span> <span class="o">/</span> <span class="s2">&quot;frpt_fault_list.lark&quot;</span><span class="p">),</span>
+        <span class="s2">&quot;StatusGroups&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">FaultReportStatusGroupsTransformer</span><span class="p">,</span> <span class="n">_current_directory</span> <span class="o">/</span> <span class="s2">&quot;frpt_status_groups.lark&quot;</span><span class="p">),</span>
+        <span class="s2">&quot;Coverage&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">FaultReportCoverageTransformer</span><span class="p">,</span> <span class="n">_current_directory</span> <span class="o">/</span> <span class="s2">&quot;frpt_coverage.lark&quot;</span><span class="p">)</span>
     <span class="p">}</span>
 
-    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">section_string</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">FaultReportFaultListTransformer</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">section_string</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">lark</span><span class="o">.</span><span class="n">Lark</span><span class="p">:</span>
 
         <span class="n">transformer</span><span class="p">,</span> <span class="n">grammar</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transformers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">section_string</span><span class="p">,</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
 
@@ -473,7 +598,7 @@
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">grammar</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
             <span class="n">lark_grammar</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
 
-        <span class="k">return</span> <span class="n">transformer</span><span class="p">(),</span> <span class="n">lark_grammar</span></div>
+        <span class="k">return</span> <span class="n">lark</span><span class="o">.</span><span class="n">Lark</span><span class="p">(</span><span class="n">grammar</span><span class="o">=</span><span class="n">lark_grammar</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="s2">&quot;start&quot;</span><span class="p">,</span> <span class="n">parser</span><span class="o">=</span><span class="s2">&quot;lalr&quot;</span><span class="p">,</span> <span class="n">transformer</span><span class="o">=</span><span class="n">transformer</span><span class="p">())</span></div>
 
 </pre></div>
 

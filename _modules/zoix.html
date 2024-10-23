@@ -45,9 +45,8 @@
 <span class="kn">import</span> <span class="nn">re</span>
 <span class="kn">import</span> <span class="nn">enum</span>
 <span class="kn">import</span> <span class="nn">pathlib</span>
-<span class="kn">import</span> <span class="nn">csv</span>
 
-<span class="kn">from</span> <span class="nn">testcrush.utils</span> <span class="kn">import</span> <span class="n">get_logger</span>
+<span class="kn">from</span> <span class="nn">testcrush.utils</span> <span class="kn">import</span> <span class="n">get_logger</span><span class="p">,</span> <span class="n">to_snake_case</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span>
 
 <span class="n">log</span> <span class="o">=</span> <span class="n">get_logger</span><span class="p">()</span>
@@ -91,11 +90,11 @@
 
 <div class="viewcode-block" id="Fault">
 <a class="viewcode-back" href="../zoix.html#zoix.Fault">[docs]</a>
-<span class="k">class</span> <span class="nc">Fault</span><span class="p">():</span>
+<span class="k">class</span> <span class="nc">Fault</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Generic representation of a fault</span>
+<span class="sd">    Generic representation of a **prime** fault</span>
 
-<span class="sd">    Each fault has two standard attributes which are:</span>
+<span class="sd">    Each prime fault has two static attributes which are:</span>
 <span class="sd">    -``equivalent_faults`` (int): Corresponds to the total number of faults equivalent to this fault. Defaults to 1 i.e.</span>
 <span class="sd">    itself.</span>
 <span class="sd">    -``equivalent_to`` (Fault): A reference to the primary fault with which the current fault is equivalent. If the</span>
@@ -201,14 +200,60 @@
 
 <div class="viewcode-block" id="TxtFaultReport">
 <a class="viewcode-back" href="../zoix.html#zoix.TxtFaultReport">[docs]</a>
-<span class="k">class</span> <span class="nc">TxtFaultReport</span><span class="p">():</span>
+<span class="k">class</span> <span class="nc">TxtFaultReport</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Manages the VC-Z01X text report.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;fault_report_path&quot;</span><span class="p">,</span> <span class="s2">&quot;fault_report&quot;</span><span class="p">,</span> <span class="s2">&quot;fault_list&quot;</span><span class="p">,</span> <span class="s2">&quot;status_groups&quot;</span><span class="p">,</span> <span class="s2">&quot;coverage&quot;</span><span class="p">]</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fault_report</span><span class="p">:</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;TxtFaultReport&quot;</span><span class="p">:</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fault_report</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">fault_report</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fault_report_path</span> <span class="o">=</span> <span class="n">fault_report</span>  <span class="c1"># Store the path, but don&#39;t read the file yet</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fault_report</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fault_list</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">status_groups</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">coverage</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">fault_report_path</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_load_fault_report</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load the fault report from the file.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">fault_report_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Fault report file </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">fault_report_path</span><span class="si">}</span><span class="s2"> not found.&quot;</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fault_report_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fault_report</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_parse_sections</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Parse the required sections from the fault report.&quot;&quot;&quot;</span>
+        <span class="c1"># Ensure the fault report is loaded before parsing</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fault_report</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Fault report is not loaded.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Lazy import to avoid circular dependencies</span>
+        <span class="kn">from</span> <span class="nn">testcrush.grammars.transformers</span> <span class="kn">import</span> <span class="n">FaultReportTransformerFactory</span>
+
+        <span class="n">factory</span> <span class="o">=</span> <span class="n">FaultReportTransformerFactory</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">section</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;StatusGroups&quot;</span><span class="p">,</span> <span class="s2">&quot;Coverage&quot;</span><span class="p">,</span> <span class="s2">&quot;FaultList&quot;</span><span class="p">]:</span>
+            <span class="n">parser</span> <span class="o">=</span> <span class="n">factory</span><span class="p">(</span><span class="n">section</span><span class="p">)</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">raw_section</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extract</span><span class="p">(</span><span class="n">section</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>  <span class="c1"># section doesn&#39;t exist</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">to_snake_case</span><span class="p">(</span><span class="n">section</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
+                <span class="k">continue</span>
+
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parsing </span><span class="si">{</span><span class="n">section</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">to_snake_case</span><span class="p">(</span><span class="n">section</span><span class="p">),</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">raw_section</span><span class="p">))</span>
+
+<div class="viewcode-block" id="TxtFaultReport.update">
+<a class="viewcode-back" href="../zoix.html#zoix.TxtFaultReport.update">[docs]</a>
+    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Update and parse all sections once the fault report file is available.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_load_fault_report</span><span class="p">()</span>  <span class="c1"># Read the file</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_parse_sections</span><span class="p">()</span>  <span class="c1"># Parse all sections</span></div>
+
 
 <div class="viewcode-block" id="TxtFaultReport.extract">
 <a class="viewcode-back" href="../zoix.html#zoix.TxtFaultReport.extract">[docs]</a>
@@ -221,6 +266,9 @@
 
 <span class="sd">        Returns:</span>
 <span class="sd">            str: A newline-joined string of the extracted section (section name included).</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If ``section`` does not exist in the fault report.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">extracted_lines</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
 
@@ -256,246 +304,86 @@
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">section_found</span><span class="p">:</span>
             <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Requested section </span><span class="se">\&quot;</span><span class="si">{</span><span class="n">section</span><span class="si">}</span><span class="se">\&quot;</span><span class="s2"> not found!&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Requested section </span><span class="se">\&quot;</span><span class="si">{</span><span class="n">section</span><span class="si">}</span><span class="se">\&quot;</span><span class="s2"> not found!&quot;</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">extracted_lines</span><span class="p">)</span></div>
-</div>
 
 
-
-<div class="viewcode-block" id="CSVFaultReport">
-<a class="viewcode-back" href="../zoix.html#zoix.CSVFaultReport">[docs]</a>
-<span class="k">class</span> <span class="nc">CSVFaultReport</span><span class="p">():</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Manipulates the VC-Z01X summary and report **CSV** files.</span>
-
-<span class="sd">    These files are expected to be generated after fault simulation.</span>
-<span class="sd">    The ``report`` instruction specified in the fault campaign manager script</span>
-<span class="sd">    **MUST** be executed with the ``-csv`` option.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fault_summary</span><span class="p">:</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">,</span>
-                 <span class="n">fault_report</span><span class="p">:</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;CSVFaultReport&quot;</span><span class="p">:</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">fault_summary</span><span class="p">:</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span> <span class="o">=</span> <span class="n">fault_summary</span><span class="o">.</span><span class="n">absolute</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">fault_report</span><span class="p">:</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span> <span class="o">=</span> <span class="n">fault_report</span><span class="o">.</span><span class="n">absolute</span><span class="p">()</span>
-
-<div class="viewcode-block" id="CSVFaultReport.set_fault_summary">
-<a class="viewcode-back" href="../zoix.html#zoix.CSVFaultReport.set_fault_summary">[docs]</a>
-    <span class="k">def</span> <span class="nf">set_fault_summary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fault_summary</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="TxtFaultReport.compute_coverage">
+<a class="viewcode-back" href="../zoix.html#zoix.TxtFaultReport.compute_coverage">[docs]</a>
+    <span class="k">def</span> <span class="nf">compute_coverage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">requested_formula</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">precision</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Setter method for fault summary.</span>
+<span class="sd">        Manually computes the coverage based on the current fault report.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            fault_summary (str): The new fault summary filename.</span>
+<span class="sd">            requested_formula (str, optional): The name of the coverage formula from the ``Coverage {}`` section of the</span>
+<span class="sd">                                               fault report. Defaults to None.</span>
+<span class="sd">            precision (int, optional): The requested float precision. Defaults to 4.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            None</span>
+<span class="sd">            dict[str, float] | float: If no formula name is provided, returns a dictionary mapping formula names to</span>
+<span class="sd">            their corresponding evaluated coverage values as floats. If a formula name is specified, returns only</span>
+<span class="sd">            the evaluated value for that formula.</span>
 
-<span class="sd">        Raises:</span>
-<span class="sd">            FileNotFoundError: if the file does not exist.</span>
+<span class="sd">        .. todo::</span>
+<span class="sd">            * Implement default Test/Fault coverage computation per-Z01X if no ``Coverage{}`` section exists.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Computing coverage </span><span class="si">{</span><span class="n">requested_formula</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
 
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">fault_summary</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">fault_summary</span><span class="si">=}</span><span class="s2"> does not exist!&quot;</span><span class="p">)</span>
+        <span class="n">retval</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">fault_summary</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">fault_summary</span><span class="p">)</span><span class="o">.</span><span class="n">absolute</span><span class="p">()</span></div>
+        <span class="n">fault_statusses</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">fault</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fault_list</span><span class="p">:</span>
 
+            <span class="n">status</span> <span class="o">=</span> <span class="n">fault</span><span class="o">.</span><span class="n">fault_status</span>
 
-<div class="viewcode-block" id="CSVFaultReport.set_fault_report">
-<a class="viewcode-back" href="../zoix.html#zoix.CSVFaultReport.set_fault_report">[docs]</a>
-    <span class="k">def</span> <span class="nf">set_fault_report</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fault_report</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Setter method for fault report.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            fault_report (str): The new fault report filename.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            None</span>
-
-<span class="sd">        Raises:</span>
-<span class="sd">            FileNotFoundError: If the file does not exist.&quot;&quot;&quot;</span>
-
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">fault_report</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">fault_report</span><span class="si">=}</span><span class="s2"> does not exist!&quot;</span><span class="p">)</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">fault_report</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">fault_report</span><span class="p">)</span><span class="o">.</span><span class="n">absolute</span><span class="p">()</span></div>
-
-
-<div class="viewcode-block" id="CSVFaultReport.extract_summary_cells_from_row">
-<a class="viewcode-back" href="../zoix.html#zoix.CSVFaultReport.extract_summary_cells_from_row">[docs]</a>
-    <span class="k">def</span> <span class="nf">extract_summary_cells_from_row</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="o">*</span><span class="n">cols</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns a sequence of cells from a row of the ``self.fault_summary`` **CSV** file.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            row (int): the row number (1-based indexing).</span>
-<span class="sd">            cols (ints): the columns&#39; numbers (1-based indexing).</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            list[str]: The cells of the fault summary.</span>
-
-<span class="sd">        Raises:</span>
-<span class="sd">            SystemExit: If a requested column or row is out-of-bounds.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fault_summary</span><span class="p">)</span> <span class="k">as</span> <span class="n">csv_source</span><span class="p">:</span>
-
-            <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">reader</span><span class="p">(</span><span class="n">csv_source</span><span class="p">)</span>
-
-            <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">csv_row</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">reader</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
-
-                <span class="k">if</span> <span class="n">index</span> <span class="o">!=</span> <span class="n">row</span><span class="p">:</span>
-                    <span class="k">continue</span>
-
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="k">return</span> <span class="p">[</span><span class="n">csv_row</span><span class="p">[</span><span class="n">col</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">cols</span><span class="p">]</span>
-                <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
-                    <span class="n">log</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;A column in </span><span class="si">{</span><span class="n">cols</span><span class="si">}</span><span class="s2"> is out of bounds for row </span><span class="si">{</span><span class="n">row</span><span class="si">}</span><span class="s2"> of summary </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">fault_summary</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
-                    <span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-
-            <span class="n">log</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Row </span><span class="si">{</span><span class="n">row</span><span class="si">}</span><span class="s2"> is out of bounds for fault summary </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">fault_summary</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
-            <span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="CSVFaultReport.parse_fault_report">
-<a class="viewcode-back" href="../zoix.html#zoix.CSVFaultReport.parse_fault_report">[docs]</a>
-    <span class="k">def</span> <span class="nf">parse_fault_report</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Fault</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Parses the ``self.fault_report`` **CSV** file and returns  a dictionary with its contents, ommiting</span>
-<span class="sd">        any column if specified.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            list[Fault]: A list with `Fault` entries.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fault_report</span><span class="p">)</span> <span class="k">as</span> <span class="n">csv_source</span><span class="p">:</span>
-
-            <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">reader</span><span class="p">(</span><span class="n">csv_source</span><span class="p">)</span>
-
-            <span class="c1"># Attributes</span>
-            <span class="n">attributes</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">reader</span><span class="p">)</span>
-
-            <span class="k">return</span> <span class="p">[</span><span class="n">Fault</span><span class="p">(</span><span class="o">**</span><span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">attributes</span><span class="p">,</span> <span class="n">csv_row</span><span class="p">)))</span> <span class="k">for</span> <span class="n">csv_row</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">]</span></div>
-
-
-<div class="viewcode-block" id="CSVFaultReport.extract_summary_coverage">
-<a class="viewcode-back" href="../zoix.html#zoix.CSVFaultReport.extract_summary_coverage">[docs]</a>
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">extract_summary_coverage</span><span class="p">(</span><span class="n">summary</span><span class="p">:</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">,</span> <span class="n">regexp</span><span class="p">:</span> <span class="n">re</span><span class="o">.</span><span class="n">Pattern</span><span class="p">,</span> <span class="n">group_index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Extracts the coverage percentage from the summary text file</span>
-<span class="sd">        file via multilined regex matching.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            summary (pathlib.Path): The location of the ``summary.txt`` report.</span>
-<span class="sd">            regexp (re.Pattern): The regular expression to match the intended coverage line. Note that it must have at</span>
-<span class="sd">                                 least one capture group, which should precicely hold the coverage percentage.</span>
-<span class="sd">            group_index (int): The capture group index of the regexp that holds the coverage percentage.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            float: The coverage percentage which was captured as float.</span>
-
-<span class="sd">        Raises:</span>
-<span class="sd">            ValueError: If the provided `regexp` does not match anything.</span>
-<span class="sd">            SystemExit: If the conversion of the matched capture group to float fails.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">summary</span><span class="p">)</span> <span class="k">as</span> <span class="n">source</span><span class="p">:</span>
-            <span class="n">data</span> <span class="o">=</span> <span class="n">source</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
-
-        <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">regexp</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">DOTALL</span> <span class="o">|</span> <span class="n">re</span><span class="o">.</span><span class="n">MULTILINE</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">match</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unable to match coverage percentage with </span><span class="si">{</span><span class="n">regexp</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-
-        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Match </span><span class="si">{</span><span class="n">match</span><span class="si">=}</span><span class="s2">. Groups </span><span class="si">{</span><span class="n">match</span><span class="o">.</span><span class="n">groups</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">coverage</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="n">group_index</span><span class="p">))</span>
-
-        <span class="k">except</span> <span class="ne">BaseException</span><span class="p">:</span>
-            <span class="n">log</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unable to cast </span><span class="si">{</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="n">group_index</span><span class="p">)</span><span class="si">}</span><span class="s2"> to float&quot;</span><span class="p">)</span>
-            <span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">coverage</span></div>
-
-
-<div class="viewcode-block" id="CSVFaultReport.compute_flist_coverage">
-<a class="viewcode-back" href="../zoix.html#zoix.CSVFaultReport.compute_flist_coverage">[docs]</a>
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">compute_flist_coverage</span><span class="p">(</span><span class="n">fault_list</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Fault</span><span class="p">],</span> <span class="n">sff_file</span><span class="p">:</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">,</span> <span class="n">formula</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">precision</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span>
-                               <span class="n">status_attribute</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;Status&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Computes the test coverage value as described by `formula`, which must be comprised of mathematical operations</span>
-<span class="sd">        of Z01X fault classes (i.e., 2 letter strings).</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            fault_list (list[Fault]): A fault-list generated after parsing the Z01X fault report csv file.</span>
-<span class="sd">            sff_file (pathlib.Path): The fault format configuration file.</span>
-<span class="sd">            formula (str): A formula which computes the coverage e.g., ``&quot;DD/(NA + DA + DN + DD)&quot;``.</span>
-<span class="sd">            precision (int): the number of decimals to consider for the coverage. Default is ``4``.</span>
-<span class="sd">            status_attribute (str): The attribute of the ``Fault`` object which represents its Z01X fault status.</span>
-<span class="sd">                                    Default value is ``&quot;Status&quot;``.</span>
-<span class="sd">        Returns:</span>
-<span class="sd">            float: The coverage value in [0.0, 1.0] i.e., the evaluated ``formula``. Not as a precentage!</span>
-<span class="sd">        Raises:</span>
-<span class="sd">            SystemExit: If the &quot;StatusGroups&quot; segment is not found in the configuration .sff file.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="c1"># Gather fault statuses numbers.</span>
-        <span class="n">fault_statuses</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
-
-        <span class="k">for</span> <span class="n">fault</span> <span class="ow">in</span> <span class="n">fault_list</span><span class="p">:</span>
-
-            <span class="n">status</span> <span class="o">=</span> <span class="n">fault</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">status_attribute</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">status</span> <span class="ow">in</span> <span class="n">fault_statuses</span><span class="p">:</span>
-                <span class="n">fault_statuses</span><span class="p">[</span><span class="n">status</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">status</span> <span class="ow">in</span> <span class="n">fault_statusses</span><span class="p">:</span>
+                <span class="n">fault_statusses</span><span class="p">[</span><span class="n">status</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">fault_statuses</span><span class="p">[</span><span class="n">status</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="n">fault_statusses</span><span class="p">[</span><span class="n">status</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
 
-        <span class="c1"># Parse StatusGroups section.</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">sff_file</span><span class="p">)</span> <span class="k">as</span> <span class="n">config</span><span class="p">:</span>
-
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">status_groups_raw</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span>
-                    <span class="sa">r</span><span class="s2">&quot;StatusGroups\n\s*{([^}]+)\s*}&quot;</span><span class="p">,</span>
-                    <span class="n">config</span><span class="o">.</span><span class="n">read</span><span class="p">(),</span>
-                    <span class="n">re</span><span class="o">.</span><span class="n">MULTILINE</span><span class="p">)</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
-
-            <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
-                <span class="n">log</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unable to extract StatusGroups segment from the </span><span class="si">{</span><span class="n">sff_file</span><span class="si">}</span><span class="s2">. Exiting...&quot;</span><span class="p">)</span>
-                <span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-
-        <span class="c1"># Remove empty lines if any.</span>
-        <span class="n">status_groups_raw</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="o">.</span><span class="n">strip</span><span class="p">,</span> <span class="n">status_groups_raw</span><span class="p">)))</span>
         <span class="n">status_groups</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">status_groups</span><span class="p">:</span>
 
-        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">status_groups_raw</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">group</span><span class="p">,</span> <span class="n">statuses</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">status_groups</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
 
-            <span class="n">group</span><span class="p">,</span> <span class="o">*</span><span class="n">statuses</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;([A-Z]</span><span class="si">{2}</span><span class="s2">)&quot;</span><span class="p">,</span> <span class="n">line</span><span class="p">)</span>
+                <span class="n">status_groups</span><span class="p">[</span><span class="n">group</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
 
-            <span class="n">status_groups</span><span class="p">[</span><span class="n">group</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="k">for</span> <span class="n">status</span> <span class="ow">in</span> <span class="n">statuses</span><span class="p">:</span>
 
-            <span class="k">for</span> <span class="n">status</span> <span class="ow">in</span> <span class="n">statuses</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">status</span> <span class="ow">in</span> <span class="n">fault_statuses</span><span class="p">:</span>
-                    <span class="n">status_groups</span><span class="p">[</span><span class="n">group</span><span class="p">]</span> <span class="o">+=</span> <span class="n">fault_statuses</span><span class="p">[</span><span class="n">status</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">status</span> <span class="ow">in</span> <span class="n">fault_statusses</span><span class="p">:</span>
 
-        <span class="c1"># Finally get any group only present in the formula and set it to 0.</span>
-        <span class="n">non_present_statuses</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+                        <span class="n">status_groups</span><span class="p">[</span><span class="n">group</span><span class="p">]</span> <span class="o">+=</span> <span class="n">fault_statusses</span><span class="p">[</span><span class="n">status</span><span class="p">]</span>
 
-        <span class="k">for</span> <span class="n">status</span> <span class="ow">in</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;[A-Z]</span><span class="si">{2}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">formula</span><span class="p">):</span>
+        <span class="c1"># We expect that if a coverage formula is specified</span>
+        <span class="c1"># i.e., Coverage{} exists, then there  may  be some</span>
+        <span class="c1"># variables there which may not  exist in  statuses</span>
+        <span class="c1"># or groups. Hence we must set them to 0.</span>
+        <span class="n">non_present</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">coverage</span><span class="p">:</span>
 
-            <span class="k">if</span> <span class="n">status</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">fault_statuses</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="ow">and</span> <span class="n">status</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">status_groups</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-                <span class="n">non_present_statuses</span><span class="p">[</span><span class="n">status</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">formula_name</span><span class="p">,</span> <span class="n">formula</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">coverage</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
 
-        <span class="k">return</span> <span class="nb">round</span><span class="p">(</span><span class="nb">eval</span><span class="p">(</span><span class="n">formula</span><span class="p">,</span> <span class="p">{</span><span class="o">**</span><span class="n">fault_statuses</span><span class="p">,</span> <span class="o">**</span><span class="n">status_groups</span><span class="p">,</span> <span class="o">**</span><span class="n">non_present_statuses</span><span class="p">}),</span> <span class="n">precision</span><span class="p">)</span></div>
+                <span class="k">for</span> <span class="n">status_or_group</span> <span class="ow">in</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;[A-Z]</span><span class="si">{2}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">formula</span><span class="p">):</span>
+
+                    <span class="k">if</span> <span class="n">status_or_group</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">fault_statusses</span> <span class="ow">and</span> <span class="n">status_or_group</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">status_groups</span><span class="p">:</span>
+
+                        <span class="n">non_present</span><span class="p">[</span><span class="n">status_or_group</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+                <span class="n">retval</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">formula_name</span><span class="p">,</span>
+                               <span class="nb">round</span><span class="p">(</span><span class="nb">eval</span><span class="p">(</span><span class="n">formula</span><span class="p">,</span> <span class="p">{</span><span class="o">**</span><span class="n">fault_statusses</span><span class="p">,</span> <span class="o">**</span><span class="n">status_groups</span><span class="p">,</span> <span class="o">**</span><span class="n">non_present</span><span class="p">}),</span>
+                                     <span class="n">precision</span><span class="p">)))</span>
+
+        <span class="c1"># Else: TODO: Implement default coverage computation according to manual</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">retval</span><span class="p">)[</span><span class="n">requested_formula</span><span class="p">]</span> <span class="k">if</span> <span class="n">requested_formula</span> <span class="k">else</span> <span class="nb">dict</span><span class="p">(</span><span class="n">retval</span><span class="p">)</span></div>
 </div>
 
 
 
 <div class="viewcode-block" id="ZoixInvoker">
 <a class="viewcode-back" href="../zoix.html#zoix.ZoixInvoker">[docs]</a>
-<span class="k">class</span> <span class="nc">ZoixInvoker</span><span class="p">():</span>
+<span class="k">class</span> <span class="nc">ZoixInvoker</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A wrapper class to be used in handling calls to VCS-Z01X.&quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;ZoixInvoker&quot;</span><span class="p">:</span>
         <span class="o">...</span>

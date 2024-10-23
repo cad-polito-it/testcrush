@@ -59,36 +59,7 @@ in the evaluation method of each iteration within the A0 class.</p>
 <dt class="sig sig-object py" id="a0.A0">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">a0.</span></span><span class="sig-name descname"><span class="pre">A0</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/a0.html#A0"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#a0.A0" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Implements the A0 compaction algorithm of <a class="reference external" href="https://doi.org/10.1109/TC.2016.2643663">https://doi.org/10.1109/TC.2016.2643663</a></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="a0.A0.deduce_coverage">
-<span class="sig-name descname"><span class="pre">deduce_coverage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">precision</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fault_status_attr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Status'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="_modules/a0.html#A0.deduce_coverage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#a0.A0.deduce_coverage" title="Link to this definition">¶</a></dt>
-<dd><p>Returns the fault coverage value by selecting one of the two supported coverage extraction methods based on the
-configuration.</p>
-<p>The fault coverage can be computed -or- extracted. If the user has specified custom status group in his sff
-file (safety flow) then its advised to specify the config &amp;&amp; coverage formula at the configuration file in order
-for the coverage to be computed. Otherwise, if the default statuses are used and no custom coverage formula
-is specified (manufacturing flow) then its advised to specify a column and a row from the summary csv file to
-extract the coverage value from the summary.csv file.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>precision</strong> (<em>int</em><em>, </em><em>optional</em>) – Specifies the precision of the coverage value when this is computed.</p></li>
-<li><p><strong>fault_status_attr</strong> (<em>str</em><em>, </em><em>optional</em>) – Indicates which column of the header row of the faultlist.csv file is
-specifying the fault status attribute of the fault. As of now the
-default column value is “Status”. If the user specifies otherwise in the
-configuration file then this value shall be used instead.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>The fault coverage.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>float</p>
-</dd>
-</dl>
-</dd></dl>
-
+<p>Implements the A0 compaction algorithm</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="a0.A0.evaluate">
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">previous_result</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_result</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="_modules/a0.html#A0.evaluate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#a0.A0.evaluate" title="Link to this definition">¶</a></dt>
@@ -108,6 +79,12 @@ configuration file then this value shall be used instead.</p></li>
 <dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="a0.A0.post_run">
+<span class="sig-name descname"><span class="pre">post_run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="_modules/a0.html#A0.post_run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#a0.A0.post_run" title="Link to this definition">¶</a></dt>
+<dd><p>Cleanup any VC-Z01X stopped processes</p>
 </dd></dl>
 
 <dl class="py method">
@@ -235,7 +212,7 @@ which can be queried for retrieving rows with information comming from the fault
 <p>Filters out candidate instructions</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="a0.Preprocessor.prune_candidates">
-<span class="sig-name descname"><span class="pre">prune_candidates</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/a0.html#Preprocessor.prune_candidates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#a0.Preprocessor.prune_candidates" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">prune_candidates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">candidates</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">Codeline</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mapping</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/a0.html#Preprocessor.prune_candidates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#a0.Preprocessor.prune_candidates" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
