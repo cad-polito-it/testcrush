@@ -5,7 +5,6 @@ import subprocess
 import re
 import enum
 import pathlib
-import csv
 
 from testcrush.utils import get_logger, to_snake_case
 from typing import Any
@@ -139,30 +138,53 @@ class TxtFaultReport:
     """
     Manages the VC-Z01X text report.
     """
-
-    __slots__ = ["fault_report", "fault_list", "status_groups", "coverage"]
+    __slots__ = ["fault_report_path", "fault_report", "fault_list", "status_groups", "coverage"]
 
     def __init__(self, fault_report: pathlib.Path) -> "TxtFaultReport":
-        with open(fault_report) as src:
-            self.fault_report: str = src.read()
+        self.fault_report_path = fault_report  # Store the path, but don't read the file yet
+        self.fault_report = None
+        self.fault_list = None
+        self.status_groups = None
+        self.coverage = None
 
-        # Lazy import to resolve avoid circular import.
+    def __str__(self) -> str:
+
+        return f"{self.fault_report_path.resolve()}"
+
+    def _load_fault_report(self):
+        """Load the fault report from the file."""
+        if not self.fault_report_path.exists():
+            raise FileNotFoundError(f"Fault report file {self.fault_report_path} not found.")
+
+        with open(self.fault_report_path) as src:
+            self.fault_report = src.read()
+
+    def _parse_sections(self):
+        """Parse the required sections from the fault report."""
+        # Ensure the fault report is loaded before parsing
+        if self.fault_report is None:
+            raise ValueError("Fault report is not loaded.")
+
+        # Lazy import to avoid circular dependencies
         from testcrush.grammars.transformers import FaultReportTransformerFactory
 
         factory = FaultReportTransformerFactory()
         for section in ["StatusGroups", "Coverage", "FaultList"]:
-
             parser = factory(section)
 
             try:
                 raw_section = self.extract(section)
-
             except ValueError:  # section doesn't exist
                 setattr(self, to_snake_case(section), None)
                 continue
 
             log.debug(f"Parsing {section}")
             setattr(self, to_snake_case(section), parser.parse(raw_section))
+
+    def update(self):
+        """Update and parse all sections once the fault report file is available."""
+        self._load_fault_report()  # Read the file
+        self._parse_sections()  # Parse all sections
 
     def extract(self, section: str) -> str:
         """
@@ -217,12 +239,27 @@ class TxtFaultReport:
 
     def compute_coverage(self, requested_formula: str = None, precision: int = 4) -> dict[str, float] | float:
         """
+        Manually computes the coverage based on the current fault report.
 
+        Args:
+            requested_formula (str, optional): The name of the coverage formula from the ``Coverage {}`` section of the
+                                               fault report. Defaults to None.
+            precision (int, optional): The requested float precision. Defaults to 4.
+
+        Returns:
+            dict[str, float] | float: If no formula name is provided, returns a dictionary mapping formula names to
+            their corresponding evaluated coverage values as floats. If a formula name is specified, returns only
+            the evaluated value for that formula.
+
+        Todo:
+            * Implement default Test/Fault coverage computation per-Z01X if no ``Coverage{}`` section exists.
         """
+        log.info(f"Computing coverage {requested_formula}.")
+        self.update()
+
         retval = list()
 
         fault_statusses = dict()
-
         for fault in self.fault_list:
 
             status = fault.fault_status
@@ -266,214 +303,6 @@ class TxtFaultReport:
 
         # Else: TODO: Implement default coverage computation according to manual
         return dict(retval)[requested_formula] if requested_formula else dict(retval)
-
-
-class CSVFaultReport:
-    """
-    Manipulates the VC-Z01X summary and report **CSV** files.
-
-    These files are expected to be generated after fault simulation.
-    The ``report`` instruction specified in the fault campaign manager script
-    **MUST** be executed with the ``-csv`` option.
-    """
-
-    def __init__(self, fault_summary: pathlib.Path, fault_report: pathlib.Path) -> "CSVFaultReport":
-
-        self.fault_summary: pathlib.Path = fault_summary.absolute()
-        self.fault_report: pathlib.Path = fault_report.absolute()
-
-    def set_fault_summary(self, fault_summary: str) -> None:
-        """
-        Setter method for fault summary.
-
-        Args:
-            fault_summary (str): The new fault summary filename.
-
-        Returns:
-            None
-
-        Raises:
-            FileNotFoundError: if the file does not exist.
-        """
-
-        if not pathlib.Path(fault_summary).exists():
-            raise FileNotFoundError(f"{fault_summary=} does not exist!")
-
-        self.fault_summary = pathlib.Path(fault_summary).absolute()
-
-    def set_fault_report(self, fault_report: str) -> None:
-        """
-        Setter method for fault report.
-
-        Args:
-            fault_report (str): The new fault report filename.
-
-        Returns:
-            None
-
-        Raises:
-            FileNotFoundError: If the file does not exist.
-        """
-
-        if not pathlib.Path(fault_report).exists():
-            raise FileNotFoundError(f"{fault_report=} does not exist!")
-
-        self.fault_report = pathlib.Path(fault_report).absolute()
-
-    def extract_summary_cells_from_row(self, row: int, *cols: int) -> list[str]:
-        """
-        Returns a sequence of cells from a row of the ``self.fault_summary`` **CSV** file.
-
-        Args:
-            row (int): the row number (1-based indexing).
-            cols (ints): the columns' numbers (1-based indexing).
-
-        Returns:
-            list[str]: The cells of the fault summary.
-
-        Raises:
-            SystemExit: If a requested column or row is out-of-bounds.
-        """
-
-        with open(self.fault_summary) as csv_source:
-
-            reader = csv.reader(csv_source)
-
-            for index, csv_row in enumerate(reader, start=1):
-
-                if index != row:
-                    continue
-
-                try:
-                    return [csv_row[col - 1] for col in cols]
-                except IndexError:
-                    log.critical(f"A column in {cols} is out of bounds for row {row} of summary {self.fault_summary}.")
-                    exit(1)
-
-            log.critical(f"Row {row} is out of bounds for fault summary {self.fault_summary}.")
-            exit(1)
-
-    def parse_fault_report(self) -> list[Fault]:
-        """
-        Parses the fault report and produces a fault list.
-
-        Returns:
-            list[Fault]: A list with ``Fault`` entries.
-        """
-
-        with open(self.fault_report) as csv_source:
-
-            reader = csv.reader(csv_source)
-
-            # Attributes
-            attributes = next(reader)
-
-            return [Fault(**dict(zip(attributes, csv_row))) for csv_row in reader]
-
-    @staticmethod
-    def extract_summary_coverage(summary: pathlib.Path, regexp: re.Pattern, group_index: int) -> float:
-        """
-        Extracts the coverage percentage from the summary text file file via multilined regex matching.
-
-        Args:
-            summary (pathlib.Path): The location of the ``summary.txt`` report.
-            regexp (re.Pattern): The regular expression to match the intended coverage line. Note that it must have at
-                                 least one capture group, which should precicely hold the coverage percentage.
-            group_index (int): The capture group index of the regexp that holds the coverage percentage.
-
-        Returns:
-            float: The coverage percentage which was captured as float.
-
-        Raises:
-            ValueError: If the provided `regexp` does not match anything.
-            SystemExit: If the conversion of the matched capture group to float fails.
-        """
-        with open(summary) as source:
-            data = source.read()
-
-        match = re.search(regexp, data, re.DOTALL | re.MULTILINE)
-
-        if not match:
-            raise ValueError(f"Unable to match coverage percentage with {regexp}")
-
-        log.debug(f"Match {match=}. Groups {match.groups()}")
-
-        try:
-            coverage = float(match.group(group_index))
-
-        except BaseException:
-            log.critical(f"Unable to cast {match.group(group_index)} to float")
-            exit(1)
-
-        return coverage
-
-    @staticmethod
-    def compute_flist_coverage(fault_list: list[Fault], sff_file: pathlib.Path, formula: str, precision: int = 4,
-                               status_attribute: str = "Status") -> float:
-        """
-        Computes the test coverage value as described by `formula`, which must be comprised of mathematical operations
-        of Z01X fault classes (i.e., 2 letter strings).
-
-        Args:
-            fault_list (list[Fault]): A fault-list generated after parsing the Z01X fault report csv file.
-            sff_file (pathlib.Path): The fault format configuration file.
-            formula (str): A formula which computes the coverage e.g., ``"DD/(NA + DA + DN + DD)"``.
-            precision (int): the number of decimals to consider for the coverage. Default is ``4``.
-            status_attribute (str): The attribute of the ``Fault`` object which represents its Z01X fault status.
-                                    Default value is ``"Status"``.
-        Returns:
-            float: The coverage value in [0.0, 1.0] i.e., the evaluated ``formula``. Not as a precentage!
-        Raises:
-            SystemExit: If the "StatusGroups" segment is not found in the configuration .sff file.
-        """
-
-        # Gather fault statuses numbers.
-        fault_statuses = dict()
-
-        for fault in fault_list:
-
-            status = fault.get(status_attribute)
-            if status in fault_statuses:
-                fault_statuses[status] += 1
-            else:
-                fault_statuses[status] = 1
-
-        # Parse StatusGroups section.
-        with open(sff_file) as config:
-
-            try:
-                status_groups_raw = re.search(
-                    r"StatusGroups\n\s*{([^}]+)\s*}",
-                    config.read(),
-                    re.MULTILINE).group(1).splitlines()
-
-            except AttributeError:
-                log.critical(f"Unable to extract StatusGroups segment from the {sff_file}. Exiting...")
-                exit(1)
-
-        # Remove empty lines if any.
-        status_groups_raw = list(filter(lambda x: len(x), map(str.strip, status_groups_raw)))
-        status_groups = dict()
-
-        for line in status_groups_raw:
-
-            group, *statuses = re.findall(r"([A-Z]{2})", line)
-
-            status_groups[group] = 0
-
-            for status in statuses:
-                if status in fault_statuses:
-                    status_groups[group] += fault_statuses[status]
-
-        # Finally get any group only present in the formula and set it to 0.
-        non_present_statuses = dict()
-
-        for status in re.findall(r"[A-Z]{2}", formula):
-
-            if status not in fault_statuses.keys() and status not in status_groups.keys():
-                non_present_statuses[status] = 0
-
-        return round(eval(formula, {**fault_statuses, **status_groups, **non_present_statuses}), precision)
 
 
 class ZoixInvoker:
@@ -752,9 +581,3 @@ expression '{tat_regexp}' ?")
                 break
 
         return fault_simulation_status
-
-
-if __name__ == "__main__":
-
-    a = TxtFaultReport(pathlib.Path("../../sandbox/fsim_attr"))
-    print(a.compute_coverage())

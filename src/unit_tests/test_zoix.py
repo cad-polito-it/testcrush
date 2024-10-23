@@ -184,32 +184,12 @@ FaultList {
 """
     def create_object(self):
 
-        real_open = open  # Keep an alias to real open
+        test_obj = zoix.TxtFaultReport(pathlib.Path("mock_fault_report"))
 
-        with mock.patch("builtins.open", mock.mock_open(read_data=self._fault_report_excerp)) as mocked_open:
+        with mock.patch("testcrush.zoix.TxtFaultReport._load_fault_report") as mocked_load:
 
-            # Careful! the constructor invokes lark parsing which means it opens >1 files
-            # However, what we want to patch is just the fault report excerpt and not the
-            # rest, e.g., the grammars. Hence, we need to hack our way around this  issue
-            # and only patch the open when the fault report is read. Hence this elaborate
-            # side effect trick. Note that i am also capturing real_open above, since  at
-            # this point, it is already patched.
-
-            def open_side_effect(file, mode="r", *args, **kwargs):
-
-                if isinstance(file, pathlib.Path):
-                    file = str(file)
-
-                if file == "mock_fault_report":
-                    return mock.mock_open(read_data=self._fault_report_excerp)()
-                else:
-                    # Use the real open function for grammar parsing
-                    return real_open(file, mode, *args, **kwargs)
-
-            # Set the side_effect to handle multiple file paths
-            mocked_open.side_effect = open_side_effect
-
-            test_obj = zoix.TxtFaultReport(pathlib.Path("mock_fault_report"))
+            test_obj.fault_report = self._fault_report_excerp
+            test_obj.update()
 
         return test_obj
 
@@ -367,119 +347,20 @@ FaultList {
 }""")
 
     def test_compute_coverage(self):
+
         test_obj = self.create_object()
 
-        coverage = test_obj.compute_coverage()
+        # This is needed explicitly also here, because compute_coverage
+        # invokes the update() to implement lazy coverage computation
+        # while already having instantiated the object. I.e., at instantiation
+        # time the fault report may not be available. But when invoking
+        # compute_coverage, the file MUST exist!
+        with mock.patch("testcrush.zoix.TxtFaultReport._load_fault_report") as mocked_load:
+
+            test_obj.fault_report = self._fault_report_excerp
+            coverage = test_obj.compute_coverage()
 
         self.assertEqual(coverage, {'Diagnostic Coverage': 0.0, 'Observational Coverage': 1.0})
-
-
-
-class CSVFaultReportTest(unittest.TestCase):
-
-    def test_constructor(self):
-
-        test_obj = zoix.CSVFaultReport(pathlib.Path("mock_fault_summary"), pathlib.Path("mock_fault_report"))
-        self.assertEqual(test_obj.fault_summary, pathlib.Path("mock_fault_summary").absolute())
-        self.assertEqual(test_obj.fault_report, pathlib.Path("mock_fault_report").absolute())
-
-    def test_set_fault_summary(self):
-
-        test_obj = zoix.CSVFaultReport(pathlib.Path("mock_fault_summary"), pathlib.Path("mock_fault_report"))
-
-        with self.assertRaises(FileNotFoundError) as cm:
-
-            test_obj.set_fault_summary("new_mock_summary")
-
-        self.assertEqual(str(cm.exception), f"fault_summary='new_mock_summary' does not exist!")
-
-        with mock.patch("pathlib.Path.exists", return_value = True):
-
-            test_obj.set_fault_summary("new_mock_summary")
-
-            self.assertEqual(test_obj.fault_summary, pathlib.Path("new_mock_summary").absolute())
-
-    def test_set_fault_report(self):
-
-        test_obj = zoix.CSVFaultReport(pathlib.Path("mock_fault_summary"), pathlib.Path("mock_fault_report"))
-
-        with self.assertRaises(FileNotFoundError) as cm:
-
-            test_obj.set_fault_report("new_mock_report")
-
-        self.assertEqual(str(cm.exception), f"fault_report='new_mock_report' does not exist!")
-
-        with mock.patch("pathlib.Path.exists", return_value = True):
-
-            test_obj.set_fault_report("new_mock_report")
-
-            self.assertEqual(test_obj.fault_report, pathlib.Path("new_mock_report").absolute())
-
-    def test_extract_summary_cells_from_row(self):
-
-        test_obj = zoix.CSVFaultReport(pathlib.Path("mock_fault_summary"), pathlib.Path("mock_fault_report"))
-
-        with mock.patch("builtins.open", mock.mock_open(read_data="""\
-"Category","Name","Label","Prime Cnt","Prime Pct","Prime Sub Pct","Total Cnt","Total Pct","Total Sub Pct"
-"General","Number of Faults","",11034,100.00,"",18684,100.00,""
-"General","Untestable Faults:","",100,0.91,100.00,100,0.54,100.00
-"Fault","Untestable Unused","UU",100,0.91,100.00,100,0.91,100.00
-"General","Testable Faults:","",10934,99.09,100.00,18584,99.46,100.00
-"Fault","Oscillating Zero","OZ",2,0.02,0.02,4,0.02,0.02
-"Fault","Not Observed","NO",672,6.09,6.15,1048,6.09,5.64
-"Fault","Not Controlled","NC",550,4.98,5.03,1096,4.98,5.90
-"Fault","Not Observed Not Diagnosed","NN",2321,21.03,21.23,3799,21.03,20.44
-"Fault","Observed Not Diagnosed","ON",7389,66.97,67.58,12637,66.97,68.00
-"Group","Dangerous Assumed","DA",2,0.02,"",4,0.02,""
-"Group","Dangerous Not Diagnosed","DN",7389,67.58,"",12637,68.00,""
-"Group","Safe","SA",100,0.91,"",100,0.54,""
-"Group","Safe Unobserved","SU",3543,32.40,"",5943,31.98,""
-"Coverage","Diagnostic Coverage","","","0.00%","","","0.00%",""
-"Coverage","Observational Coverage","","","67.58%","","","68.00%",""""")):
-
-            diagnostic_coverage = test_obj.extract_summary_cells_from_row(15,8)
-            observationL_coverage = test_obj.extract_summary_cells_from_row(16,8)
-            total_faults = test_obj.extract_summary_cells_from_row(2,2,4,7)
-
-            self.assertEqual(diagnostic_coverage, ["0.00%"])
-            self.assertEqual(observationL_coverage, ["68.00%"])
-            self.assertEqual(total_faults, ["Number of Faults", "11034", "18684"])
-
-            # Row is out of bounds
-            with self.assertRaises(SystemExit) as cm:
-
-                test_obj.extract_summary_cells_from_row(20,1)
-
-            self.assertEqual(str(cm.exception), "1")
-
-            # Column is out of bounds
-            with self.assertRaises(SystemExit) as cm:
-
-                test_obj.extract_summary_cells_from_row(10,1,20)
-
-            self.assertEqual(str(cm.exception), "1")
-
-    def test_parse_fault_report(self):
-
-        self.maxDiff = None
-
-        test_obj = zoix.CSVFaultReport(pathlib.Path("mock_fault_summary"), pathlib.Path("mock_fault_report"))
-
-        with mock.patch("builtins.open", mock.mock_open(read_data='''\
-"FID","Test Name","Prime","Status","Model","Timing","Cycle Injection","Cycle End","Class","Location"
-1,"test1","yes","ON","0","","","","PORT","path_to_fault_1.portA"
-2,"test1",1,"ON","0","","","","PORT","path_to_fault_2.portB"
-3,"test1","yes","ON","1","","","","PORT","path_to_fault_3.portC"''')):
-
-            report = test_obj.parse_fault_report()
-            expected_report = [
-                zoix.Fault(**{"FID":"1", "Test Name":"test1", "Prime":"yes", "Status":"ON", "Model":"0", "Timing":"", "Cycle Injection":"", "Cycle End":"", "Class":"PORT", "Location":"path_to_fault_1.portA"}),
-                zoix.Fault(**{"FID":"2", "Test Name":"test1", "Prime":"1", "Status":"ON", "Model":"0", "Timing":"", "Cycle Injection":"", "Cycle End":"", "Class":"PORT", "Location":"path_to_fault_2.portB"}),
-                zoix.Fault(**{"FID":"3", "Test Name":"test1", "Prime":"yes", "Status":"ON", "Model":"1", "Timing":"", "Cycle Injection":"", "Cycle End":"", "Class":"PORT", "Location":"path_to_fault_3.portC"}),
-            ]
-
-            self.assertEqual(report, expected_report)
-
 
 class ZoixInvokerTest(unittest.TestCase):
 
