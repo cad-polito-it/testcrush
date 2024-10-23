@@ -24,3 +24,5 @@ htmlcov/
 *.zip
 # ignore vscode
 .vscode
+# ignore databases
+*.db
