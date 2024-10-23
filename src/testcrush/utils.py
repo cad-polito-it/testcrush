@@ -9,17 +9,27 @@ import subprocess
 import pathlib
 import zipfile
 import os
+import psutil
+
+# # # # # # # # # # # # # # # # # # # # # #
+#    __                   _               #
+#   / /  ___   __ _  __ _(_)_ __   __ _   #
+#  / /  / _ \ / _` |/ _` | | '_ \ / _` |  #
+# / /__| (_) | (_| | (_| | | | | | (_| |  #
+# \____/\___/ \__, |\__, |_|_| |_|\__, |  #
+#             |___/ |___/         |___/   #
+# # # # # # # # # # # # # # # # # # # # # #
+
+trace_level_num = 5
+logging.addLevelName(trace_level_num, "TRACE")
 
 
-def to_snake_case(name: str) -> str:
-    """
-    Args:
-        name (str): A camelCase-like string
+def trace(self, message, *args, **kws):
+    if self.isEnabledFor(trace_level_num):
+        self._log(trace_level_num, message, args, **kws, stacklevel=2)
 
-    Returns:
-        str: The ``name`` in snake_case format.
-    """
-    return ''.join(['_' + i.lower() if i.isupper() else i for i in name]).lstrip('_')
+
+logging.Logger.trace = trace
 
 
 def setup_logger(stream_logging_level: int, log_file: str | None = None) -> None:
@@ -34,22 +44,28 @@ def setup_logger(stream_logging_level: int, log_file: str | None = None) -> None
 
             return indented_message
 
+    _v_to_levels = {
+        0: logging.INFO,
+        1: logging.DEBUG,
+        2: trace_level_num
+    }
+
     logger = logging.getLogger(__name__)
-    logger.setLevel(stream_logging_level)
+    logger.setLevel(_v_to_levels[stream_logging_level])
 
     # Check if handlers already exist (to prevent adding them multiple times)
     if not logger.hasHandlers():
 
         log_stream = logging.StreamHandler(stream=sys.stdout)
-        log_stream.setLevel(stream_logging_level)
+        log_stream.setLevel(_v_to_levels[stream_logging_level])
         log_stream.setFormatter(logging.Formatter('%(levelname)s: %(message)s'))
         logger.addHandler(log_stream)
 
         if log_file:
             log_file_handler = logging.FileHandler(filename=log_file, mode='w')
-            log_file_handler.setLevel(stream_logging_level)
+            log_file_handler.setLevel(_v_to_levels[stream_logging_level])
             log_file_handler.setFormatter(IndentedFormatter(
-                '[%(levelname)s] @ %(module)s/%(funcName)s/line%(lineno)d\n%(message)s'))
+                '[%(levelname)s] @ %(module)s/%(funcName)s/line %(lineno)d\n%(message)s'))
 
             logger.addHandler(log_file_handler)
 
@@ -60,6 +76,25 @@ def get_logger() -> logging.Logger:
 
 
 log = get_logger()
+
+
+# # # # # # # # # # # #
+#         _           #
+#   /\/\ (_)___  ___  #
+#  /    \| / __|/ __| #
+# / /\/\ \ \__ \ (__  #
+# \/    \/_|___/\___| #
+# # # # # # # # # # # #
+
+def to_snake_case(name: str) -> str:
+    """
+    Args:
+        name (str): A camelCase-like string
+
+    Returns:
+        str: The ``name`` in snake_case format.
+    """
+    return ''.join(['_' + i.lower() if i.isupper() else i for i in name]).lstrip('_')
 
 
 def compile_assembly(*instructions, exit_on_error: bool = False) -> bool:
@@ -189,8 +224,55 @@ def addr2line(elf_file: pathlib.Path, pc_address: str) -> tuple[str, int] | None
 
                         return (file_name.decode('utf-8'), int(state.line))
 
-    return None
+    return (None, None)
 
+
+def reap_process_tree(pid: int, timeout: float = 5.0) -> None:
+    """Gracefully terminate and reap the process tree for a given PID.
+
+    Args:
+        pid (int): The process ID of the root process.
+        timeout (float): Time in seconds to wait for processes to be reaped.
+    """
+
+    parent = psutil.Process(pid)
+    children = parent.children(recursive=True)
+
+    # First, try to gracefully terminate all processes in the tree
+    log.info(f"Terminating process tree for PID {pid}...")
+    for p in children:
+        try:
+            p.terminate()  # Sends SIGTERM
+        except psutil.NoSuchProcess:
+            continue  # Process might have exited already
+
+    # Wait for the processes to terminate gracefully
+    gone, alive = psutil.wait_procs(children, timeout=timeout)
+
+    # For processes still alive after timeout, forcefully kill them
+    if alive:
+        log.info(f"Forcefully killing {len(alive)} processes...")
+        for p in alive:
+            try:
+                p.kill()  # Sends SIGKILL
+            except psutil.NoSuchProcess:
+                continue
+
+    # Finally, wait for all processes to be reaped
+    gone, alive = psutil.wait_procs(alive, timeout=timeout)
+    if not alive:
+        log.info("All processes terminated and reaped.")
+    else:
+        log.info(f"Some processes could not be terminated: {[p.pid for p in alive]}")
+
+
+# # # # # # # # # # # # # # # # # # #
+#    ___ _                          #
+#   / __\ | __ _ ___ ___  ___  ___  #
+#  / /  | |/ _` / __/ __|/ _ \/ __| #
+# / /___| | (_| \__ \__ \  __/\__ \ #
+# \____/|_|\__,_|___/___/\___||___/ #
+# # # # # # # # # # # # # # # # # # #
 
 class Timer():
     """
