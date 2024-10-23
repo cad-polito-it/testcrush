@@ -10,6 +10,7 @@ from testcrush.utils import get_logger
 
 log = get_logger()
 
+
 class FaultReportFaultListTransformer(lark.Transformer):
     """
     This transformer is expected to act on the grammar of the ``FaultList`` segment of a Z01X txt fault report.
