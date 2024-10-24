@@ -166,9 +166,23 @@ class Preprocessor(metaclass=Singleton):
 
             return result
 
-    def prune_candidates(self, candidates: list[asm.Codeline], mapping: dict[str, str]):
+    def prune_candidates(self, candidates: list[asm.Codeline], mapping: dict[str, str]) -> None:
+        """
+        Performs Attribute-Trace prunning of the codeline candidates of A0.
 
-        # 1. Gather attribute pairs and rank them
+        Takes as input the list of ``Codeline`` objects of A0. This list will be modified in-place by identifying the
+        relevance of each codeline towards fault detection. The fault attributes of simulation time and program counter
+        are accumulated for each prime fault. Then, a query is performed on the trace database for each <time,pc> pair
+        in order to extract a window of program counters (i.e., instruction sequences). Then, thes program counters are
+        associated with line numbers in the assembly sources and are ommitted from the search space. That is, they are
+        removed from the ``candidates`` list which is modified in place.
+
+        Args:
+            candidates (list[asm.Codeline]): Reference to the list of candidates of A0. To be modified **in-place**.
+            mapping (dict[str, str]): A mapping of Z01X fault attributes to Trace column names.
+
+        """
+        # 1. Gather attribute pairs
         attributes = list()
         for fault in self.fault_list:
 
@@ -202,6 +216,7 @@ class Preprocessor(metaclass=Singleton):
 
             if lineno in removed:
                 log.warning(f"Line {lineno} has already been removed. Skipping.")
+                continue
 
             if not asm_file:
                 log.warning(f"Program counter {pc} not found in {self.elf}")
