@@ -302,6 +302,7 @@ class FaultReportCoverageTransformer(lark.Transformer):
     def formula(self, formula_name: str, formula: str) -> tuple[str, str]:
         """
         Takes the lhs and rhs and returns them as a tuple
+
         .. highlight:: python
         .. code-block:: python
 
