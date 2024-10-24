@@ -142,10 +142,10 @@ class TxtFaultReport:
 
     def __init__(self, fault_report: pathlib.Path) -> "TxtFaultReport":
         self.fault_report_path = fault_report  # Store the path, but don't read the file yet
-        self.fault_report = None
-        self.fault_list = None
-        self.status_groups = None
-        self.coverage = None
+        self.fault_report: str = None
+        self.fault_list: list[Fault] = None
+        self.status_groups: dict[str, list[str]] = None
+        self.coverage: dict[str, str] = None
 
     def __str__(self) -> str:
 
