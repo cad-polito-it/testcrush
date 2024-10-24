@@ -190,7 +190,7 @@ def addr2line(elf_file: pathlib.Path, pc_address: str) -> tuple[str, int] | None
 
     Returns:
         tuple: A file-line pair. The file (index-0) is the source which contains the line number that corresponds to the
-        ``pc_address`` and the lien (index-1) is the 1-based indexing of the line number within the source file.
+        ``pc_address`` and the line (index-1) is the 1-based indexing of the line number within the source file.
     """
 
     from elftools.elf.elffile import ELFFile
