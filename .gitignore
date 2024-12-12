@@ -26,3 +26,6 @@ htmlcov/
 .vscode
 # ignore databases
 *.db
+# ignore virtual_env
+/venv
+/packs

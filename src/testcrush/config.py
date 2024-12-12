@@ -24,6 +24,26 @@ A0_PREPROCESSOR_KEYS = {
     "elf_file": ["preprocessing", "elf_file"]
 }
 
+A1xx_KEYS = {
+    "a1xx_segment_dimension": ["a1xx_behavior", "segment_dimension"],
+    "a1xx_policy": ["a1xx_behavior", "policy"],
+    "assembly_compilation_instructions": ["cross_compilation", "instructions"],
+    "vcs_compilation_instructions": ["vcs_hdl_compilation", "instructions"],
+    "vcs_logic_simulation_instructions": ["vcs_logic_simulation", "instructions"],
+    "vcs_logic_simulation_control": ["vcs_logic_simulation_control"],
+    "zoix_fault_simulation_instructions": ["zoix_fault_simulation", "instructions"],
+    "zoix_fault_simulation_control": ["zoix_fault_simulation_control"],
+    "fsim_report": ["fault_report", "frpt_file"],
+    "coverage_formula": ["fault_report", "coverage_formula"],
+}
+
+A1xx_PREPROCESSOR_KEYS = {
+    "processor_name": ["preprocessing", "processor_name"],
+    "processor_trace": ["preprocessing", "processor_trace"],
+    "zoix_to_trace": ["preprocessing", "zoix_to_trace"],
+    "elf_file": ["preprocessing", "elf_file"]
+}
+
 
 def replace_toml_placeholders(item: Any, defines: dict[str, str]) -> dict[str, Any]:
     """Recursively replaces any string or string within list and dicts with user defined values.
@@ -157,3 +177,4 @@ def parse_a0_configuration(config_file: pathlib.Path) -> tuple[str, list, dict]:
     a0_preprocessor_settings = {setting: get_nested_value(config, path)
                                 for setting, path in A0_PREPROCESSOR_KEYS.items()}
     return (isa, asm_sources, a0_settings, a0_preprocessor_settings)
+

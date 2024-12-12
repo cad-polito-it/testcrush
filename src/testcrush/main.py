@@ -7,6 +7,7 @@ import pathlib
 from testcrush import config
 from testcrush import utils
 from testcrush import a0
+from testcrush import a1xx
 
 log = utils.get_logger()
 
@@ -23,20 +24,20 @@ def execute_a0(configuration: pathlib.Path):
     init_tat, init_cov = A0.pre_run()
     log.info(f"Initial STL stats are: TaT = {init_tat}, Coverage = {init_cov}.")
 
-    if any([val for val in a0_preprocessor_settings.values()]):
+    # if any([val for val in a0_preprocessor_settings.values()]):
 
-        log.info("Attribute-Trace Preprocessing has been specified.")
+        # log.info("Attribute-Trace Preprocessing has been specified.")
 
-        # This is after pre_run, which means that the fault list
-        # has been computed for the golden run and is available.
-        preprocessor = a0.Preprocessor(A0.fsim_report.fault_list, **a0_preprocessor_settings)
+        # # This is after pre_run, which means that the fault list
+        # # has been computed for the golden run and is available.
+        # preprocessor = a0.Preprocessor(A0.fsim_report.fault_list, **a0_preprocessor_settings)
 
-        before_preprocessing = len(A0.all_instructions)
-        preprocessor.prune_candidates(A0.all_instructions, A0.path_to_id)
-        after_preprocessing = len(A0.all_instructions)
-        percentage = round((after_preprocessing / before_preprocessing) * 100, 4)
+        # before_preprocessing = len(A0.all_instructions)
+        # preprocessor.prune_candidates(A0.all_instructions, A0.path_to_id)
+        # after_preprocessing = len(A0.all_instructions)
+        # percentage = round((after_preprocessing / before_preprocessing) * 100, 4)
 
-        log.info(f"Preprocessor finished. Search space reduced by {percentage}%.")
+        # log.info(f"Preprocessor finished. Search space reduced by {percentage}%.")
 
     # 2. Execution of A0
     with utils.Timer():
@@ -44,6 +45,33 @@ def execute_a0(configuration: pathlib.Path):
 
     # 3. Cleanup. Reapping stopped processes.
     A0.post_run()
+
+def execute_a1xx():
+
+    config.sanitize_a1xx_configuration(configuration)
+
+    ISA, asm_src, a1xx_settings, a1xx_preprocessor_settings = config.parse_a0_configuration(configuration)
+
+    A1xx = a1xx.A1xx(pathlib.Path(ISA), asm_src, a1xx_settings)
+
+    # 1. Initial run for original STL for TaT and Coverage computation
+    init_tat, init_cov = A1xx.pre_run()
+    log.info(f"Initial STL stats are: TaT = {init_tat}, Coverage = {init_cov}.")
+
+    # if any([val for val in a0_preprocessor_settings.values()]):
+
+        # log.info("Attribute-Trace Preprocessing has been specified.")
+
+        # # This is after pre_run, which means that the fault list
+        # # has been computed for the golden run and is available.
+        # preprocessor = a0.Preprocessor(A0.fsim_report.fault_list, **a0_preprocessor_settings)
+
+        # before_preprocessing = len(A0.all_instructions)
+        # preprocessor.prune_candidates(A0.all_instructions, A0.path_to_id)
+        # after_preprocessing = len(A0.all_instructions)
+        # percentage = round((after_preprocessing / before_preprocessing) * 100, 4)
+
+        # log.info(f"Preprocessor finished. Search space reduced by {percentage}%.")
 
 
 def main():
@@ -66,6 +94,7 @@ def main():
     if args.compaction_mode == "A0":
         execute_a0(args.configuration)
     elif args.compaction_mode == "A1xx":
+        # execute_a1xx(args.configuration)
         raise NotImplementedError("The compaction algorithm A1xx is not yet implemented")
 
 
