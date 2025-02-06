@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 import time
+import re
 import logging
 import sys
 import shutil
@@ -126,7 +127,7 @@ def compile_assembly(*instructions, exit_on_error: bool = False) -> bool:
 
             stdout, stderr = process.communicate()
 
-            if stderr:
+            if stderr and not re.search("warning", stderr, re.IGNORECASE):
 
                 log.debug(f"Error during execution of {cmd}\n\
                 ---------[MESSAGE]---------\n\
@@ -141,8 +142,8 @@ def compile_assembly(*instructions, exit_on_error: bool = False) -> bool:
                 return False
 
             for line in stdout.splitlines():
-                log.debug(f"{cmd}: {line.rstrip()}")
-
+                log.debug(f"{cmd}: {line.rstrip()}") 
+    
     return True
 
 

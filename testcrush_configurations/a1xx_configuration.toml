@@ -13,7 +13,7 @@ run_dir = "../../cv32e40p/run/vc-z01x"
 # A1xx execution parameters        #
 ###########################
 segment_dimension = 3
-policy = 'F'
+policy = 'R'
 
 [isa]
 ###########################

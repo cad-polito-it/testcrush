@@ -11,10 +11,7 @@ from testcrush import a1xx
 
 log = utils.get_logger()
 
-
 def execute_a0(configuration: pathlib.Path):
-
-    config.sanitize_a0_configuration(configuration)
 
     ISA, asm_src, a0_settings, a0_preprocessor_settings = config.parse_a0_configuration(configuration)
 
@@ -46,11 +43,9 @@ def execute_a0(configuration: pathlib.Path):
     # 3. Cleanup. Reapping stopped processes.
     A0.post_run()
 
-def execute_a1xx():
+def execute_a1xx(configuration: pathlib.Path):
 
-    config.sanitize_a1xx_configuration(configuration)
-
-    ISA, asm_src, a1xx_settings, a1xx_preprocessor_settings = config.parse_a0_configuration(configuration)
+    ISA, asm_src, a1xx_settings, a1xx_preprocessor_settings = config.parse_a1xx_configuration(configuration)
 
     A1xx = a1xx.A1xx(pathlib.Path(ISA), asm_src, a1xx_settings)
 
@@ -73,6 +68,12 @@ def execute_a1xx():
 
         # log.info(f"Preprocessor finished. Search space reduced by {percentage}%.")
 
+    # 2. Execution of A1xx
+    with utils.Timer():
+        A1xx.run((init_tat, init_cov))
+
+    # 3. Cleanup. Reapping stopped processes.
+    A1xx.post_run()
 
 def main():
 
@@ -94,8 +95,8 @@ def main():
     if args.compaction_mode == "A0":
         execute_a0(args.configuration)
     elif args.compaction_mode == "A1xx":
-        # execute_a1xx(args.configuration)
-        raise NotImplementedError("The compaction algorithm A1xx is not yet implemented")
+        execute_a1xx(args.configuration)
+        # raise NotImplementedError("The compaction algorithm A1xx is not yet implemented")
 
 
 if __name__ == "__main__":

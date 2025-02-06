@@ -6,7 +6,7 @@ import re
 import random
 import csv
 import time
-# import sqlite3
+import sqlite3
 import io
 import os
 
@@ -55,184 +55,184 @@ class Preprocessor(metaclass=Singleton):
         self.elf = kwargs.get("elf_file")
         self.zoix2trace = kwargs.get("zoix_to_trace")
 
-        # self._create_trace_db()
+        self._create_trace_db()
 
-    # def _create_trace_db(self):
-        # """
-        # Transforms the trace of the DUT to a SQLite database of a single table. The header of the CSV is mapped to the
-        # DB column names and then the CSV body is transformed into DB row entries.
-        # """
+    def _create_trace_db(self):
+        """
+        Transforms the trace of the DUT to a SQLite database of a single table. The header of the CSV is mapped to the
+        DB column names and then the CSV body is transformed into DB row entries.
+        """
 
-        # # If pre-existent db is found, delete it.
-        # db = pathlib.Path(self._trace_db)
-        # if db.exists():
-            # log.debug(f"Database {self._trace_db} exists. Overwritting it.")
-            # db.unlink()
+        # If pre-existent db is found, delete it.
+        db = pathlib.Path(self._trace_db)
+        if db.exists():
+            log.debug(f"Database {self._trace_db} exists. Overwritting it.")
+            db.unlink()
 
-        # con = sqlite3.connect(self._trace_db)
-        # cursor = con.cursor()
+        con = sqlite3.connect(self._trace_db)
+        cursor = con.cursor()
 
-        # header: list[str] = self.trace[0].split(',')
-        # header = list(map(lambda column_name: f"\"{column_name}\"", header))
-        # header = ", ".join(header)
+        header: list[str] = self.trace[0].split(',')
+        header = list(map(lambda column_name: f"\"{column_name}\"", header))
+        header = ", ".join(header)
 
-        # cursor.execute(f"CREATE TABLE trace({header})")
+        cursor.execute(f"CREATE TABLE trace({header})")
 
-        # body: list[str] = self.trace[1:]
+        body: list[str] = self.trace[1:]
 
-        # with io.StringIO('\n'.join(body)) as source:
+        with io.StringIO('\n'.join(body)) as source:
 
-            # for row in csv.reader(source):
+            for row in csv.reader(source):
 
-                # cursor.execute(f"INSERT INTO trace VALUES ({', '.join(['?'] * len(row))})", row)
+                cursor.execute(f"INSERT INTO trace VALUES ({', '.join(['?'] * len(row))})", row)
 
-        # con.commit()
-        # con.close()
+        con.commit()
+        con.close()
 
-        # log.debug(f"Database {self._trace_db} created.")
+        log.debug(f"Database {self._trace_db} created.")
 
-    # def query_trace_db(self, select: str, where: dict[str, str],
-                       # history: int = 5, allow_multiple: bool = False) -> list[tuple[str, ...]]:
-        # """
-        # Perform a query with the specified parameters.
+    def query_trace_db(self, select: str, where: dict[str, str],
+                       history: int = 5, allow_multiple: bool = False) -> list[tuple[str, ...]]:
+        """
+        Perform a query with the specified parameters.
 
-        # Assuming that the DB looks like this:
+        Assuming that the DB looks like this:
 
-        # ::
+        ::
 
-            # Time || Cycle || PC       || Instruction
-            # -----||-------||----------||------------
-            # 10ns || 1     || 00000004 || and
-            # 20ns || 2     || 00000008 || or          <-*
-            # 30ns || 3     || 0000000c || xor         <-|
-            # 40ns || 4     || 00000010 || sll         <-|
-            # 50ns || 5     || 00000014 || j           <-|
-            # 60ns || 6     || 0000004c || addi        <-*
-            # 70ns || 7     || 00000050 || wfi
+            Time || Cycle || PC       || Instruction
+            -----||-------||----------||------------
+            10ns || 1     || 00000004 || and
+            20ns || 2     || 00000008 || or          <-*
+            30ns || 3     || 0000000c || xor         <-|
+            40ns || 4     || 00000010 || sll         <-|
+            50ns || 5     || 00000014 || j           <-|
+            60ns || 6     || 0000004c || addi        <-*
+            70ns || 7     || 00000050 || wfi
 
-        # And you perform a query for the ``select="PC"`` and ``where={"PC": "0000004c", "Time": "60ns"}`` then the search
-        # would result in a window of 1+4 ``PC`` values, indicated by ``<-`` in the snapshot above. The size of the window
-        # defaults to 5 but can be freely selected by the user.
+        And you perform a query for the ``select="PC"`` and ``where={"PC": "0000004c", "Time": "60ns"}`` then the search
+        would result in a window of 1+4 ``PC`` values, indicated by ``<-`` in the snapshot above. The size of the window
+        defaults to 5 but can be freely selected by the user.
 
-        # Args:
-            # select (str): The field to select in the query.
-            # where (dict[str, str]): A dictionary specifying conditions to filter the query.
-            # history (int, optional): The number of past queries to include. Defaults to 5.
-            # allow_multiple (bool, optional): Whether to allow multiple results. Defaults to False.
+        Args:
+            select (str): The field to select in the query.
+            where (dict[str, str]): A dictionary specifying conditions to filter the query.
+            history (int, optional): The number of past queries to include. Defaults to 5.
+            allow_multiple (bool, optional): Whether to allow multiple results. Defaults to False.
 
-        # Returns:
-            # list[tuple[str, ...]: A list of query results (tuples of strings) matching the criteria.
-        # """
+        Returns:
+            list[tuple[str, ...]: A list of query results (tuples of strings) matching the criteria.
+        """
 
-        # db = pathlib.Path(self._trace_db)
-        # if not db.exists():
-            # raise FileNotFoundError("Trace DB not found")
+        db = pathlib.Path(self._trace_db)
+        if not db.exists():
+            raise FileNotFoundError("Trace DB not found")
 
-        # columns = where.keys()
+        columns = where.keys()
 
-        # query = f"""
-            # SELECT ROWID
-            # FROM trace
-            # WHERE {' AND '.join([f'{x} = ?' for x in columns])}
-        # """
+        query = f"""
+            SELECT ROWID
+            FROM trace
+            WHERE {' AND '.join([f'{x} = ?' for x in columns])}
+        """
 
-        # values = where.values()
-        # with sqlite3.connect(db) as con:
+        values = where.values()
+        with sqlite3.connect(db) as con:
 
-            # cursor = con.cursor()
+            cursor = con.cursor()
 
-            # cursor.execute(query, tuple(values))
-            # rowids = cursor.fetchall()
+            cursor.execute(query, tuple(values))
+            rowids = cursor.fetchall()
 
-            # if not rowids:
-                # raise ValueError(f"No row found for {', '.join([f'{k}={v}' for k, v in where.items()])}")
+            if not rowids:
+                raise ValueError(f"No row found for {', '.join([f'{k}={v}' for k, v in where.items()])}")
 
-            # if len(rowids) > 1 and not allow_multiple:
-                # raise ValueError(f"Query resulted in multiple ROWIDs for \
-# {', '.join([f'{k}={v}' for k, v in where.items()])}")
+            if len(rowids) > 1 and not allow_multiple:
+                raise ValueError(f"Query resulted in multiple ROWIDs for \
+{', '.join([f'{k}={v}' for k, v in where.items()])}")
 
-            # result = list()
-            # for rowid, in rowids:
+            result = list()
+            for rowid, in rowids:
 
-                # query_with_history = f"""
-                    # SELECT {'"'+select+'"' if select != '*' else select} FROM trace
-                    # WHERE ROWID <= ?
-                    # ORDER BY ROWID DESC
-                    # LIMIT ?
-                # """
+                query_with_history = f"""
+                    SELECT {'"'+select+'"' if select != '*' else select} FROM trace
+                    WHERE ROWID <= ?
+                    ORDER BY ROWID DESC
+                    LIMIT ?
+                """
 
-            # cursor.execute(query_with_history, (rowid, history))
-            # result += cursor.fetchall()[::-1]
+            cursor.execute(query_with_history, (rowid, history))
+            result += cursor.fetchall()[::-1]
 
-            # return result
+            return result
 
-    # def prune_candidates(self, candidates: list[asm.Codeline], mapping: dict[str, str]) -> None:
-        # """
-        # Performs Attribute-Trace prunning of the codeline candidates of A0.
+    def prune_candidates(self, candidates: list[asm.Codeline], mapping: dict[str, str]) -> None:
+        """
+        Performs Attribute-Trace prunning of the codeline candidates of A0.
 
-        # Takes as input the list of ``Codeline`` objects of A0. This list will be modified in-place by identifying the
-        # relevance of each codeline towards fault detection. The fault attributes of simulation time and program counter
-        # are accumulated for each prime fault. Then, a query is performed on the trace database for each <time,pc> pair
-        # in order to extract a window of program counters (i.e., instruction sequences). Then, thes program counters are
-        # associated with line numbers in the assembly sources and are ommitted from the search space. That is, they are
-        # removed from the ``candidates`` list which is modified in place.
+        Takes as input the list of ``Codeline`` objects of A0. This list will be modified in-place by identifying the
+        relevance of each codeline towards fault detection. The fault attributes of simulation time and program counter
+        are accumulated for each prime fault. Then, a query is performed on the trace database for each <time,pc> pair
+        in order to extract a window of program counters (i.e., instruction sequences). Then, thes program counters are
+        associated with line numbers in the assembly sources and are ommitted from the search space. That is, they are
+        removed from the ``candidates`` list which is modified in place.
 
-        # Args:
-            # candidates (list[asm.Codeline]): Reference to the list of candidates of A0. To be modified **in-place**.
-            # mapping (dict[str, str]): A mapping of Z01X fault attributes to Trace column names.
+        Args:
+            candidates (list[asm.Codeline]): Reference to the list of candidates of A0. To be modified **in-place**.
+            mapping (dict[str, str]): A mapping of Z01X fault attributes to Trace column names.
 
-        # """
-        # # 1. Gather attribute pairs
-        # attributes = list()
-        # for fault in self.fault_list:
+        """
+        # 1. Gather attribute pairs
+        attributes = list()
+        for fault in self.fault_list:
 
-            # if hasattr(fault, "fault_attributes"):
+            if hasattr(fault, "fault_attributes"):
 
-                # entry = {self.zoix2trace[k]: fault.fault_attributes[k] for k in self.zoix2trace.keys()}
-                # if entry not in attributes:
+                entry = {self.zoix2trace[k]: fault.fault_attributes[k] for k in self.zoix2trace.keys()}
+                if entry not in attributes:
 
-                    # attributes.append(entry)
+                    attributes.append(entry)
 
-        # # 2. Query the database for PC windows
-        # # TODO: How to specify the column name of the trace? ask explicitly for PC?
-        # pcs = list()
-        # for entry in attributes:
-            # try:
-                # window = [pc for (pc,) in self.query_trace_db(select="PC", where=entry, history=4)]
-            # except ValueError:
-                # continue
+        # 2. Query the database for PC windows
+        # TODO: How to specify the column name of the trace? ask explicitly for PC?
+        pcs = list()
+        for entry in attributes:
+            try:
+                window = [pc for (pc,) in self.query_trace_db(select="PC", where=entry, history=4)]
+            except ValueError:
+                continue
 
-            # if window not in pcs:
-                # pcs.append(window)
+            if window not in pcs:
+                pcs.append(window)
 
-        # # Flatten the list
-        # pcs = [pc for window in pcs for pc in window]
+        # Flatten the list
+        pcs = [pc for window in pcs for pc in window]
 
-        # # 3. Find the asm source and line numbers and filter out the candidates
-        # removed = list()
-        # for pc in pcs:
+        # 3. Find the asm source and line numbers and filter out the candidates
+        removed = list()
+        for pc in pcs:
 
-            # asm_file, lineno = addr2line(self.elf, pc)
+            asm_file, lineno = addr2line(self.elf, pc)
 
-            # if lineno in removed:
-                # log.warning(f"Line {lineno} has already been removed. Skipping.")
-                # continue
+            if lineno in removed:
+                log.warning(f"Line {lineno} has already been removed. Skipping.")
+                continue
 
-            # if not asm_file:
-                # log.warning(f"Program counter {pc} not found in {self.elf}")
+            if not asm_file:
+                log.warning(f"Program counter {pc} not found in {self.elf}")
 
-            # if asm_file not in mapping:
-                # log.warning(f"PC value {pc} maps to line {lineno} of {asm_file} which isn't in asm sources. Skipping.")
-                # continue
+            if asm_file not in mapping:
+                log.warning(f"PC value {pc} maps to line {lineno} of {asm_file} which isn't in asm sources. Skipping.")
+                continue
 
-            # before = len(candidates)
-            # candidates[:] = list(filter(lambda entry: not ((entry[0] == mapping[asm_file]) and
-                                                           # (entry[1] == lineno - 1)),
-                                        # candidates))
-            # after = len(candidates)
+            before = len(candidates)
+            candidates[:] = list(filter(lambda entry: not ((entry[0] == mapping[asm_file]) and
+                                                           (entry[1] == lineno - 1)),
+                                        candidates))
+            after = len(candidates)
 
-            # if before != after:
-                # removed.append(lineno)
+            if before != after:
+                removed.append(lineno)
 
 
 class A0(metaclass=Singleton):
