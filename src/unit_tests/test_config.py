@@ -152,7 +152,7 @@ zoix_to_trace = { 'PC_ID' = 'PC', 'sim_time' = 'Time'}
 
         with mock.patch("io.open", mock.mock_open(read_data=correct_toml_config)) as mocked_open:
 
-            _config = config.sanitize_a0_configuration("some_mocked_file")
+            _config = config.sanitize_configuration("some_mocked_file")
 
         missing_section = r"""
 [isa]
@@ -164,7 +164,7 @@ isa_file = '../../langs/riscv.isa'
         with mock.patch("io.open", mock.mock_open(read_data=missing_section)) as mocked_open:
 
             with self.assertRaises(KeyError) as cm:
-                _config = config.sanitize_a0_configuration("some_mocked_file")
+                _config = config.sanitize_configuration("some_mocked_file")
 
 
         wrong_section_key = r"""
@@ -177,7 +177,7 @@ isa_ = '../../langs/riscv.isa'
         with mock.patch("io.open", mock.mock_open(read_data=wrong_section_key)) as mocked_open:
 
             with self.assertRaises(KeyError) as cm:
-                _config = config.sanitize_a0_configuration("some_mocked_file")
+                _config = config.sanitize_configuration("some_mocked_file")
 
 
     def test_parse_a0_configuration(self):

@@ -51,7 +51,7 @@ class A1xx(metaclass=Singleton):
                                                             for asm_file in a1xx_asm_sources]
 
         # Flatten candidates list
-        self.all_instructions: list[asm.Codeline] = [(asm_id, codeline) for asm_id, asm in
+        self.all_instructions: list[tuple[int, asm.Codeline]] = [(asm_id, codeline) for asm_id, asm in
                                                      enumerate(self.assembly_sources) for codeline in asm.get_code()]
         self.path_to_id = {f"{v.stem}{v.suffix}": k for k, v in enumerate(a1xx_asm_sources)}
 
@@ -103,7 +103,6 @@ class A1xx(metaclass=Singleton):
         new_tat, new_coverage = new_result
 
         return (new_tat <= old_tat) and (new_coverage >= old_coverage) 
-        # and all(fault in new_faults_list for fault in old_faults_list)
 
     def _coverage(self, precision: int = 4) -> float:
         """
@@ -205,7 +204,7 @@ class A1xx(metaclass=Singleton):
         Returns:
             None
         """
-        def _restore(asm_source, codelines) -> None:
+        def _restore(asm_source, codelines: list[asm.Codeline]) -> None:
             """
             Invokes the ``restore()`` function of a specific assembly handler.
             """
@@ -254,32 +253,37 @@ class A1xx(metaclass=Singleton):
 #############
 """)
     
-            # Step 4-5: Remove a block of code following the given configurations
 
-            if (self.policy == 'R'): 
-                for _ in range(times_to_shuffle):
-                    random.shuffle(block)
+            # Step 4-5: Remove a block of code following the given configurations
 
             asm_ids = set()
             codelines = list()
             iteration = len(block)
-            
-            for _ in range(iteration):                
-                if self.policy == 'F':
-                    asm_id, codeline = block.pop()
-                else:
+        
+            for j in range(iteration):
+                if self.policy == 'B':                    
                     asm_id, codeline = block.pop(0)
+                elif self.policy == 'F':
+                    asm_id, codeline = block.pop()
+                    block.pop()
+                elif self.policy == 'R': 
+                    asm_id, codeline = block.pop(random.randint(0, len(block) - 1))
+                else:
+                    log.fatal("Inexistent policy!")
+                    exit(1)
+    
 
                 codelines.append(codeline)
                 asm_ids.add(asm_id)
-
                 handler = self.assembly_sources[asm_id]
                 handler.remove(codeline)
 
-            print(f"Removing {codelines} of assembly sources {asm_ids}")
- 
+
+            assembly_sources = " ".join(self.assembly_sources[asm_id].get_asm_source().name for asm_id in asm_ids)
+
             for _ in range(iteration):
                 
+                print(f"Removing: {"\n".join(str(codeline) for codeline in codelines)}\n of assembly sources {assembly_sources}")
                 # Update statistics
 
                 if any(iteration_stats.values()):
@@ -353,7 +357,7 @@ class A1xx(metaclass=Singleton):
                 fsim = vc_zoix.fault_simulate(*self.zoix_fsim_args, **self.zoix_fsim_kwargs)
 
                 if fsim != zoix.FaultSimulation.SUCCESS:
-                    print(f"\tFault simulation resulted in a {fsim.value} after removing {codeline}.")
+                    print(f"\tFault simulation resulted in a {fsim.value} after removing: {"\n".join(str(codeline) for codeline in codelines)}.")
                     print("\tRestoring.")
                     iteration_stats["compiles"] = "YES"
                     iteration_stats["lsim_ok"] = "YES"
