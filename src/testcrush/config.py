@@ -179,7 +179,6 @@ def parse_a0_configuration(config_file: pathlib.Path) -> tuple[str, list, dict]:
     return (isa, asm_sources, a0_settings, a0_preprocessor_settings)
 
 
-
 def parse_a1xx_configuration(config_file: pathlib.Path) -> tuple[str, list, dict]:
     """
     Parses the TOML configuration file of A0 and returns the A0 constructor args.
@@ -222,6 +221,9 @@ def parse_a1xx_configuration(config_file: pathlib.Path) -> tuple[str, list, dict
     # Dynamically build the a0_settings dictionary using the defined key mappings
     a1xx_settings = {setting: get_nested_value(config, path) for setting, path in A1xx_KEYS.items()}
 
-    a1xx_preprocessor_settings = {setting: get_nested_value(config, path)
-                                for setting, path in A1xx_PREPROCESSOR_KEYS.items()}
+    a1xx_preprocessor_settings = {
+        setting: get_nested_value(config, path)
+        for setting, path in A1xx_PREPROCESSOR_KEYS.items()
+    }
+
     return (isa, asm_sources, a1xx_settings, a1xx_preprocessor_settings)

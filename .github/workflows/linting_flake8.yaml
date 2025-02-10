@@ -40,6 +40,11 @@ jobs:
       run: |
         cd src/testcrush
         flake8 a0.py --max-line-length 120
+    
+    - name: Lint a1xx.py
+      run: |
+        cd src/testcrush
+        flake8 a1xx.py --max-line-length 120
 
     - name: Lint utils.py
       run: |

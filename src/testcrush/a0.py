@@ -248,8 +248,12 @@ class A0(metaclass=Singleton):
                                                             for asm_file in a0_asm_sources]
 
         # Flatten candidates list
-        self.all_instructions: list[tuple[int, asm.Codeline]] = [(asm_id, codeline) for asm_id, asm in
-                                                     enumerate(self.assembly_sources) for codeline in asm.get_code()]
+        self.all_instructions: list[tuple[int, asm.Codeline]] = [
+            (asm_id, codeline)
+            for asm_id, asm in enumerate(self.assembly_sources)
+            for codeline in asm.get_code()
+        ]
+
         self.path_to_id = {f"{v.stem}{v.suffix}": k for k, v in enumerate(a0_asm_sources)}
 
         self.assembly_compilation_instructions: list[str] = a0_settings.get("assembly_compilation_instructions")

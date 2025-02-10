@@ -7,16 +7,14 @@ import re
 import random
 import csv
 import time
-import sqlite3
-import io
 import os
 
-import testcrush.grammars.transformers as transformers
-from testcrush.utils import get_logger, compile_assembly, zip_archive, Singleton, addr2line, reap_process_tree
+from testcrush.utils import get_logger, compile_assembly, zip_archive, Singleton, reap_process_tree
 from testcrush import asm, zoix
 from typing import Any
 
 log = get_logger()
+
 
 class CSVCompactionStatistics(metaclass=Singleton):
     """Manages I/O operations on the CSV file which logs the statistics of the A1xx."""
@@ -36,8 +34,6 @@ class CSVCompactionStatistics(metaclass=Singleton):
         return self
 
 
-
-
 class A1xx(metaclass=Singleton):
 
     """Implements the A1xx compaction algorithm"""
@@ -51,8 +47,12 @@ class A1xx(metaclass=Singleton):
                                                             for asm_file in a1xx_asm_sources]
 
         # Flatten candidates list
-        self.all_instructions: list[tuple[int, asm.Codeline]] = [(asm_id, codeline) for asm_id, asm in
-                                                     enumerate(self.assembly_sources) for codeline in asm.get_code()]
+        self.all_instructions: list[tuple[int, asm.Codeline]] = [
+            (asm_id, codeline)
+            for asm_id, asm in enumerate(self.assembly_sources)
+            for codeline in asm.get_code()
+        ]
+
         self.path_to_id = {f"{v.stem}{v.suffix}": k for k, v in enumerate(a1xx_asm_sources)}
 
         self.assembly_compilation_instructions: list[str] = a1xx_settings.get("assembly_compilation_instructions")
@@ -78,9 +78,7 @@ class A1xx(metaclass=Singleton):
         self.segment_dimension = a1xx_settings.get("a1xx_segment_dimension")
         self.policy = a1xx_settings.get("a1xx_policy")
 
-
         self.vc_zoix: zoix.ZoixInvoker = zoix.ZoixInvoker()
-
 
     @staticmethod
     def evaluate(previous_result: tuple[int, float, list[zoix.Fault]],
@@ -102,7 +100,7 @@ class A1xx(metaclass=Singleton):
         old_tat, old_coverage = previous_result
         new_tat, new_coverage = new_result
 
-        return (new_tat <= old_tat) and (new_coverage >= old_coverage) 
+        return (new_tat <= old_tat) and (new_coverage >= old_coverage)
 
     def _coverage(self, precision: int = 4) -> float:
         """
@@ -179,19 +177,19 @@ class A1xx(metaclass=Singleton):
         coverage = self._coverage()
 
         return (test_application_time.pop(), coverage)
-    
+
     def run(self, initial_stl_stats: tuple[int, float], times_to_shuffle: int = 100) -> None:
         """
         Main loop of the A1xx algorithm
-        
+
         1. Removal of an instruction block from the last lines of code to index 0
             1.1 Get the set of faults detected in that block
         2. Cross-compilation
-            2.1 If FAIL, Restore 
+            2.1 If FAIL, Restore
         3. Logic simulation
             3.1 If ERROR, Restore
         4. Fault simulation
-            4.1 If ERROR or TIMEOUT, Restore 
+            4.1 If ERROR or TIMEOUT, Restore
         5. Evaluation
         6. Goto 1.
 
@@ -210,7 +208,6 @@ class A1xx(metaclass=Singleton):
             """
             codelines.pop()
             self.assembly_sources[asm_source].restore()
-        
 
         # To be used for generated file suffixes
         unique_id = time.strftime("%d_%b_%H%M", time.gmtime())
@@ -234,58 +231,58 @@ class A1xx(metaclass=Singleton):
         iteration_stats = dict.fromkeys(CSVCompactionStatistics._header)
 
         iteration_stats["tat"] = initial_tat
-        iteration_stats["coverage"] = initial_coverage        
+        iteration_stats["coverage"] = initial_coverage
 
         old_stl_stats = (initial_tat, initial_coverage)
 
         # Step 2: Split code into m (where m = ⌈len(self.all_instructions)/self.segment_dimension)⌉ segments
         m = math.ceil(len(self.all_instructions)/self.segment_dimension)
         # Get all the blocks in reverse order
-        blocks =  [self.all_instructions[(i)*self.segment_dimension : (i+1)*self.segment_dimension] for i in range(m)][::-1]
+        blocks = [
+            self.all_instructions[(i)*self.segment_dimension:(i+1)*self.segment_dimension] for i in range(m)
+        ][::-1]
 
         print(f"Code len {len(self.all_instructions)}, segment {self.segment_dimension}, m: {m}")
-
 
         for (i, block) in enumerate(blocks):
             print(f"""
 #############
-# BLOCK {i} 
+# BLOCK {i}
 #############
 """)
-    
 
             # Step 4-5: Remove a block of code following the given configurations
 
             asm_ids = set()
             codelines = list()
             iteration = len(block)
-        
+
             for j in range(iteration):
-                if self.policy == 'B':                    
+                if self.policy == 'B':
                     asm_id, codeline = block.pop(0)
                 elif self.policy == 'F':
                     asm_id, codeline = block.pop()
                     block.pop()
-                elif self.policy == 'R': 
+                elif self.policy == 'R':
                     asm_id, codeline = block.pop(random.randint(0, len(block) - 1))
                 else:
                     log.fatal("Inexistent policy!")
                     exit(1)
-    
 
                 codelines.append(codeline)
                 asm_ids.add(asm_id)
                 handler = self.assembly_sources[asm_id]
                 handler.remove(codeline)
 
-
             assembly_sources = " ".join(self.assembly_sources[asm_id].get_asm_source().name for asm_id in asm_ids)
 
             for _ in range(iteration):
-                
-                print(f"Removing: {"\n".join(str(codeline) for codeline in codelines)}\n of assembly sources {assembly_sources}")
-                # Update statistics
 
+                print(f"""Removing:
+                    {("\n".join(str(codeline) for codeline in codelines))}\n
+                    of assembly sources {assembly_sources}""")
+
+                # Update statistics
                 if any(iteration_stats.values()):
                     stats += iteration_stats
                     iteration_stats = dict.fromkeys(CSVCompactionStatistics._header)
@@ -293,7 +290,6 @@ class A1xx(metaclass=Singleton):
                 iteration_stats["block"] = str(i)
                 iteration_stats["asm_sources"] = " ".join(str(asm_id) for asm_id in asm_ids)
                 iteration_stats["removed_codelines"] = "\t".join(str(codeline) for codeline in codelines)
-
 
                 # +-+-+-+ +-+-+-+-+-+-+-+
                 # |A|S|M| |C|O|M|P|I|L|E|
@@ -306,7 +302,7 @@ class A1xx(metaclass=Singleton):
                     print(f"\tDoes not compile after the removal of: {codelines}. Restoring!")
                     iteration_stats["compiles"] = "NO"
                     iteration_stats["verdict"] = "Restore"
-                    
+
                     _restore(asm_id, codelines)
                     continue
 
@@ -328,9 +324,11 @@ class A1xx(metaclass=Singleton):
                 test_application_time = list()
                 try:
                     print("\tInitiating logic simulation.")
-                    lsim = vc_zoix.logic_simulate(*self.zoix_lsim_args,
-                                                **self.zoix_lsim_kwargs,
-                                                tat_value=test_application_time)
+                    lsim = vc_zoix.logic_simulate(
+                        *self.zoix_lsim_args,
+                        **self.zoix_lsim_kwargs,
+                        tat_value=test_application_time
+                    )
 
                 except zoix.LogicSimulationException:
 
@@ -357,7 +355,9 @@ class A1xx(metaclass=Singleton):
                 fsim = vc_zoix.fault_simulate(*self.zoix_fsim_args, **self.zoix_fsim_kwargs)
 
                 if fsim != zoix.FaultSimulation.SUCCESS:
-                    print(f"\tFault simulation resulted in a {fsim.value} after removing: {"\n".join(str(codeline) for codeline in codelines)}.")
+                    print(f"""\tFault simulation resulted in a {fsim.value} after removing:
+                        {("\n".join(str(codeline) for codeline in codelines))}.
+                    """)
                     print("\tRestoring.")
                     iteration_stats["compiles"] = "YES"
                     iteration_stats["lsim_ok"] = "YES"
@@ -378,7 +378,6 @@ class A1xx(metaclass=Singleton):
                 iteration_stats["tat"] = str(test_application_time)
                 iteration_stats["fsim_ok"] = "YES"
                 iteration_stats["coverage"] = str(coverage)
-                
 
                 # Step 7: Coverage and TaT evaluation.  Wrt
                 # the paper the evaluation happens  on  the
@@ -401,16 +400,14 @@ class A1xx(metaclass=Singleton):
     {new_stl_stats[0]} | New Coverage: {new_stl_stats[1]}\n\tRestoring!")
 
                     iteration_stats["verdict"] = "Restore"
-                    
+
                     _restore(asm_id, codelines)
-        
+
         # Last iteration updates
         if any(iteration_stats.values()):
             stats += iteration_stats
             iteration_stats = dict.fromkeys(CSVCompactionStatistics._header)
 
-
     def post_run(self) -> None:
         """ Cleanup any VC-Z01X stopped processes """
         reap_process_tree(os.getpid())
-
