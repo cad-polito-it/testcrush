@@ -7,6 +7,7 @@ import pathlib
 from typing import Any
 
 A0_KEYS = {
+    "compaction_policy": ["a0_behavior", "compaction_policy"],
     "assembly_compilation_instructions": ["cross_compilation", "instructions"],
     "vcs_compilation_instructions": ["vcs_hdl_compilation", "instructions"],
     "vcs_logic_simulation_instructions": ["vcs_logic_simulation", "instructions"],
@@ -18,6 +19,7 @@ A0_KEYS = {
 }
 
 A0_PREPROCESSOR_KEYS = {
+    "enabled": ["preprocessing", "enabled"],
     "processor_name": ["preprocessing", "processor_name"],
     "processor_trace": ["preprocessing", "processor_trace"],
     "zoix_to_trace": ["preprocessing", "zoix_to_trace"],
@@ -27,6 +29,7 @@ A0_PREPROCESSOR_KEYS = {
 A1xx_KEYS = {
     "a1xx_segment_dimension": ["a1xx_behavior", "segment_dimension"],
     "a1xx_policy": ["a1xx_behavior", "policy"],
+    "compaction_policy": ["a1xx_behavior", "compaction_policy"],
     "assembly_compilation_instructions": ["cross_compilation", "instructions"],
     "vcs_compilation_instructions": ["vcs_hdl_compilation", "instructions"],
     "vcs_logic_simulation_instructions": ["vcs_logic_simulation", "instructions"],
@@ -38,6 +41,7 @@ A1xx_KEYS = {
 }
 
 A1xx_PREPROCESSOR_KEYS = {
+    "enabled": ["preprocessing", "enabled"],
     "processor_name": ["preprocessing", "processor_name"],
     "processor_trace": ["preprocessing", "processor_trace"],
     "zoix_to_trace": ["preprocessing", "zoix_to_trace"],

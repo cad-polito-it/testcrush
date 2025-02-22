@@ -22,9 +22,8 @@ def execute_a0(configuration: pathlib.Path):
     init_tat, init_cov = A0.pre_run()
     log.info(f"Initial STL stats are: TaT = {init_tat}, Coverage = {init_cov}.")
 
-    if any([val for val in a0_preprocessor_settings.values()]):
-
-        log.info("Attribute-Trace Preprocessing has been specified.")
+    if a0_preprocessor_settings["enabled"]:
+        log.info("Preprocessor phase:")
 
         # This is after pre_run, which means that the fault list
         # has been computed for the golden run and is available.
@@ -33,9 +32,13 @@ def execute_a0(configuration: pathlib.Path):
         before_preprocessing = len(A0.all_instructions)
         preprocessor.prune_candidates(A0.all_instructions, A0.path_to_id)
         after_preprocessing = len(A0.all_instructions)
-        percentage = round((after_preprocessing / before_preprocessing) * 100, 4)
+        percentage = round(((before_preprocessing - after_preprocessing) / before_preprocessing) * 100, 4)
 
-        log.info(f"Preprocessor finished. Search space reduced by {percentage}%.")
+        log.info(f"""Preprocessor finished, from {before_preprocessing} to {after_preprocessing} lines.
+                 Search space reduced by {percentage}%.""")
+
+    else:
+        log.info("Preprocessor phase skipped")
 
     # 2. Execution of A0
     with utils.Timer():
@@ -55,20 +58,23 @@ def execute_a1xx(configuration: pathlib.Path):
     init_tat, init_cov = A1xx.pre_run()
     log.info(f"Initial STL stats are: TaT = {init_tat}, Coverage = {init_cov}.")
 
-    # if any([val for val in a0_preprocessor_settings.values()]):
+    if a1xx_preprocessor_settings['enabled']:
+        log.info("Preprocessor phase:")
 
-    # log.info("Attribute-Trace Preprocessing has been specified.")
+        # This is after pre_run, which means that the fault list
+        # has been computed for the golden run and is available.
+        preprocessor = A1xx.Preprocessor(A1xx.fsim_report.fault_list, **a1xx_preprocessor_settings)
 
-    # # This is after pre_run, which means that the fault list
-    # # has been computed for the golden run and is available.
-    # preprocessor = a0.Preprocessor(A0.fsim_report.fault_list, **a0_preprocessor_settings)
+        before_preprocessing = len(A1xx.all_instructions)
+        preprocessor.prune_candidates(A1xx.all_instructions, A1xx.path_to_id)
+        after_preprocessing = len(A1xx.all_instructions)
+        percentage = round(((before_preprocessing - after_preprocessing) / before_preprocessing) * 100, 4)
 
-    # before_preprocessing = len(A0.all_instructions)
-    # preprocessor.prune_candidates(A0.all_instructions, A0.path_to_id)
-    # after_preprocessing = len(A0.all_instructions)
-    # percentage = round((after_preprocessing / before_preprocessing) * 100, 4)
+        log.info(f"""Preprocessor finished, from {before_preprocessing} to {after_preprocessing} lines.
+                 Search space reduced by {percentage}%.""")
 
-    # log.info(f"Preprocessor finished. Search space reduced by {percentage}%.")
+    else:
+        log.info("Preprocessor phase skipped")
 
     # 2. Execution of A1xx
     with utils.Timer():
@@ -99,7 +105,6 @@ def main():
         execute_a0(args.configuration)
     elif args.compaction_mode == "A1xx":
         execute_a1xx(args.configuration)
-        # raise NotImplementedError("The compaction algorithm A1xx is not yet implemented")
 
 
 if __name__ == "__main__":

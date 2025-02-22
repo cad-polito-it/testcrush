@@ -7,13 +7,13 @@ test_dir = "../../cv32e40p/sbst/tests"
 root_dir = "../../cv32e40p"
 run_dir = "../../cv32e40p/run/vc-z01x"
 
-
 [a1xx_behavior]
 ###########################
-# A1xx execution parameters        #
+# A1xx parameters         #
 ###########################
 segment_dimension = 3
-policy = 'R'
+policy = 'F'
+compaction_policy = "Maximize" # "Maximize" or "Threshold"
 
 [isa]
 ###########################
@@ -89,6 +89,7 @@ coverage_formula = 'Observational Coverage'
 ###########################
 # Trace required          #
 ###########################
+enabled = false
 processor_name = 'CV32E40P'
 processor_trace = '%sbst_dir%/trace.log'
 elf_file = '%sbst_dir%/sbst.elf'

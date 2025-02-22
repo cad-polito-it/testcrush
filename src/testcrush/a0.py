@@ -276,6 +276,9 @@ class A0(metaclass=Singleton):
         self.coverage_formula: str = a0_settings.get("coverage_formula")
         log.debug(f"The coverage formula that will be used is: {self.coverage_formula}")
 
+        self.compaction_policy = a0_settings.get("compaction_policy")
+        log.debug(f"The compaction policy that will be used is: {self.compaction_policy}")
+
         self.vc_zoix: zoix.ZoixInvoker = zoix.ZoixInvoker()
 
     @staticmethod
@@ -549,7 +552,15 @@ class A0(metaclass=Singleton):
 {old_stl_stats[0]} | Old Coverage: {old_stl_stats[1]}\n\t\tNew TaT: \
 {new_stl_stats[0]} | New Coverage: {new_stl_stats[1]}\n\tProceeding!")
 
-                old_stl_stats = new_stl_stats
+                if (self.compaction_policy == "Maximize"):
+                    old_stl_stats = new_stl_stats
+                elif self.compaction_policy == "Threshold":
+                    # We want to minimize TaT remaining over the initial faults coverage
+                    old_stl_stats = (new_stl_stats[0], old_stl_stats[1])
+                else:
+                    log.critical("Unknown compaction policy!")
+                    exit(1)
+
                 iteration_stats["verdict"] = "Proceed"
 
             else:
@@ -560,6 +571,11 @@ class A0(metaclass=Singleton):
 
                 iteration_stats["verdict"] = "Restore"
                 _restore(asm_id)
+
+        # Last iteration updates
+        if any(iteration_stats.values()):
+            stats += iteration_stats
+            iteration_stats = dict.fromkeys(CSVCompactionStatistics._header)
 
     def post_run(self) -> None:
         """ Cleanup any VC-Z01X stopped processes """
