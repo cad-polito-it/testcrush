@@ -388,7 +388,6 @@ class A1xx(metaclass=Singleton):
         Main loop of the A1xx algorithm
 
         1. Removal of an instruction block from the last lines of code to index 0
-            1.1 Get the set of faults detected in that block
         2. Cross-compilation
             2.1 If FAIL, Restore
         3. Logic simulation
@@ -403,6 +402,8 @@ class A1xx(metaclass=Singleton):
         Args:
             initial_stl_stats (tuple[int, float]): The test application time (int) and coverage (float) of the original
                                                    STL
+            times_to_shuffle (int, optional): Number of times to permutate the assembly candidates. Defaults to 100,
+            useful only for the "Random" policy.
 
         Returns:
             None
@@ -442,6 +443,7 @@ class A1xx(metaclass=Singleton):
 
         # Step 2: Split code into m (where m = ⌈len(self.all_instructions)/self.segment_dimension)⌉ segments
         m = math.ceil(len(self.all_instructions)/self.segment_dimension)
+
         # Get all the blocks in reverse order
         blocks = [
             self.all_instructions[(i)*self.segment_dimension:(i+1)*self.segment_dimension] for i in range(m)
@@ -598,7 +600,7 @@ class A1xx(metaclass=Singleton):
                         # We want to minimize TaT remaining over the initial faults coverage
                         old_stl_stats = (new_stl_stats[0], old_stl_stats[1])
                     else:
-                        log.critical("Unknown compaction policy!")
+                        log.fatal("Unknown compaction policy!")
                         exit(1)
 
                     iteration_stats["verdict"] = "Proceed"

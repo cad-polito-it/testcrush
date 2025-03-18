@@ -7,13 +7,13 @@ test_dir = "../../cv32e40p/sbst/tests"
 root_dir = "../../cv32e40p"
 run_dir = "../../cv32e40p/run/vc-z01x"
 
-[a1xx_behavior]
+[a1xx_behaviour]
 ###########################
 # A1xx parameters         #
 ###########################
 segment_dimension = 3
 policy = 'F'
-compaction_policy = "Maximize" # "Maximize" or "Threshold"
+compaction_policy = "Threshold" # "Maximize" or "Threshold"
 
 [isa]
 ###########################

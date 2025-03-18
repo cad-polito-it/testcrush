@@ -63,7 +63,7 @@ def execute_a1xx(configuration: pathlib.Path):
 
         # This is after pre_run, which means that the fault list
         # has been computed for the golden run and is available.
-        preprocessor = A1xx.Preprocessor(A1xx.fsim_report.fault_list, **a1xx_preprocessor_settings)
+        preprocessor = a1xx.Preprocessor(A1xx.fsim_report.fault_list, **a1xx_preprocessor_settings)
 
         before_preprocessing = len(A1xx.all_instructions)
         preprocessor.prune_candidates(A1xx.all_instructions, A1xx.path_to_id)

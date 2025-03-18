@@ -31,6 +31,8 @@ Version 0.5.0
    asm
    zoix
    grammar
+   preprocessing
    a0
+   a1xx
    utils
    config
