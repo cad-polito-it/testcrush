@@ -7,7 +7,7 @@ import pathlib
 from typing import Any
 
 A0_KEYS = {
-    "compaction_policy": ["a0_behavior", "compaction_policy"],
+    "compaction_policy": ["a0_behaviour", "compaction_policy"],
     "assembly_compilation_instructions": ["cross_compilation", "instructions"],
     "vcs_compilation_instructions": ["vcs_hdl_compilation", "instructions"],
     "vcs_logic_simulation_instructions": ["vcs_logic_simulation", "instructions"],
@@ -27,9 +27,9 @@ A0_PREPROCESSOR_KEYS = {
 }
 
 A1xx_KEYS = {
-    "a1xx_segment_dimension": ["a1xx_behavior", "segment_dimension"],
-    "a1xx_policy": ["a1xx_behavior", "policy"],
-    "compaction_policy": ["a1xx_behavior", "compaction_policy"],
+    "a1xx_segment_dimension": ["a1xx_behaviour", "segment_dimension"],
+    "a1xx_policy": ["a1xx_behaviour", "policy"],
+    "compaction_policy": ["a1xx_behaviour", "compaction_policy"],
     "assembly_compilation_instructions": ["cross_compilation", "instructions"],
     "vcs_compilation_instructions": ["vcs_hdl_compilation", "instructions"],
     "vcs_logic_simulation_instructions": ["vcs_logic_simulation", "instructions"],
