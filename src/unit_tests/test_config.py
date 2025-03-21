@@ -29,7 +29,7 @@ test_dir = "../../cv32e40p/sbst/tests"
 root_dir = "../../cv32e40p"
 run_dir = "../../cv32e40p/run/vc-z01x"
 
-[a0_behavior]
+[a0_behaviour]
 ###########################
 # A0 parameters           #
 ###########################
