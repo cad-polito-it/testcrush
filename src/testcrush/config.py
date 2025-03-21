@@ -185,14 +185,14 @@ def parse_a0_configuration(config_file: pathlib.Path) -> tuple[str, list, dict]:
 
 def parse_a1xx_configuration(config_file: pathlib.Path) -> tuple[str, list, dict]:
     """
-    Parses the TOML configuration file of A0 and returns the A0 constructor args.
+    Parses the TOML configuration file of A1xx and returns the A1xx constructor args.
 
     Args:
         config_file (pathlib.Path): The configuration file.
 
     Returns:
         tuple: A triplet with the ISA file (str), a list of the assembly sources (strs), and a dictionary with all the
-        a0 settings.
+        a1xx settings.
     """
 
     def get_nested_value(d: dict, keys: list, default=None) -> Any:
