@@ -26,7 +26,7 @@ A0_PREPROCESSOR_KEYS = {
     "elf_file": ["preprocessing", "elf_file"]
 }
 
-A1xx_KEYS = {
+A1XX_KEYS = {
     "a1xx_segment_dimension": ["a1xx_behaviour", "segment_dimension"],
     "a1xx_policy": ["a1xx_behaviour", "policy"],
     "compaction_policy": ["a1xx_behaviour", "compaction_policy"],
@@ -40,7 +40,7 @@ A1xx_KEYS = {
     "coverage_formula": ["fault_report", "coverage_formula"],
 }
 
-A1xx_PREPROCESSOR_KEYS = {
+A1XX_PREPROCESSOR_KEYS = {
     "enabled": ["preprocessing", "enabled"],
     "processor_name": ["preprocessing", "processor_name"],
     "processor_trace": ["preprocessing", "processor_trace"],
@@ -204,7 +204,7 @@ def parse_a1xx_configuration(config_file: pathlib.Path) -> tuple[str, list, dict
 
         return d if d else default
 
-    sanitize_configuration(config_file, A1xx_KEYS)
+    sanitize_configuration(config_file, A1XX_KEYS)
 
     config = toml.load(config_file)
 
@@ -223,11 +223,11 @@ def parse_a1xx_configuration(config_file: pathlib.Path) -> tuple[str, list, dict
     asm_sources = config["assembly_sources"]["sources"]
 
     # Dynamically build the a0_settings dictionary using the defined key mappings
-    a1xx_settings = {setting: get_nested_value(config, path) for setting, path in A1xx_KEYS.items()}
+    a1xx_settings = {setting: get_nested_value(config, path) for setting, path in A1XX_KEYS.items()}
 
     a1xx_preprocessor_settings = {
         setting: get_nested_value(config, path)
-        for setting, path in A1xx_PREPROCESSOR_KEYS.items()
+        for setting, path in A1XX_PREPROCESSOR_KEYS.items()
     }
 
     return (isa, asm_sources, a1xx_settings, a1xx_preprocessor_settings)

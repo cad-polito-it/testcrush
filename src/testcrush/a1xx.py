@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: MIT
 
 import pathlib
-import math
 import re
 import random
 import csv
@@ -21,7 +20,7 @@ log = get_logger()
 
 class CSVCompactionStatistics(metaclass=Singleton):
     """Manages I/O operations on the CSV file which logs the statistics of the A1xx."""
-    _header = ["asm_sources", "block", "removed_codelines", "compiles", "lsim_ok",
+    _header = ["asm_source", "block_index", "removed_codelines", "compiles", "lsim_ok",
                "tat", "fsim_ok", "coverage", "verdict"]
 
     def __init__(self, output: pathlib.Path) -> 'CSVCompactionStatistics':
@@ -245,14 +244,13 @@ class A1xx(metaclass=Singleton):
         log.debug(f"Generating AssemblyHandlers for {a1xx_asm_sources}")
         a1xx_asm_sources = list(map(pathlib.Path, a1xx_asm_sources))
         self.assembly_sources: list[asm.AssemblyHandler] = [asm.AssemblyHandler(asm.ISA(isa), asm_file,
-                                                                                chunksize=1)
+                                                            chunksize=a1xx_settings.get("a1xx_segment_dimension"))
                                                             for asm_file in a1xx_asm_sources]
 
-        # Flatten candidates list
-        self.all_instructions: list[tuple[int, asm.Codeline]] = [
-            (asm_id, codeline)
+        self.all_code_chunks: list[tuple[int, list[asm.Codeline]]] = [
+            (asm_id, chunk)
             for asm_id, asm in enumerate(self.assembly_sources)
-            for codeline in asm.get_code()
+            for chunk in asm.get_code_chunks()
         ]
 
         self.path_to_id = {f"{v.stem}{v.suffix}": k for k, v in enumerate(a1xx_asm_sources)}
@@ -441,62 +439,58 @@ class A1xx(metaclass=Singleton):
 
         old_stl_stats = (initial_tat, initial_coverage)
 
-        # Step 2: Split code into m (where m = ⌈len(self.all_instructions)/self.segment_dimension)⌉ segments
-        m = math.ceil(len(self.all_instructions)/self.segment_dimension)
-
         # Get all the blocks in reverse order
-        blocks = [
-            self.all_instructions[(i)*self.segment_dimension:(i+1)*self.segment_dimension] for i in range(m)
-        ][::-1]
+        blocks_number = len(self.all_code_chunks)
+        blocks = self.all_code_chunks[::-1]
 
-        print(f"Code len {len(self.all_instructions)}, segment {self.segment_dimension}, m: {m}")
+        log.debug(f"""Code len {len([codeline for chunk in self.all_code_chunks for codeline in chunk])},
+                segment_dimension: {self.segment_dimension},
+                blocks_number: {blocks_number}
+            """)
 
-        for (i, block) in enumerate(blocks):
+        for (i, (asm_id, block)) in enumerate(blocks):
             print(f"""
 #############
-# BLOCK {i}/{m}
+# BLOCK {i + 1}/{blocks_number}
 #############
 """)
 
             # Step 4-5: Remove a block of code following the given configurations
 
-            asm_ids = set()
-            codelines = list()
+            candidate_codelines = list()
             iteration = len(block)
 
             for j in range(iteration):
                 if self.policy == 'B':
-                    asm_id, codeline = block.pop(0)
+                    codeline = block.pop(0)
                 elif self.policy == 'F':
-                    asm_id, codeline = block.pop()
+                    codeline = block.pop()
                 elif self.policy == 'R':
-                    asm_id, codeline = block.pop(random.randint(0, len(block) - 1))
+                    codeline = block.pop(random.randint(0, len(block) - 1))
                 else:
                     log.fatal("Inexistent policy!")
                     exit(1)
 
-                codelines.append(codeline)
-                asm_ids.add(asm_id)
+                candidate_codelines.append(codeline)
                 handler = self.assembly_sources[asm_id]
                 handler.remove(codeline)
 
-            assembly_sources = " ".join(self.assembly_sources[asm_id].get_asm_source().name for asm_id in asm_ids)
+            assembly_source = self.assembly_sources[asm_id].get_asm_source().name
 
             for _ in range(iteration):
 
-                removed_codelines = ("\n".join(str(codeline) for codeline in codelines))
+                removed_codelines = ("\n".join(str(codeline) for codeline in candidate_codelines))
 
-                print(f"Removing:{removed_codelines}\n of assembly sources {assembly_sources}")
+                print(f"Removing:{removed_codelines}\n of assembly sources {assembly_source}")
 
                 # Update statistics
                 if any(iteration_stats.values()):
                     stats += iteration_stats
                     iteration_stats = dict.fromkeys(CSVCompactionStatistics._header)
 
-                iteration_stats["block"] = str(i)
-                iteration_stats["asm_sources"] = " ".join(
-                    self.assembly_sources[asm_id].get_asm_source().name for asm_id in asm_ids)
-                iteration_stats["removed_codelines"] = "\t".join(str(codeline) for codeline in codelines)
+                iteration_stats["block_index"] = str(i)
+                iteration_stats["asm_source"] = assembly_source
+                iteration_stats["removed_codelines"] = "\t".join(str(codeline) for codeline in candidate_codelines)
 
                 # +-+-+-+ +-+-+-+-+-+-+-+
                 # |A|S|M| |C|O|M|P|I|L|E|
@@ -510,7 +504,7 @@ class A1xx(metaclass=Singleton):
                     iteration_stats["compiles"] = "NO"
                     iteration_stats["verdict"] = "Restore"
 
-                    _restore(asm_id, codelines)
+                    _restore(asm_id, candidate_codelines)
                     continue
 
                 # +-+-+-+ +-+-+-+-+-+-+-+
@@ -550,7 +544,7 @@ class A1xx(metaclass=Singleton):
                     iteration_stats["lsim_ok"] = f"NO-{lsim.value}"
                     iteration_stats["verdict"] = "Restore"
 
-                    _restore(asm_id, codelines)
+                    _restore(asm_id, candidate_codelines)
                     continue
 
                 test_application_time = test_application_time.pop(0)
@@ -570,7 +564,7 @@ class A1xx(metaclass=Singleton):
                     iteration_stats["fsim_ok"] = f"NO-{fsim.value}"
                     iteration_stats["verdict"] = "Restore"
 
-                    _restore(asm_id, codelines)
+                    _restore(asm_id, candidate_codelines)
                     continue
 
                 print("\t\tComputing coverage.")
@@ -600,7 +594,7 @@ class A1xx(metaclass=Singleton):
                         # We want to minimize TaT remaining over the initial faults coverage
                         old_stl_stats = (new_stl_stats[0], old_stl_stats[1])
                     else:
-                        log.fatal("Unknown compaction policy!")
+                        log.critical("Unknown compaction policy!")
                         exit(1)
 
                     iteration_stats["verdict"] = "Proceed"
@@ -614,7 +608,7 @@ class A1xx(metaclass=Singleton):
 
                     iteration_stats["verdict"] = "Restore"
 
-                    _restore(asm_id, codelines)
+                    _restore(asm_id, candidate_codelines)
 
         # Last iteration updates
         if any(iteration_stats.values()):

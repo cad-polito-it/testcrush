@@ -233,6 +233,16 @@ class AssemblyHandler():
 
         return [codeline for chunk in self.candidates for codeline in chunk]
 
+    def get_code_chunks(self) -> list[list[Codeline]]:
+        """
+        Returns the parsed code as a list of chunks, each chunk is a list of ``Codelines``.
+
+        Returns:
+            list[list[Codeline]]: A list of chunks.
+        """
+
+        return self.candidates
+
     def get_candidate(self, lineno: int) -> Codeline:
         """
         Returns the Codeline in candidates with the specified lineno
