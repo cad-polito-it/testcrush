@@ -403,6 +403,12 @@ class A0(metaclass=Singleton):
         def _restore(asm_source: int) -> None:
             """
             Invokes the ``restore()`` function of a specific assembly handler.
+
+            Args:
+                asm_source (int): The identifier of the assembly source.
+
+            Returns:
+                None
             """
             self.assembly_sources[asm_source].restore()
 

@@ -166,7 +166,37 @@ class Preprocessor(metaclass=Singleton):
 
             return result
 
-    def prune_candidates(self, candidates: list[asm.Codeline], mapping: dict[str, str]) -> None:
+    @staticmethod
+    def get_chunked_codelines(candidates: list[tuple[int, asm.Codeline]],
+                              chunksize: int) -> list[tuple[int, list[asm.Codeline]]]:
+        """
+        Divides codelines in chunks, for each file
+
+        Args:
+            candidates (list[tuple[int, list(asm.Codeline)]]): Reference to the list of candidates of A1xx
+            chunksize (int): Dimension of each slice (except for the last one which may be different)
+        """
+
+        # First, group codelines by asm_files
+        max_id: int = max(asm_id + 1 for asm_id, _ in candidates)
+        grouped_candidates: list[tuple[int, list[asm.Codeline]]] = [(asm_id, []) for asm_id in range(max_id)]
+        
+        for (asm_id, codeline) in candidates:
+            grouped_candidates[asm_id][1].append(codeline)
+
+        # Recompose as chunks
+        chunked_candidates = list()
+
+        for asm_id, candidates in grouped_candidates:
+
+            # Create slice of chunksize dimension
+            for i in range(0, len(candidates), chunksize):
+                chunked_candidates.append((asm_id, candidates[i:i + chunksize]))
+
+        return chunked_candidates
+
+    def prune_candidates(self, candidates: list[tuple[int, asm.Codeline]], mapping: dict[str, str],
+                         chunksize: int) -> list[tuple[int, list[asm.Codeline]]]:
         """
         Performs Attribute-Trace prunning of the codeline candidates of A1xx.
 
@@ -178,9 +208,13 @@ class Preprocessor(metaclass=Singleton):
         removed from the ``candidates`` list which is modified in place.
 
         Args:
-            candidates (list[asm.Codeline]): Reference to the list of candidates of A1xx. To be modified **in-place**.
+            candidates (list[tuple[int, asm.Codeline]]): Reference to the list of candidates of A1xx.
+                To be modified **in-place**.
             mapping (dict[str, str]): A mapping of Z01X fault attributes to Trace column names.
+            chunksize: (int): Chunk dimension
 
+        Returns:
+            (list[tuple[int, list[asm.Codeline]]]): List of chunks, each associated with its asm_id
         """
         # 1. Gather attribute pairs
         attributes = list()
@@ -234,6 +268,8 @@ class Preprocessor(metaclass=Singleton):
             if before != after:
                 removed.append(lineno)
 
+        return self.get_chunked_codelines(candidates, chunksize)
+
 
 class A1xx(metaclass=Singleton):
 
@@ -246,6 +282,12 @@ class A1xx(metaclass=Singleton):
         self.assembly_sources: list[asm.AssemblyHandler] = [asm.AssemblyHandler(asm.ISA(isa), asm_file,
                                                             chunksize=a1xx_settings.get("a1xx_segment_dimension"))
                                                             for asm_file in a1xx_asm_sources]
+
+        self.all_instructions: list[tuple[int, asm.Codeline]] = [
+            (asm_id, codeline)
+            for asm_id, asm in enumerate(self.assembly_sources)
+            for codeline in asm.get_code()
+        ]
 
         self.all_code_chunks: list[tuple[int, list[asm.Codeline]]] = [
             (asm_id, chunk)
@@ -399,18 +441,26 @@ class A1xx(metaclass=Singleton):
 
         Args:
             initial_stl_stats (tuple[int, float]): The test application time (int) and coverage (float) of the original
-                                                   STL
+                                                   STL.
             times_to_shuffle (int, optional): Number of times to permutate the assembly candidates. Defaults to 100,
             useful only for the "Random" policy.
 
         Returns:
             None
         """
-        def _restore(asm_source, codelines: list[asm.Codeline]) -> None:
+        def _restore(asm_source: int, candidate_codelines: list[asm.Codeline]) -> None:
             """
             Invokes the ``restore()`` function of a specific assembly handler.
+
+            Args:
+                asm_source (int): The identifier of the assembly source.
+                candidate_codelines (list[asm.Codeline]): The list of candidates currently involved
+                    in block elimination.
+
+            Returns:
+                None
             """
-            codelines.pop()
+            candidate_codelines.pop()
             self.assembly_sources[asm_source].restore()
 
         # To be used for generated file suffixes
@@ -443,7 +493,7 @@ class A1xx(metaclass=Singleton):
         blocks_number = len(self.all_code_chunks)
         blocks = self.all_code_chunks[::-1]
 
-        log.debug(f"""Code len {len([codeline for chunk in self.all_code_chunks for codeline in chunk])},
+        log.debug(f"""Code len {len([codeline for chunk in self.all_code_chunks for codeline in chunk[1]])},
                 segment_dimension: {self.segment_dimension},
                 blocks_number: {blocks_number}
             """)
@@ -457,10 +507,13 @@ class A1xx(metaclass=Singleton):
 
             # Step 4-5: Remove a block of code following the given configurations
 
-            candidate_codelines = list()
-            iteration = len(block)
+            handler = self.assembly_sources[asm_id]
+            assembly_source = self.assembly_sources[asm_id].get_asm_source().name
 
-            for j in range(iteration):
+            candidate_codelines = list()
+            block_instructions = len(block)
+
+            for _ in range(block_instructions):
                 if self.policy == 'B':
                     codeline = block.pop(0)
                 elif self.policy == 'F':
@@ -472,12 +525,9 @@ class A1xx(metaclass=Singleton):
                     exit(1)
 
                 candidate_codelines.append(codeline)
-                handler = self.assembly_sources[asm_id]
                 handler.remove(codeline)
 
-            assembly_source = self.assembly_sources[asm_id].get_asm_source().name
-
-            for _ in range(iteration):
+            for _ in range(block_instructions):
 
                 removed_codelines = ("\n".join(str(codeline) for codeline in candidate_codelines))
 

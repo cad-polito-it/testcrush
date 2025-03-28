@@ -66,7 +66,10 @@ def execute_a1xx(configuration: pathlib.Path):
         preprocessor = a1xx.Preprocessor(A1xx.fsim_report.fault_list, **a1xx_preprocessor_settings)
 
         before_preprocessing = len(A1xx.all_instructions)
-        preprocessor.prune_candidates(A1xx.all_instructions, A1xx.path_to_id)
+        A1xx.all_code_chunks = preprocessor.prune_candidates(A1xx.all_instructions,
+                                                             A1xx.path_to_id,
+                                                             a1xx_settings.get("a1xx_segment_dimension"))
+
         after_preprocessing = len(A1xx.all_instructions)
         percentage = round(((before_preprocessing - after_preprocessing) / before_preprocessing) * 100, 4)
 

@@ -153,38 +153,50 @@ zoix_to_trace = { 'PC_ID' = 'PC', 'sim_time' = 'Time'}
 
         self.assertEqual(expected_dict, new_dict)
 
-    # def test_sanitize_a0_configuration(self):
+    def test_sanitize_configuration(self):
 
-        # correct_toml_config = self.TOML_RAW
+        A0_KEYS = {
+            "compaction_policy": ["a0_behaviour", "compaction_policy"],
+            "assembly_compilation_instructions": ["cross_compilation", "instructions"],
+            "vcs_compilation_instructions": ["vcs_hdl_compilation", "instructions"],
+            "vcs_logic_simulation_instructions": ["vcs_logic_simulation", "instructions"],
+            "vcs_logic_simulation_control": ["vcs_logic_simulation_control"],
+            "zoix_fault_simulation_instructions": ["zoix_fault_simulation", "instructions"],
+            "zoix_fault_simulation_control": ["zoix_fault_simulation_control"],
+            "fsim_report": ["fault_report", "frpt_file"],
+            "coverage_formula": ["fault_report", "coverage_formula"]
+        }
 
-        # with mock.patch("io.open", mock.mock_open(read_data=correct_toml_config)) as mocked_open:
+        correct_toml_config = self.TOML_RAW
 
-            # _config = config.sanitize_configuration("some_mocked_file")
+        with mock.patch("io.open", mock.mock_open(read_data=correct_toml_config)) as mocked_open:
 
-        # missing_section = r"""
-# [isa]
-# ###########################
-# # ISALANG Location        #
-# ###########################
-# isa_file = '../../langs/riscv.isa'
-        # """
-        # with mock.patch("io.open", mock.mock_open(read_data=missing_section)) as mocked_open:
+            _config = config.sanitize_configuration("some_mocked_file", A0_KEYS)
 
-            # with self.assertRaises(KeyError) as cm:
-                # _config = config.sanitize_configuration("some_mocked_file")
+        missing_section = r"""
+[isa]
+###########################
+# ISALANG Location        #
+###########################
+isa_file = '../../langs/riscv.isa'
+        """
+        with mock.patch("io.open", mock.mock_open(read_data=missing_section)) as mocked_open:
+
+            with self.assertRaises(KeyError) as cm:
+                _config = config.sanitize_configuration("some_mocked_file", A0_KEYS)
 
 
-        # wrong_section_key = r"""
-# [isa]
-# ###########################
-# # ISALANG Location        #
-# ###########################
-# isa_ = '../../langs/riscv.isa'
-        # """
-        # with mock.patch("io.open", mock.mock_open(read_data=wrong_section_key)) as mocked_open:
+        wrong_section_key = r"""
+[isa]
+###########################
+# ISALANG Location        #
+###########################
+isa_ = '../../langs/riscv.isa'
+        """
+        with mock.patch("io.open", mock.mock_open(read_data=wrong_section_key)) as mocked_open:
 
-            # with self.assertRaises(KeyError) as cm:
-                # _config = config.sanitize_configuration("some_mocked_file")
+            with self.assertRaises(KeyError) as cm:
+                _config = config.sanitize_configuration("some_mocked_file", A0_KEYS)
 
 
     def test_parse_a0_configuration(self):
