@@ -3,6 +3,7 @@ from testcrush import config
 from testcrush import asm
 from testcrush import zoix
 from testcrush import a0
+from testcrush import a1xx
 from testcrush.grammars import transformers
 
 __version__ = "0.5.0"

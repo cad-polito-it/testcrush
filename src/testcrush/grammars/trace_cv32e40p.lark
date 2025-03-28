@@ -53,6 +53,7 @@ DECODED_INSTRUCTION: /
     ([-a-z0-9, ()]+)?    # Optional operand part (rd,rs1,rs2, etc.)      
     (?=                  # Stop when 
         x[0-9]{1,2}[=:]  # Either you hit an xN= or xN:
+        |f[0-9]{1,2}[=:]  # Either you hit an fN= or fN:
         |PA:             # or you meet PA:
         |store:          # or you meet store:
         |load:           # or you meet load
@@ -62,7 +63,7 @@ DECODED_INSTRUCTION: /
 
 
 REG_AND_MEM: /
-    (?:[x[0-9]+|PA|store|load) # xN or xN or PA
+    (?:[x[0-9]+|f[0-9]+|PA|store|load) # xN or fN or PA
     [=|:]                      # : or =
     [0-9a-fx]+                 # A hexadecimal value which can include x vals.
 /xi

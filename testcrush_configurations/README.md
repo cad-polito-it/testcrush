@@ -8,7 +8,6 @@ has to only modify the corresponding values to the key.
 
 >Important Remark: All values in keys that have `regex` in their name are transformed into `re.Patterns('your_regex', re.DOTALL)`.
 
-
 # User Defines Section #
 Since TestCrush requires the definition of auxiliary files and paths to recognize the presence of various components (e.g., the run directory of Z01X, the paths to STL source assembly files), we provide a `user_defines` section. In this section, users can define custom key-value pairs (such as paths), which can then be referenced in subsequent TOML sections using the format `%my_custom_key%`. These placeholders will be replaced with the corresponding values from the `user_defines` section during execution.
 
@@ -37,8 +36,24 @@ root_dir = '%stl_path%/../..'
 ```
 As it will trigger run-time errors and incorrect substitutions.
 
-# A0 Configuration #
-Following the optional `user_defines` section we have:
+
+# A0/A1xx algorithm behaviour
+
+In this section is possible to change the algorithms behaviour:
+- `compaction_policy`: defines how the algorithm decides whether to remove or restore a line of code. Currently, there are two different policies:
+  - `Maximize`: the line is removed only if the new program stats improved (either TaT or Cov)
+  - `Threshold`: the line is removed only if the new TaT is lower than the previous one and the fault coverage is not lower than the initial value. 
+
+## A1xx behaviour specifics
+In the A1xx algorithm, it is necessary to define the XX parameters:
+- `segment_dimension`: defines the block size 
+- `policy`: indicates the restoration policy:
+  - `F`- forward
+  - `B`- backward
+  - `R`- random
+
+
+# Algorithm utils
 
 ## Definition of the ISA file ##
 ```
@@ -160,7 +175,8 @@ processor_name = 'CV32E40P'
 elf_file = '%sbst_dir%/sbst.elf'
 zoix_to_trace = { 'PC_ID' = 'PC', 'sim_time' = 'Time'}
 ```
-1. `processor_trace`: The location of the txt execution trace of the STL.
-2. `processor_name`: The name of the processor. MUST be one of the supported processors [TraceTransformerFactory](../src/testcrush/grammars/transformers.py#L430)
-3. `elf_file`: The path to the `.elf` file of the original STL
-4. `zoix_to_trace`: A mapping of Z01X fault attributes to trace column names.
+1. `enabled`: A flag to enable preprocessing (`true`/`false`)
+2. `processor_trace`: The location of the txt execution trace of the STL.
+3. `processor_name`: The name of the processor. MUST be one of the supported processors [TraceTransformerFactory](../src/testcrush/grammars/transformers.py#L430)
+4. `elf_file`: The path to the `.elf` file of the original STL
+5. `zoix_to_trace`: A mapping of Z01X fault attributes to trace column names.

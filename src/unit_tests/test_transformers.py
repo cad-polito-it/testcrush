@@ -355,3 +355,40 @@ class TraceTransformerCV32E40PTest(unittest.TestCase):
                               '1015ns,97,000010fc,00079563,"c.bne x15, x0, 10","x15:00000000"']
 
         self.assertEqual(csv_lines, expected_csv_lines)
+
+    def test_float_operands_in_decoded_instruction(self):
+
+            parser = self.get_parser()
+
+            trace_sample = r"""Time    Cycle   PC  Instr   Decoded instruction Register and memory contents
+    6235ns             619 00000506 00032087 flw               f1, 0(x6)           f1=40800001  x6:0000290c  PA:0000290c
+    6245ns             620 00000508 0815754b fnmsub.s         f10, f10,  f1,  f1  f10=4427827e f10:c326827d  f1:40800001  f1:40800001
+    6255ns             621 0000050a 18107153 fdiv.s            f2,  f0,  f1        f2=3f800000  f0:40800001  f1:40800001
+    6315ns             627 0000050e 18207153 fdiv.s            f2,  f0,  f2        f2=40800001  f0:40800001  f2:3f800000
+    6495ns             645 00000512 e0011553 fclass.s         x10,  f2            x10=00000040  f2:40800001
+    6505ns             646 00000516 202005d3 fsgnj.s          f11,  f0,  f2       f11=40800001  f0:40800001  f2:40800001
+    6515ns             647 0000051a 20001653 fsgnjn.s         f12,  f0,  f0       f12=c0800001  f0:40800001  f0:40800001
+    6525ns             648 0000051e 202026d3 fsgnjx.s         f13,  f0,  f2       f13=40800001  f0:40800001  f2:40800001
+    6535ns             649 00000522 182071d3 fdiv.s            f3,  f0,  f2        f3=3f800000  f0:40800001  f2:40800001
+    6595ns             655 00000526 e0019553 fclass.s         x10,  f3            x10=00000040  f3:3f800000
+    6605ns             656 0000052a 1821f253 fdiv.s            f4,  f3,  f2        f4=3e7ffffe  f3:3f800000  f2:40800001
+    6705ns             658 00000e8a fbdff06f c.jal             x0, -68      
+    """
+            csv_lines = parser.parse(trace_sample)
+
+            expected_csv_lines = ['Time,Cycle,PC,Instr,Decoded instruction,Register and memory contents',
+        '6235ns,619,00000506,00032087,"flw f1, 0(x6)","f1=40800001, x6:0000290c, PA:0000290c"', # 3 Mixed registers
+        '6245ns,620,00000508,0815754b,"fnmsub.s f10, f10, f1, f1","f10=4427827e, f10:c326827d, f1:40800001, f1:40800001"', # 4 f registers
+        '6255ns,621,0000050a,18107153,"fdiv.s f2, f0, f1","f2=3f800000, f0:40800001, f1:40800001"', # 3 f registers
+        '6315ns,627,0000050e,18207153,"fdiv.s f2, f0, f2","f2=40800001, f0:40800001, f2:3f800000"',
+        '6495ns,645,00000512,e0011553,"fclass.s x10, f2","x10=00000040, f2:40800001"', # 2 mixed registers
+        '6505ns,646,00000516,202005d3,"fsgnj.s f11, f0, f2","f11=40800001, f0:40800001, f2:40800001"',
+        '6515ns,647,0000051a,20001653,"fsgnjn.s f12, f0, f0","f12=c0800001, f0:40800001, f0:40800001"',
+        '6525ns,648,0000051e,202026d3,"fsgnjx.s f13, f0, f2","f13=40800001, f0:40800001, f2:40800001"',
+        '6535ns,649,00000522,182071d3,"fdiv.s f3, f0, f2","f3=3f800000, f0:40800001, f2:40800001"',
+        '6595ns,655,00000526,e0019553,"fclass.s x10, f3","x10=00000040, f3:3f800000"',
+        '6605ns,656,0000052a,1821f253,"fdiv.s f4, f3, f2","f4=3e7ffffe, f3:3f800000, f2:40800001"',
+        '6705ns,658,00000e8a,fbdff06f,"c.jal x0, -68",""' # No register
+    ]
+
+            self.assertEqual(csv_lines, expected_csv_lines)
