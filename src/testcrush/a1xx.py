@@ -178,8 +178,8 @@ class Preprocessor(metaclass=Singleton):
         """
 
         # First, group codelines by asm_files
-        max_id: int = max(asm_id + 1 for asm_id, _ in candidates)
-        grouped_candidates: list[tuple[int, list[asm.Codeline]]] = [(asm_id, []) for asm_id in range(max_id)]
+        max_id: int = max(asm_id for asm_id, _ in candidates)
+        grouped_candidates: list[tuple[int, list[asm.Codeline]]] = [(asm_id, []) for asm_id in range(max_id + 1)]
 
         for (asm_id, codeline) in candidates:
             grouped_candidates[asm_id][1].append(codeline)
