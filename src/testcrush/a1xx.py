@@ -7,11 +7,11 @@ import random
 import csv
 import time
 import sqlite3
-import io
 import os
+import io
 
 import testcrush.grammars.transformers as transformers
-from testcrush.utils import get_logger, compile_assembly, zip_archive, Singleton, addr2line, reap_process_tree
+from testcrush.utils import get_logger, compile_assembly, zip_archive, Singleton, reap_process_tree, addr2line
 from testcrush import asm, zoix
 from typing import Any
 
@@ -19,8 +19,8 @@ log = get_logger()
 
 
 class CSVCompactionStatistics(metaclass=Singleton):
-    """Manages I/O operations on the CSV file which logs the statistics of the A0."""
-    _header = ["asm_source", "removed_codeline", "compiles", "lsim_ok",
+    """Manages I/O operations on the CSV file which logs the statistics of the A1xx."""
+    _header = ["asm_source", "block_index", "removed_codelines", "compiles", "lsim_ok",
                "tat", "fsim_ok", "coverage", "verdict"]
 
     def __init__(self, output: pathlib.Path) -> 'CSVCompactionStatistics':
@@ -166,11 +166,41 @@ class Preprocessor(metaclass=Singleton):
 
             return result
 
-    def prune_candidates(self, candidates: list[asm.Codeline], mapping: dict[str, str]) -> None:
+    @staticmethod
+    def get_chunked_codelines(candidates: list[tuple[int, asm.Codeline]],
+                              chunksize: int) -> list[tuple[int, list[asm.Codeline]]]:
         """
-        Performs Attribute-Trace prunning of the codeline candidates of A0.
+        Divides codelines in chunks, for each file
 
-        Takes as input the list of ``Codeline`` objects of A0. This list will be modified in-place by identifying the
+        Args:
+            candidates (list[tuple[int, list(asm.Codeline)]]): Reference to the list of candidates of A1xx
+            chunksize (int): Dimension of each slice (except for the last one which may be different)
+        """
+
+        # First, group codelines by asm_files
+        max_id: int = max(asm_id for asm_id, _ in candidates)
+        grouped_candidates: list[tuple[int, list[asm.Codeline]]] = [(asm_id, []) for asm_id in range(max_id + 1)]
+
+        for (asm_id, codeline) in candidates:
+            grouped_candidates[asm_id][1].append(codeline)
+
+        # Recompose as chunks
+        chunked_candidates = list()
+
+        for asm_id, candidates in grouped_candidates:
+
+            # Create slice of chunksize dimension
+            for i in range(0, len(candidates), chunksize):
+                chunked_candidates.append((asm_id, candidates[i:i + chunksize]))
+
+        return chunked_candidates
+
+    def prune_candidates(self, candidates: list[tuple[int, asm.Codeline]], mapping: dict[str, str],
+                         chunksize: int) -> list[tuple[int, list[asm.Codeline]]]:
+        """
+        Performs Attribute-Trace prunning of the codeline candidates of A1xx.
+
+        Takes as input the list of ``Codeline`` objects of A1xx. This list will be modified in-place by identifying the
         relevance of each codeline towards fault detection. The fault attributes of simulation time and program counter
         are accumulated for each prime fault. Then, a query is performed on the trace database for each <time,pc> pair
         in order to extract a window of program counters (i.e., instruction sequences). Then, thes program counters are
@@ -178,9 +208,13 @@ class Preprocessor(metaclass=Singleton):
         removed from the ``candidates`` list which is modified in place.
 
         Args:
-            candidates (list[asm.Codeline]): Reference to the list of candidates of A0. To be modified **in-place**.
+            candidates (list[tuple[int, asm.Codeline]]): Reference to the list of candidates of A1xx.
+                To be modified **in-place**.
             mapping (dict[str, str]): A mapping of Z01X fault attributes to Trace column names.
+            chunksize: (int): Chunk dimension
 
+        Returns:
+            (list[tuple[int, list[asm.Codeline]]]): List of chunks, each associated with its asm_id
         """
         # 1. Gather attribute pairs
         attributes = list()
@@ -234,60 +268,71 @@ class Preprocessor(metaclass=Singleton):
             if before != after:
                 removed.append(lineno)
 
+        return self.get_chunked_codelines(candidates, chunksize)
 
-class A0(metaclass=Singleton):
 
-    """Implements the A0 compaction algorithm"""
+class A1xx(metaclass=Singleton):
 
-    def __init__(self, isa: pathlib.Path, a0_asm_sources: list[str], a0_settings: dict[str, Any]) -> "A0":
+    """Implements the A1xx compaction algorithm"""
 
-        log.debug(f"Generating AssemblyHandlers for {a0_asm_sources}")
-        a0_asm_sources = list(map(pathlib.Path, a0_asm_sources))
+    def __init__(self, isa: pathlib.Path, a1xx_asm_sources: list[str], a1xx_settings: dict[str, Any]) -> "A1xx":
+
+        log.debug(f"Generating AssemblyHandlers for {a1xx_asm_sources}")
+        a1xx_asm_sources = list(map(pathlib.Path, a1xx_asm_sources))
         self.assembly_sources: list[asm.AssemblyHandler] = [asm.AssemblyHandler(asm.ISA(isa), asm_file,
-                                                                                chunksize=1)
-                                                            for asm_file in a0_asm_sources]
+                                                            chunksize=a1xx_settings.get("a1xx_segment_dimension"))
+                                                            for asm_file in a1xx_asm_sources]
 
-        # Flatten candidates list
         self.all_instructions: list[tuple[int, asm.Codeline]] = [
             (asm_id, codeline)
             for asm_id, asm in enumerate(self.assembly_sources)
             for codeline in asm.get_code()
         ]
 
-        self.path_to_id = {f"{v.stem}{v.suffix}": k for k, v in enumerate(a0_asm_sources)}
+        self.all_code_chunks: list[tuple[int, list[asm.Codeline]]] = [
+            (asm_id, chunk)
+            for asm_id, asm in enumerate(self.assembly_sources)
+            for chunk in asm.get_code_chunks()
+        ]
 
-        self.assembly_compilation_instructions: list[str] = a0_settings.get("assembly_compilation_instructions")
+        self.path_to_id = {f"{v.stem}{v.suffix}": k for k, v in enumerate(a1xx_asm_sources)}
 
-        self.zoix_compilation_args: list[str] = a0_settings.get("vcs_compilation_instructions")
+        self.assembly_compilation_instructions: list[str] = a1xx_settings.get("assembly_compilation_instructions")
+
+        self.zoix_compilation_args: list[str] = a1xx_settings.get("vcs_compilation_instructions")
         log.debug(f"VCS compilation instructions for HDL sources set to {self.zoix_compilation_args}")
 
-        self.zoix_lsim_args: list[str] = a0_settings.get("vcs_logic_simulation_instructions")
+        self.zoix_lsim_args: list[str] = a1xx_settings.get("vcs_logic_simulation_instructions")
         log.debug(f"VCS logic simulation instructions are {self.zoix_lsim_args}")
         self.zoix_lsim_kwargs: dict[str, float | re.Pattern | int | list] = \
-            {k: v for k, v in a0_settings.get("vcs_logic_simulation_control").items()}
+            {k: v for k, v in a1xx_settings.get("vcs_logic_simulation_control").items()}
         log.debug(f"VCS logic simulation control parameters are: {self.zoix_lsim_kwargs}")
 
-        self.zoix_fsim_args: list[str] = a0_settings.get("zoix_fault_simulation_instructions")
+        self.zoix_fsim_args: list[str] = a1xx_settings.get("zoix_fault_simulation_instructions")
         self.zoix_fsim_kwargs: dict[str, float] = \
-            {k: v for k, v in a0_settings.get("zoix_fault_simulation_control").items()}
+            {k: v for k, v in a1xx_settings.get("zoix_fault_simulation_control").items()}
 
-        self.fsim_report: zoix.TxtFaultReport = zoix.TxtFaultReport(pathlib.Path(a0_settings.get("fsim_report")))
+        self.fsim_report: zoix.TxtFaultReport = zoix.TxtFaultReport(pathlib.Path(a1xx_settings.get("fsim_report")))
         log.debug(f"Z01X fault report is set to: {self.fsim_report}")
-        self.coverage_formula: str = a0_settings.get("coverage_formula")
+        self.coverage_formula: str = a1xx_settings.get("coverage_formula")
         log.debug(f"The coverage formula that will be used is: {self.coverage_formula}")
 
-        self.compaction_policy = a0_settings.get("compaction_policy")
+        self.segment_dimension = a1xx_settings.get("a1xx_segment_dimension")
+        self.policy = a1xx_settings.get("a1xx_policy")
+
+        self.compaction_policy = a1xx_settings.get("compaction_policy")
         log.debug(f"The compaction policy that will be used is: {self.compaction_policy}")
 
         self.vc_zoix: zoix.ZoixInvoker = zoix.ZoixInvoker()
 
     @staticmethod
-    def evaluate(previous_result: tuple[int, float],
-                 new_result: tuple[int, float]) -> bool:
+    def evaluate(previous_result: tuple[int, float, list[zoix.Fault]],
+                 new_result: tuple[int, float, list[zoix.Fault]]) -> bool:
         """
         Evaluates the new results with respect to the previous ones.
 
-        Specifically, if new tat <= old tat and if new coverage >= old coverage.
+        Specifically, if new tat <= old tat, if new coverage >= old coverage and
+        if the faults set of the block are all detected from the code without that block.
 
         Args:
             previous_result (tuple[int, float]): the old tat value (int) and coverage (float) values.
@@ -380,36 +425,42 @@ class A0(metaclass=Singleton):
 
     def run(self, initial_stl_stats: tuple[int, float], times_to_shuffle: int = 100) -> None:
         """
-        Main loop of the A0 algorithm
+        Main loop of the A1xx algorithm
 
-        1. Removal of a random instruction
+        1. Removal of an instruction block from the last lines of code to index 0
         2. Cross-compilation
             2.1 If FAIL, Restore
         3. Logic simulation
-            3.1 If ERROR or TIMEOUT, Restore
+            3.1 If ERROR, Restore
         4. Fault simulation
             4.1 If ERROR or TIMEOUT, Restore
         5. Evaluation
         6. Goto 1.
 
+        The restore procedure depends of the configured policy: Forward, Back or Random
+
         Args:
             initial_stl_stats (tuple[int, float]): The test application time (int) and coverage (float) of the original
-                                                   STL
-            times_to_shuffle (int, optional): Number of times to permutate the assembly candidates. Defaults to 100.
+                                                   STL.
+            times_to_shuffle (int, optional): Number of times to permutate the assembly candidates. Defaults to 100,
+            useful only for the "Random" policy.
 
         Returns:
             None
         """
-        def _restore(asm_source: int) -> None:
+        def _restore(asm_source: int, candidate_codelines: list[asm.Codeline]) -> None:
             """
             Invokes the ``restore()`` function of a specific assembly handler.
 
             Args:
                 asm_source (int): The identifier of the assembly source.
+                candidate_codelines (list[asm.Codeline]): The list of candidates currently involved
+                    in block elimination.
 
             Returns:
                 None
             """
+            candidate_codelines.pop()
             self.assembly_sources[asm_source].restore()
 
         # To be used for generated file suffixes
@@ -423,160 +474,191 @@ class A0(metaclass=Singleton):
         vc_zoix = self.vc_zoix
 
         # Statistics
-        stats_filename = f"a0_statistics_{unique_id}.csv"
+        stats_filename = f"a1{self.policy}{self.segment_dimension}_statistics_{unique_id}.csv"
         stats = CSVCompactionStatistics(pathlib.Path(stats_filename))
 
         # Keep a backup of all sources since
         # they will be modified in-place.
         zip_archive(f"../backup_{unique_id}", *[asm.get_asm_source() for asm in self.assembly_sources])
 
-        # Randomize order for Step 2
-        for _ in range(times_to_shuffle):
-            random.shuffle(self.all_instructions)
-
+        # Set initial stats
         iteration_stats = dict.fromkeys(CSVCompactionStatistics._header)
 
         iteration_stats["tat"] = initial_tat
         iteration_stats["coverage"] = initial_coverage
 
-        total_iterations = len(self.all_instructions)
-
-        # Step 2: Select instructions in a random order
         old_stl_stats = (initial_tat, initial_coverage)
-        while len(self.all_instructions) != 0:
 
+        # Get all the blocks in reverse order
+        blocks_number = len(self.all_code_chunks)
+        blocks = self.all_code_chunks[::-1]
+
+        log.debug(f"""Code len {len([codeline for chunk in self.all_code_chunks for codeline in chunk[1]])},
+                segment_dimension: {self.segment_dimension},
+                blocks_number: {blocks_number}
+            """)
+
+        for (i, (asm_id, block)) in enumerate(blocks):
             print(f"""
 #############
-# ITERATION {total_iterations - len(self.all_instructions) + 1} / {total_iterations}
+# BLOCK {i + 1}/{blocks_number}
 #############
 """)
 
-            # Update statistics
-            if any(iteration_stats.values()):
-                stats += iteration_stats
-                iteration_stats = dict.fromkeys(CSVCompactionStatistics._header)
+            # Step 4-5: Remove a block of code following the given configurations
 
-            asm_id, codeline = self.all_instructions.pop(0)
-            asm_source_file = self.assembly_sources[asm_id].get_asm_source().name
-
-            iteration_stats["asm_source"] = asm_source_file
-            iteration_stats["removed_codeline"] = codeline
-
-            print(f"Removing {codeline} of assembly source {asm_source_file}")
-            # Step 3: Removal of the selected instruction
             handler = self.assembly_sources[asm_id]
-            handler.remove(codeline)
+            assembly_source = self.assembly_sources[asm_id].get_asm_source().name
 
-            # +-+-+-+ +-+-+-+-+-+-+-+
-            # |A|S|M| |C|O|M|P|I|L|E|
-            # +-+-+-+ +-+-+-+-+-+-+-+
-            print("\tCross-compiling assembly sources.")
-            asm_compilation = compile_assembly(*self.assembly_compilation_instructions)
+            candidate_codelines = list()
+            block_instructions = len(block)
 
-            if not asm_compilation:
-
-                print(f"\t{asm_source_file} does not compile after the removal of: {codeline}. Restoring!")
-                iteration_stats["compiles"] = "NO"
-                iteration_stats["verdict"] = "Restore"
-                _restore(asm_id)
-                continue
-
-            # +-+-+-+ +-+-+-+-+-+-+-+
-            # |V|C|S| |C|O|M|P|I|L|E|
-            # +-+-+-+ +-+-+-+-+-+-+-+
-            if self.zoix_compilation_args:
-
-                comp = vc_zoix.compile_sources(*self.zoix_compilation_args)
-
-                if comp == zoix.Compilation.ERROR:
-
-                    log.critical("Unable to compile HDL sources!")
+            for _ in range(block_instructions):
+                if self.policy == 'B':
+                    codeline = block.pop(0)
+                elif self.policy == 'F':
+                    codeline = block.pop()
+                elif self.policy == 'R':
+                    codeline = block.pop(random.randint(0, len(block) - 1))
+                else:
+                    log.fatal("Inexistent policy!")
                     exit(1)
 
-            # +-+-+-+ +-+-+-+-+
-            # |V|C|S| |L|S|I|M|
-            # +-+-+-+ +-+-+-+-+
-            test_application_time = list()
-            try:
-                print("\tInitiating logic simulation.")
-                lsim = vc_zoix.logic_simulate(*self.zoix_lsim_args,
-                                              **self.zoix_lsim_kwargs,
-                                              tat_value=test_application_time)
+                candidate_codelines.append(codeline)
+                handler.remove(codeline)
 
-            except zoix.LogicSimulationException:
+            for _ in range(block_instructions):
 
-                log.critical("Unable to perform logic simulation for TaT computation. Simulation status not set!")
-                exit(1)
+                removed_codelines = ("\n".join(str(codeline) for codeline in candidate_codelines))
 
-            if lsim != zoix.LogicSimulation.SUCCESS:
+                print(f"Removing:{removed_codelines}\n of assembly sources {assembly_source}")
 
-                print(f"\tLogic simulation of {asm_source_file} resulted in {lsim.value} after removing {codeline}.")
-                print("\tRestoring.")
-                iteration_stats["compiles"] = "YES"
-                iteration_stats["lsim_ok"] = f"NO-{lsim.value}"
-                iteration_stats["verdict"] = "Restore"
-                _restore(asm_id)
-                continue
+                # Update statistics
+                if any(iteration_stats.values()):
+                    stats += iteration_stats
+                    iteration_stats = dict.fromkeys(CSVCompactionStatistics._header)
 
-            test_application_time = test_application_time.pop(0)
+                iteration_stats["block_index"] = str(i)
+                iteration_stats["asm_source"] = assembly_source
+                iteration_stats["removed_codelines"] = "\t".join(str(codeline) for codeline in candidate_codelines)
 
-            # +-+-+-+ +-+-+-+-+
-            # |V|C|S| |F|S|I|M|
-            # +-+-+-+ +-+-+-+-+
-            print("\tInitiating fault simulation.")
-            fsim = vc_zoix.fault_simulate(*self.zoix_fsim_args, **self.zoix_fsim_kwargs)
+                # +-+-+-+ +-+-+-+-+-+-+-+
+                # |A|S|M| |C|O|M|P|I|L|E|
+                # +-+-+-+ +-+-+-+-+-+-+-+
+                print("\tCross-compiling assembly sources.")
+                asm_compilation = compile_assembly(*self.assembly_compilation_instructions)
 
-            if fsim != zoix.FaultSimulation.SUCCESS:
-                print(f"\tFault simulation of {asm_source_file} resulted in a {fsim.value} after removing {codeline}.")
-                print("\tRestoring.")
+                if not asm_compilation:
+
+                    print(f"\tDoes not compile after the removal of: {removed_codelines}. Restoring!")
+                    iteration_stats["compiles"] = "NO"
+                    iteration_stats["verdict"] = "Restore"
+
+                    _restore(asm_id, candidate_codelines)
+                    continue
+
+                # +-+-+-+ +-+-+-+-+-+-+-+
+                # |V|C|S| |C|O|M|P|I|L|E|
+                # +-+-+-+ +-+-+-+-+-+-+-+
+                if self.zoix_compilation_args:
+
+                    comp = vc_zoix.compile_sources(*self.zoix_compilation_args)
+
+                    if comp == zoix.Compilation.ERROR:
+
+                        log.critical("Unable to compile HDL sources!")
+                        exit(1)
+
+                # +-+-+-+ +-+-+-+-+
+                # |V|C|S| |L|S|I|M|
+                # +-+-+-+ +-+-+-+-+
+                test_application_time = list()
+                try:
+                    print("\tInitiating logic simulation.")
+                    lsim = vc_zoix.logic_simulate(
+                        *self.zoix_lsim_args,
+                        **self.zoix_lsim_kwargs,
+                        tat_value=test_application_time
+                    )
+
+                except zoix.LogicSimulationException:
+
+                    log.critical("Unable to perform logic simulation for TaT computation. Simulation status not set!")
+                    exit(1)
+
+                if lsim != zoix.LogicSimulation.SUCCESS:
+
+                    print(f"\tLogic simulation resulted in {lsim.value} after removing {removed_codelines}.")
+                    print("\tRestoring.")
+                    iteration_stats["compiles"] = "YES"
+                    iteration_stats["lsim_ok"] = f"NO-{lsim.value}"
+                    iteration_stats["verdict"] = "Restore"
+
+                    _restore(asm_id, candidate_codelines)
+                    continue
+
+                test_application_time = test_application_time.pop(0)
+
+                # +-+-+-+ +-+-+-+-+
+                # |V|C|S| |F|S|I|M|
+                # +-+-+-+ +-+-+-+-+
+                print("\tInitiating fault simulation.")
+                fsim = vc_zoix.fault_simulate(*self.zoix_fsim_args, **self.zoix_fsim_kwargs)
+
+                if fsim != zoix.FaultSimulation.SUCCESS:
+                    print(f"\tFault simulation resulted in a {fsim.value} after removing: {removed_codelines}")
+                    print("\tRestoring.")
+                    iteration_stats["compiles"] = "YES"
+                    iteration_stats["lsim_ok"] = "YES"
+                    iteration_stats["tat"] = str(test_application_time)
+                    iteration_stats["fsim_ok"] = f"NO-{fsim.value}"
+                    iteration_stats["verdict"] = "Restore"
+
+                    _restore(asm_id, candidate_codelines)
+                    continue
+
+                print("\t\tComputing coverage.")
+                coverage = self._coverage()
+
+                new_stl_stats = (test_application_time, coverage)
+
                 iteration_stats["compiles"] = "YES"
                 iteration_stats["lsim_ok"] = "YES"
                 iteration_stats["tat"] = str(test_application_time)
-                iteration_stats["fsim_ok"] = f"NO-{fsim.value}"
-                iteration_stats["verdict"] = "Restore"
-                _restore(asm_id)
-                continue
+                iteration_stats["fsim_ok"] = "YES"
+                iteration_stats["coverage"] = str(coverage)
 
-            print("\t\tComputing coverage.")
-            coverage = self._coverage()
+                # Step 7: Coverage and TaT evaluation.  Wrt
+                # the paper the evaluation happens  on  the
+                # coverage i.e., new >= old rather than the
+                # comparison of the set of detected faults
+                if self.evaluate(old_stl_stats, new_stl_stats):
 
-            new_stl_stats = (test_application_time, coverage)
+                    print(f"\tSTL has better stats than before!\n\t\tOld TaT: \
+    {old_stl_stats[0]} | Old Coverage: {old_stl_stats[1]}\n\t\tNew TaT: \
+    {new_stl_stats[0]} | New Coverage: {new_stl_stats[1]}\n\tProceeding!")
 
-            iteration_stats["compiles"] = "YES"
-            iteration_stats["lsim_ok"] = "YES"
-            iteration_stats["tat"] = str(test_application_time)
-            iteration_stats["fsim_ok"] = "YES"
-            iteration_stats["coverage"] = str(coverage)
+                    if (self.compaction_policy == "Maximize"):
+                        old_stl_stats = new_stl_stats
+                    elif self.compaction_policy == "Threshold":
+                        # We want to minimize TaT remaining over the initial faults coverage
+                        old_stl_stats = (new_stl_stats[0], old_stl_stats[1])
+                    else:
+                        log.critical("Unknown compaction policy!")
+                        exit(1)
 
-            # Step 4: Coverage and TaT evaluation.  Wrt
-            # the paper the evaluation happens  on  the
-            # coverage i.e., new >= old rather than the
-            # comparisson of the set of detected faults
-            if self.evaluate(old_stl_stats, new_stl_stats):
+                    iteration_stats["verdict"] = "Proceed"
+                    break
 
-                print(f"\tSTL has better stats than before!\n\t\tOld TaT: \
-{old_stl_stats[0]} | Old Coverage: {old_stl_stats[1]}\n\t\tNew TaT: \
-{new_stl_stats[0]} | New Coverage: {new_stl_stats[1]}\n\tProceeding!")
-
-                if (self.compaction_policy == "Maximize"):
-                    old_stl_stats = new_stl_stats
-                elif self.compaction_policy == "Threshold":
-                    # We want to minimize TaT remaining over the initial faults coverage
-                    old_stl_stats = (new_stl_stats[0], old_stl_stats[1])
                 else:
-                    log.critical("Unknown compaction policy!")
-                    exit(1)
 
-                iteration_stats["verdict"] = "Proceed"
+                    print(f"\tSTL has worse stats than before!\n\t\tOld TaT: \
+    {old_stl_stats[0]} | Old Coverage: {old_stl_stats[1]}\n\t\tNew TaT: \
+    {new_stl_stats[0]} | New Coverage: {new_stl_stats[1]}\n\tRestoring!")
 
-            else:
+                    iteration_stats["verdict"] = "Restore"
 
-                print(f"\tSTL has worse stats than before!\n\t\tOld TaT: \
-{old_stl_stats[0]} | Old Coverage: {old_stl_stats[1]}\n\t\tNew TaT: \
-{new_stl_stats[0]} | New Coverage: {new_stl_stats[1]}\n\tRestoring!")
-
-                iteration_stats["verdict"] = "Restore"
-                _restore(asm_id)
+                    _restore(asm_id, candidate_codelines)
 
         # Last iteration updates
         if any(iteration_stats.values()):

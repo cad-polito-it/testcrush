@@ -26,3 +26,9 @@ htmlcov/
 .vscode
 # ignore databases
 *.db
+# ignore virtual_env
+/venv_2
+
+reap_em.sh
+/cv32e40p
+/results

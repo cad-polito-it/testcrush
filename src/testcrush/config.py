@@ -7,6 +7,7 @@ import pathlib
 from typing import Any
 
 A0_KEYS = {
+    "compaction_policy": ["a0_behaviour", "compaction_policy"],
     "assembly_compilation_instructions": ["cross_compilation", "instructions"],
     "vcs_compilation_instructions": ["vcs_hdl_compilation", "instructions"],
     "vcs_logic_simulation_instructions": ["vcs_logic_simulation", "instructions"],
@@ -18,6 +19,29 @@ A0_KEYS = {
 }
 
 A0_PREPROCESSOR_KEYS = {
+    "enabled": ["preprocessing", "enabled"],
+    "processor_name": ["preprocessing", "processor_name"],
+    "processor_trace": ["preprocessing", "processor_trace"],
+    "zoix_to_trace": ["preprocessing", "zoix_to_trace"],
+    "elf_file": ["preprocessing", "elf_file"]
+}
+
+A1XX_KEYS = {
+    "a1xx_segment_dimension": ["a1xx_behaviour", "segment_dimension"],
+    "a1xx_policy": ["a1xx_behaviour", "policy"],
+    "compaction_policy": ["a1xx_behaviour", "compaction_policy"],
+    "assembly_compilation_instructions": ["cross_compilation", "instructions"],
+    "vcs_compilation_instructions": ["vcs_hdl_compilation", "instructions"],
+    "vcs_logic_simulation_instructions": ["vcs_logic_simulation", "instructions"],
+    "vcs_logic_simulation_control": ["vcs_logic_simulation_control"],
+    "zoix_fault_simulation_instructions": ["zoix_fault_simulation", "instructions"],
+    "zoix_fault_simulation_control": ["zoix_fault_simulation_control"],
+    "fsim_report": ["fault_report", "frpt_file"],
+    "coverage_formula": ["fault_report", "coverage_formula"],
+}
+
+A1XX_PREPROCESSOR_KEYS = {
+    "enabled": ["preprocessing", "enabled"],
     "processor_name": ["preprocessing", "processor_name"],
     "processor_trace": ["preprocessing", "processor_trace"],
     "zoix_to_trace": ["preprocessing", "zoix_to_trace"],
@@ -79,7 +103,7 @@ def replace_toml_regex(item: Any, substitute: bool = False) -> dict[str, Any]:
         return item
 
 
-def sanitize_a0_configuration(config_file: pathlib.Path) -> None:
+def sanitize_configuration(config_file: pathlib.Path, algorithm_keys: dict) -> None:
     """Checks whether all key-value pairs have been defined in the TOML file.
 
     Args:
@@ -95,7 +119,7 @@ def sanitize_a0_configuration(config_file: pathlib.Path) -> None:
     except toml.TomlDecodeError as e:
         print(f"Error decoding TOML: {e}")
 
-    for toml_path in A0_KEYS.values():
+    for toml_path in algorithm_keys.values():
 
         section = toml_path[0]
 
@@ -133,7 +157,7 @@ def parse_a0_configuration(config_file: pathlib.Path) -> tuple[str, list, dict]:
 
         return d if d else default
 
-    sanitize_a0_configuration(config_file)
+    sanitize_configuration(config_file, A0_KEYS)
 
     config = toml.load(config_file)
 
@@ -157,3 +181,53 @@ def parse_a0_configuration(config_file: pathlib.Path) -> tuple[str, list, dict]:
     a0_preprocessor_settings = {setting: get_nested_value(config, path)
                                 for setting, path in A0_PREPROCESSOR_KEYS.items()}
     return (isa, asm_sources, a0_settings, a0_preprocessor_settings)
+
+
+def parse_a1xx_configuration(config_file: pathlib.Path) -> tuple[str, list, dict]:
+    """
+    Parses the TOML configuration file of A1xx and returns the A1xx constructor args.
+
+    Args:
+        config_file (pathlib.Path): The configuration file.
+
+    Returns:
+        tuple: A triplet with the ISA file (str), a list of the assembly sources (strs), and a dictionary with all the
+        a1xx settings.
+    """
+
+    def get_nested_value(d: dict, keys: list, default=None) -> Any:
+        """Helper function to get a nested value from a dictionary, safely."""
+
+        for key in keys:
+
+            d = d.get(key, {})
+
+        return d if d else default
+
+    sanitize_configuration(config_file, A1XX_KEYS)
+
+    config = toml.load(config_file)
+
+    try:
+        user_defines = config["user_defines"]
+    except KeyError:
+        pass
+
+    if user_defines:
+        config = replace_toml_placeholders(config, user_defines)
+
+    # Change regex keys to re.Patterns
+    config = replace_toml_regex(config)
+
+    isa = config["isa"]["isa_file"]
+    asm_sources = config["assembly_sources"]["sources"]
+
+    # Dynamically build the a0_settings dictionary using the defined key mappings
+    a1xx_settings = {setting: get_nested_value(config, path) for setting, path in A1XX_KEYS.items()}
+
+    a1xx_preprocessor_settings = {
+        setting: get_nested_value(config, path)
+        for setting, path in A1XX_PREPROCESSOR_KEYS.items()
+    }
+
+    return (isa, asm_sources, a1xx_settings, a1xx_preprocessor_settings)
