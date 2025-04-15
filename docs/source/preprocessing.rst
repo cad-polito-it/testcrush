@@ -3,12 +3,10 @@
 Preprocessing
 =============
 
--------------
-It is possible to perform preprocessing in the set of assembly candidates to reduce the runtime of the A0 algorithm. The runtime of 
+It is possible to perform preprocessing in the set of assembly candidates to reduce the runtime of the A0 and A1xx algorithm. The runtime of 
 the algorithm solely depends on the total number of candidates to be considered in each iteration. It is a brute-force approach to 
-the compaction problem. So the idea is the following. What 
-if, after we execute the `pre_run()` of the A0 algorithm to obtain the initial STL statistics, we are able to assess somehow
-the impact each Candidate has in terms of faults being detected?
+the compaction problem. So the idea is the following. What if, after we execute the `pre_run()` of the A0 algorithm to obtain the initial STL statistics,
+we are able to assess somehow the impact each Candidate has in terms of faults being detected?
 
 In order to obtain such information a couple of things are required. First, we need a fault report comming from Z01X with includes
 custom **fault attributes**. Secondly, we need a trace comming directly from the DUT after the execution of the original STL. The idea
@@ -58,7 +56,24 @@ which can be queried for retrieving rows with information comming from the fault
 Preprocessor
 ------------
 
-.. autoclass:: a0.Preprocessor
+.. autoclass:: preprocessor.Preprocessor
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+Preprocessor subclass for A0
+----------------------------
+
+.. autoclass:: a0.PreprocessorA0
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Preprocessor subclass for A1xx
+------------------------------
+
+.. autoclass:: a1xx.PreprocessorA1xx
    :members:
    :undoc-members:
    :show-inheritance:
