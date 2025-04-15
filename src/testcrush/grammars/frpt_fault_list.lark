@@ -75,8 +75,15 @@ HEX_NUMBER: "0x"? HEXDIGIT+
 ATTRIBUTE_VALUE: HEX_NUMBER
                | CNAME
                | TIME_STAMP
+               | DONT_CARE
 
 _CNAME: CNAME
+
+DONT_CARE: /
+    [\d\.]+         # One or more digits
+    [Xx]+
+    [Xx0]+    # X and 0 values in whatever sequence 
+/x
 
 ///////////////
 // REGEX     //

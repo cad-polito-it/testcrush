@@ -11,7 +11,7 @@ run_dir = "../../cv32e40p/run/vc-z01x"
 ###########################
 # A0 parameters           #
 ###########################
-compaction_policy = "Threshold" # "Maximize" or "Threshold"
+compaction_policy = "Maximize" # "Maximize" or "Threshold"
 
 [isa]
 ###########################
@@ -87,7 +87,7 @@ coverage_formula = 'Observational Coverage'
 ###########################
 # Trace required          #
 ###########################
-enabled = false
+enabled = true
 processor_name = 'CV32E40P'
 processor_trace = '%sbst_dir%/trace.log'
 elf_file = '%sbst_dir%/sbst.elf'
