@@ -70,20 +70,19 @@ _LOCATION_TYPE: "PORT"
               | "PRIM"
               | "VARI"
 
-HEX_NUMBER: "0x"? HEXDIGIT+
-
-ATTRIBUTE_VALUE: HEX_NUMBER
+ATTRIBUTE_VALUE: HEX_NUMBER_WITH_X_VALS
                | CNAME
                | TIME_STAMP
-               | DONT_CARE
 
 _CNAME: CNAME
 
-DONT_CARE: /
-    [\d\.]+         # One or more digits
-    [Xx]+
-    [Xx0]+    # X and 0 values in whatever sequence 
-/x
+HEX_NUMBER_WITH_X_VALS: /
+    [0x]?                 # Optional 0x
+    (?:                   # Non capturing group of hex with don't care vals
+        [0-9a-f]            # Valid hex digits 
+        | [x]               # or x vals
+    )+
+/xi
 
 ///////////////
 // REGEX     //

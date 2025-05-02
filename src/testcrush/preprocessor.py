@@ -14,7 +14,7 @@ log = get_logger()
 
 
 class Preprocessor(metaclass=Singleton):
-    """Superclass: Filters out candidate instructions"""
+    """Superclass: Creates trace database and utils to query it"""
 
     _trace_db = ".trace.db"
 
