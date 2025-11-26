@@ -142,6 +142,8 @@ FaultList {
     <  1> ON 1 {PORT "tb_top.wrapper_i.top_i.core_i.ex_stage_i.mult_i.U100.A1"}(* "test1"->INSTR=3cb3079a; "test1"->INSTR_ADDR=000009bc; "test1"->PC_ID=000009b2; "test1"->PC_IF=000009b6; "test1"->sim_time="   7455ns"; *)
     <  1> ON 1 {PORT "tb_top.wrapper_i.top_i.core_i.ex_stage_i.mult_i.U100.A2"}(* "test1"->INSTR=3cb3079a; "test1"->INSTR_ADDR=000009bc; "test1"->PC_ID=000009b2; "test1"->PC_IF=000009b6; "test1"->sim_time="   2815ns"; *)
           -- 0 {PORT "tb_top.wrapper_i.top_i.core_i.ex_stage_i.mult_i.U681.A"}
+    <  1> ON 1 {PORT "tb_top.wrapper_i.top_i.core_i.ex_stage_i.mult_i.U120.A1"}(* "test1"->INSTR=00000000; "test1"->INSTR_ADDR=00000540; "test1"->PC_ID=00000XXX; "test1"->PC_IF=00000XxX; "test1"->sim_time="   6815ns"; *)
+    <  1> ON 1 {PORT "tb_top.wrapper_i.top_i.core_i.ex_stage_i.mult_i.U122.A1"}(* "test1"->INSTR=00000000; "test1"->INSTR_ADDR=00000540; "test1"->PC_ID=00000X0X; "test1"->PC_IF=00000X00; "test1"->sim_time="   6915ns"; *)
 }
 #------------------------------------------------------------------------
 # Fault Coverage Summary for Default List
@@ -207,8 +209,10 @@ FaultList {
                    zoix.Fault(fault_status='ON', fault_type='0', fault_sites=['tb_top.wrapper_i.top_i.core_i.ex_stage_i.mult_i.U333.Z']),
                    zoix.Fault(fault_status='ON', fault_type='1', fault_sites=['tb_top.wrapper_i.top_i.core_i.ex_stage_i.mult_i.U100.A1'], fault_attributes={'INSTR': '3cb3079a', 'INSTR_ADDR': '000009bc', 'PC_ID': '000009b2', 'PC_IF': '000009b6', 'sim_time': '7455ns'}),
                    zoix.Fault(fault_status='ON', fault_type='1', fault_sites=['tb_top.wrapper_i.top_i.core_i.ex_stage_i.mult_i.U100.A2'], fault_attributes={'INSTR': '3cb3079a', 'INSTR_ADDR': '000009bc', 'PC_ID': '000009b2', 'PC_IF': '000009b6', 'sim_time': '2815ns'}),
-                   zoix.Fault(fault_status='ON', fault_type='0', fault_sites=['tb_top.wrapper_i.top_i.core_i.ex_stage_i.mult_i.U681.A'])]
-
+                   zoix.Fault(fault_status='ON', fault_type='0', fault_sites=['tb_top.wrapper_i.top_i.core_i.ex_stage_i.mult_i.U681.A']),
+                   zoix.Fault(fault_status='ON', fault_type='1', fault_sites=['tb_top.wrapper_i.top_i.core_i.ex_stage_i.mult_i.U120.A1'], fault_attributes={'INSTR': '00000000', 'INSTR_ADDR': '00000540', 'PC_ID': '00000XXX', 'PC_IF': '00000XxX', 'sim_time': '6815ns'}),
+                   zoix.Fault(fault_status='ON', fault_type='1', fault_sites=['tb_top.wrapper_i.top_i.core_i.ex_stage_i.mult_i.U122.A1'], fault_attributes={'INSTR': '00000000', 'INSTR_ADDR': '00000540', 'PC_ID': '00000X0X', 'PC_IF': '00000X00', 'sim_time': '6915ns'}),
+                ]
         expected[1].equivalent_to = expected[0]
         expected[0].equivalent_faults = 2
         expected[5].equivalent_to = expected[4]
@@ -217,6 +221,7 @@ FaultList {
         expected[4].equivalent_faults = 4
         expected[10].equivalent_to = expected[9]
         expected[9].equivalent_faults = 2
+
         self.assertEqual(test_obj.fault_list, expected)
 
         self.assertEqual(test_obj.status_groups, {'SA': ['UT', 'UB', 'UR', 'UU'],
@@ -344,6 +349,8 @@ FaultList {
     <  1> ON 1 {PORT "tb_top.wrapper_i.top_i.core_i.ex_stage_i.mult_i.U100.A1"}(* "test1"->INSTR=3cb3079a; "test1"->INSTR_ADDR=000009bc; "test1"->PC_ID=000009b2; "test1"->PC_IF=000009b6; "test1"->sim_time="   7455ns"; *)
     <  1> ON 1 {PORT "tb_top.wrapper_i.top_i.core_i.ex_stage_i.mult_i.U100.A2"}(* "test1"->INSTR=3cb3079a; "test1"->INSTR_ADDR=000009bc; "test1"->PC_ID=000009b2; "test1"->PC_IF=000009b6; "test1"->sim_time="   2815ns"; *)
           -- 0 {PORT "tb_top.wrapper_i.top_i.core_i.ex_stage_i.mult_i.U681.A"}
+    <  1> ON 1 {PORT "tb_top.wrapper_i.top_i.core_i.ex_stage_i.mult_i.U120.A1"}(* "test1"->INSTR=00000000; "test1"->INSTR_ADDR=00000540; "test1"->PC_ID=00000XXX; "test1"->PC_IF=00000XxX; "test1"->sim_time="   6815ns"; *)
+    <  1> ON 1 {PORT "tb_top.wrapper_i.top_i.core_i.ex_stage_i.mult_i.U122.A1"}(* "test1"->INSTR=00000000; "test1"->INSTR_ADDR=00000540; "test1"->PC_ID=00000X0X; "test1"->PC_IF=00000X00; "test1"->sim_time="   6915ns"; *)
 }""")
 
     def test_compute_coverage(self):
