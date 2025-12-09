@@ -11,6 +11,7 @@ import pathlib
 import zipfile
 import os
 import psutil
+from typing import Literal
 
 # # # # # # # # # # # # # # # # # # # # # #
 #    __                   _               #
@@ -276,26 +277,68 @@ def reap_process_tree(pid: int, timeout: float = 5.0) -> None:
 
 class Timer():
     """
-    Context manager style timer. To be used as: ``with Timer():``
+    Timer class that can be used as a context manager or decorator to measure execution time.
+    Can measure either wall-clock time or CPU process time.
+
+    Usage as a context manager:
+
+    .. code-block:: python
+
+        with Timer(mode="wall"):
+            # code block to time
+
+    Usage as a decorator:
+
+    .. code-block:: python
+
+        @Timer(mode="cpu")
+        def my_function(...):
+            ...
+
+    Args:
+        mode (str): Timing mode. Either "wall" for wall-clock time (default)
+            or "cpu" for CPU process time.
     """
+
+    def __init__(self, mode: Literal["wall", "cpu"] = "wall"):
+        self.mode = mode
+        self.start: float
+        self.end: float
+        self.interval: float
 
     def __enter__(self):
 
-        self.start = time.perf_counter()
+        if self.mode == "wall":
+            self.start = time.perf_counter()
+        elif self.mode == "cpu":
+            self.start = time.process_time()
+
         return self
 
     def __exit__(self, *args):
 
-        self.end = time.perf_counter()
+        if self.mode == "wall":
+            self.end = time.perf_counter()
+        elif self.mode == "cpu":
+            self.end = time.process_time()
+
         self.interval = self.end - self.start
         print(f"Execution time: {self.format_time(self.interval)}")
+
+    def __call__(self, func):
+
+        def wrapper(*args, **kwargs):
+            with self:
+                return func(*args, **kwargs)
+        return wrapper
 
     def format_time(self, seconds):
 
         days, remainder = divmod(seconds, 86_400)  # 86400 seconds in a day
         hours, remainder = divmod(remainder, 3_600)  # 3600 seconds in an hour
         minutes, seconds = divmod(remainder, 60)  # 60 seconds in a minute
-        return f"{int(days)}d {int(hours)}h {int(minutes)}m {seconds:.2f}s"
+
+        return f"{int(days)}d {int(hours)}h {int(minutes)}m {seconds:.3f}s"
 
 
 class Singleton(type):
