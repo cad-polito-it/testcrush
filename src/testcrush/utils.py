@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 import time
+import resource
 import re
 import logging
 import sys
@@ -278,7 +279,7 @@ def reap_process_tree(pid: int, timeout: float = 5.0) -> None:
 class Timer():
     """
     Timer class that can be used as a context manager or decorator to measure execution time.
-    Can measure either wall-clock time or CPU process time.
+    Can measure either wall-clock time or CPU process time, optionally including child processes.
 
     Usage as a context manager:
 
@@ -286,6 +287,9 @@ class Timer():
 
         with Timer(mode="wall"):
             # code block to time
+
+        with Timer(mode="cpu+"):
+            # code block including subprocess CPU time (if supported)
 
     Usage as a decorator:
 
@@ -296,11 +300,13 @@ class Timer():
             ...
 
     Args:
-        mode (str): Timing mode. Either "wall" for wall-clock time (default)
-            or "cpu" for CPU process time.
+        mode (str): Timing mode. One of:
+            "wall"  - wall-clock time (default)
+            "cpu"   - CPU time of the current Python process
+            "cpu+"  - CPU time including child processes (Availability: Unix-derived systems)
     """
 
-    def __init__(self, mode: Literal["wall", "cpu"] = "wall"):
+    def __init__(self, mode: Literal["wall", "cpu", "cpu+"] = "wall"):
         self.mode = mode
         self.start: float
         self.end: float
@@ -312,6 +318,8 @@ class Timer():
             self.start = time.perf_counter()
         elif self.mode == "cpu":
             self.start = time.process_time()
+        elif self.mode == "cpu+":
+            self.start = time.process_time() + self._child_time()
 
         return self
 
@@ -321,6 +329,8 @@ class Timer():
             self.end = time.perf_counter()
         elif self.mode == "cpu":
             self.end = time.process_time()
+        elif self.mode == "cpu+":
+            self.end = time.process_time() + self._child_time()
 
         self.interval = self.end - self.start
         print(f"Execution time: {self.format_time(self.interval)}")
@@ -331,6 +341,11 @@ class Timer():
             with self:
                 return func(*args, **kwargs)
         return wrapper
+
+    def _child_time(self):
+
+        children_usage = resource.getrusage(resource.RUSAGE_CHILDREN)
+        return children_usage.ru_stime + children_usage.ru_utime
 
     def format_time(self, seconds):
 
